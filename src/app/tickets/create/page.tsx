@@ -75,7 +75,6 @@ export default function CreateRepairRequest() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -87,18 +86,18 @@ export default function CreateRepairRequest() {
     title: "",
     description: "",
     priority: "MEDIUM",
+    // Guest information
+    guestName: "",
+    guestEmail: "",
+    guestPhone: "",
+    guestDepartment: "",
   });
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login");
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [router]);
+    // No authentication check needed - allow guests
+  }, []);
 
   const handleCategoryChange = (value: string) => {
     setFormData({
@@ -122,6 +121,14 @@ export default function CreateRepairRequest() {
     if (!formData.title.trim()) newErrors.title = "กรุณากรอกหัวเรื่อง";
     if (!formData.description.trim())
       newErrors.description = "กรุณากรอกรายละเอียด";
+
+    // Guest information required if not authenticated
+    const token = localStorage.getItem("token");
+    if (!token) {
+      if (!formData.guestName.trim()) newErrors.guestName = "กรุณากรอกชื่อ";
+      if (!formData.guestEmail.trim()) newErrors.guestEmail = "กรุณากรอกอีเมล";
+      if (!formData.guestPhone.trim()) newErrors.guestPhone = "กรุณากรอกเบอร์โทรศัพท์";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -149,6 +156,17 @@ export default function CreateRepairRequest() {
       formDataToSend.append("equipmentName", formData.equipmentName);
       formDataToSend.append("location", formData.location);
 
+      // Add guest information if not authenticated
+      const token = localStorage.getItem("token");
+      if (!token) {
+        formDataToSend.append("guestName", formData.guestName);
+        formDataToSend.append("guestEmail", formData.guestEmail);
+        formDataToSend.append("guestPhone", formData.guestPhone);
+        if (formData.guestDepartment) {
+          formDataToSend.append("guestDepartment", formData.guestDepartment);
+        }
+      }
+
       files.forEach((file) => {
         formDataToSend.append("files", file);
       });
@@ -158,6 +176,8 @@ export default function CreateRepairRequest() {
         body: formDataToSend,
       });
 
+      // Show success message with ticket code
+      alert(`สำเร็จ! รหัสแจ้งซ่อมของคุณคือ: ${result.ticketCode}`);
       router.push(`/tickets/${result.id}`);
     } catch (error: any) {
       alert(error.message || "เกิดข้อผิดพลาด");
@@ -167,8 +187,6 @@ export default function CreateRepairRequest() {
   };
 
   const availableSubcategories = SUBCATEGORIES[formData.problemCategory] || [];
-
-  if (!isAuthenticated) return <LoadingState />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -240,8 +258,9 @@ export default function CreateRepairRequest() {
             </div>
             <div className="flex justify-between text-xs text-slate-600 mt-3">
               <span>ประเภท</span>
-              <span>รายละเอียด</span>
+              <span>อุปกรณ์</span>
               <span>อาการ</span>
+              <span>ข้อมูล</span>
               <span>ไฟล์</span>
             </div>
           </div>
@@ -506,11 +525,11 @@ export default function CreateRepairRequest() {
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      formData.title &&
-                      formData.description &&
-                      setCurrentStep(4)
-                    }
+                    onClick={() => {
+                      const token = localStorage.getItem("token");
+                      // Skip guest info if logged in
+                      setCurrentStep(token ? 5 : 4);
+                    }}
                     disabled={!formData.title || !formData.description}
                     className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-300 transition-all font-medium text-sm"
                   >
@@ -520,10 +539,129 @@ export default function CreateRepairRequest() {
               )}
             </div>
 
-            {/* Step 4: Attachments */}
+            {/* Step 4: Guest Information (if not authenticated) */}
             <div
               className={`space-y-6 transition-all duration-300 ${
                 currentStep !== 4 && "opacity-50 pointer-events-none"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 bg-cyan-100 rounded-lg mt-1">
+                  <Info size={18} className="text-cyan-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    ข้อมูลของท่าน
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    กรุณากรอกข้อมูลการติดต่อของท่านเพื่อให้เราสามารถติดต่อกลับได้
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-5 pl-11">
+                <div>
+                  <InputField
+                    label="ชื่อ"
+                    value={formData.guestName}
+                    onChange={(v) => {
+                      setFormData({ ...formData, guestName: v });
+                      setErrors({ ...errors, guestName: "" });
+                    }}
+                    placeholder="กรุณากรอกชื่อของท่าน"
+                    required
+                  />
+                  {errors.guestName && (
+                    <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                      <AlertCircle size={14} /> {errors.guestName}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <InputField
+                    label="อีเมล"
+                    type="email"
+                    value={formData.guestEmail}
+                    onChange={(v) => {
+                      setFormData({ ...formData, guestEmail: v });
+                      setErrors({ ...errors, guestEmail: "" });
+                    }}
+                    placeholder="example@email.com"
+                    required
+                  />
+                  {errors.guestEmail && (
+                    <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                      <AlertCircle size={14} /> {errors.guestEmail}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <InputField
+                    label="เบอร์โทรศัพท์"
+                    type="tel"
+                    value={formData.guestPhone}
+                    onChange={(v) => {
+                      setFormData({ ...formData, guestPhone: v });
+                      setErrors({ ...errors, guestPhone: "" });
+                    }}
+                    placeholder="เช่น 081-2345678"
+                    required
+                  />
+                  {errors.guestPhone && (
+                    <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                      <AlertCircle size={14} /> {errors.guestPhone}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <InputField
+                    label="แผนก (ไม่บังคับ)"
+                    value={formData.guestDepartment}
+                    onChange={(v) => {
+                      setFormData({ ...formData, guestDepartment: v });
+                    }}
+                    placeholder="เช่น IT, HR, Finance"
+                  />
+                </div>
+              </div>
+
+              {currentStep === 4 && (
+                <div className="flex justify-between pt-4 pl-11">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(3)}
+                    className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all font-medium text-sm"
+                  >
+                    ย้อนกลับ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      formData.guestName &&
+                      formData.guestEmail &&
+                      formData.guestPhone &&
+                      setCurrentStep(5)
+                    }
+                    disabled={
+                      !formData.guestName ||
+                      !formData.guestEmail ||
+                      !formData.guestPhone
+                    }
+                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-300 transition-all font-medium text-sm"
+                  >
+                    ถัดไป <ChevronRight size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Step 5: Attachments */}
+            <div
+              className={`space-y-6 transition-all duration-300 ${
+                currentStep !== 5 && "opacity-50 pointer-events-none"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -582,7 +720,10 @@ export default function CreateRepairRequest() {
               <div className="flex flex-col sm:flex-row gap-4 pt-8 pl-11">
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => {
+                    const token = localStorage.getItem("token");
+                    setCurrentStep(token ? 3 : 4);
+                  }}
                   className="flex-1 px-8 py-3.5 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 transition-all duration-200"
                 >
                   ย้อนกลับ
