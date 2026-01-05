@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   // If this is a LINE OAuth callback on the root path, redirect to /callback
-  if (pathname === '/' && searchParams.has('code')) {
+  if (pathname === '/' && (searchParams.has('code') || searchParams.has('liffClientId'))) {
     const callbackUrl = request.nextUrl.clone();
     callbackUrl.pathname = '/callback';
     return NextResponse.redirect(callbackUrl);
@@ -16,15 +16,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match root path with code parameter (LINE OAuth callback)
-    {
-      source: '/',
-      has: [
-        {
-          type: 'query',
-          key: 'code',
-        },
-      ],
-    },
+    // Match any request path to catch LINE OAuth callbacks
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

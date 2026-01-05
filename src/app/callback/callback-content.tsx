@@ -21,6 +21,8 @@ export default function CallbackContent() {
           return;
         }
 
+        console.log("Processing LINE callback with code:", code);
+
         // Send the code and state to your backend
         const response = await fetch("/api/auth/line-callback", {
           method: "POST",
@@ -42,10 +44,16 @@ export default function CallbackContent() {
 
         const data = await response.json();
 
+        console.log("Authentication successful, received data:", {
+          access_token: !!data.access_token,
+          role: data.role,
+        });
+
         // Store the token and redirect
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token);
           localStorage.setItem("role", data.role || "USER");
+          localStorage.setItem("userId", data.userId || "");
 
           // Redirect based on role
           const userRole = data.role || "USER";
@@ -64,6 +72,7 @@ export default function CallbackContent() {
           err instanceof Error
             ? err.message
             : "An unknown error occurred during authentication";
+        console.error("Callback error:", errorMessage);
         setError(errorMessage);
         setIsLoading(false);
       }

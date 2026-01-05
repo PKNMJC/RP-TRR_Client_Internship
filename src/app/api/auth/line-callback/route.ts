@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('LINE callback API route - exchanging code:', code);
+
     // Call your NestJS backend to handle LINE OAuth callback
     const response = await fetch(`${API_BASE_URL}/auth/line-callback`, {
       method: 'POST',
@@ -25,16 +27,17 @@ export async function POST(request: NextRequest) {
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
+      console.error('Backend error:', data);
       return NextResponse.json(
-        { message: errorData.message || 'Authentication failed' },
+        { message: data.message || 'Authentication failed' },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
-
+    console.log('LINE authentication successful');
     return NextResponse.json(data, { status: 200 });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
