@@ -19,9 +19,11 @@ export default function Home() {
       const callbackUrl = new URL("/callback", window.location.origin);
       if (code) callbackUrl.searchParams.append("code", code);
       if (state) callbackUrl.searchParams.append("state", state);
-      if (liffClientId) callbackUrl.searchParams.append("liffClientId", liffClientId);
-      if (liffRedirectUri) callbackUrl.searchParams.append("liffRedirectUri", liffRedirectUri);
-      
+      if (liffClientId)
+        callbackUrl.searchParams.append("liffClientId", liffClientId);
+      if (liffRedirectUri)
+        callbackUrl.searchParams.append("liffRedirectUri", liffRedirectUri);
+
       router.push(callbackUrl.toString().replace(window.location.origin, ""));
     } else {
       // Not a callback, redirect to login
@@ -51,5 +53,4 @@ export default function Home() {
       </div>
     </div>
   );
-};
 }
