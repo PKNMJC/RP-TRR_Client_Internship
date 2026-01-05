@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Upload, X } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import liff from "@line/liff";
 
 export const dynamic = "force-dynamic";
 
@@ -71,18 +72,43 @@ function RepairLiffFormContent() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // ดึง lineUserId จาก URL params (ถ้ามี)
-    const id = searchParams.get("lineUserId") || "";
-    setLineUserId(id);
+    // Initialize LIFF
+    const initLiff = async () => {
+      try {
+        // Replace with your actual LIFF ID from LINE Developers Console
+        const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
 
-    // ตั้งค่า reporterLineId ด้วย
-    if (id) {
-      setFormData((prev) => ({
-        ...prev,
-        reporterLineId: id,
-      }));
-    }
-  }, [searchParams]);
+        if (!liffId) {
+          console.error("LIFF ID is not set");
+          return;
+        }
+
+        await liff.init({ liffId });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        // Get LINE user profile
+        const profile = await liff.getProfile();
+        const lineUserId = profile.userId;
+
+        // Set LINE user ID to form data
+        setLineUserId(lineUserId);
+        setFormData((prev) => ({
+          ...prev,
+          reporterLineId: lineUserId,
+        }));
+
+        console.log("LIFF initialized with user ID:", lineUserId);
+      } catch (error) {
+        console.error("LIFF initialization error:", error);
+      }
+    };
+
+    initLiff();
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<
