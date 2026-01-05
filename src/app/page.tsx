@@ -1,6 +1,26 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const params = await searchParams;
+
+  // If this is a LINE OAuth callback, redirect to the callback page
+  if (params.code) {
+    const callbackUrl = new URL(
+      "/callback",
+      "https://rp-trr-server-internship.vercel.app"
+    );
+    callbackUrl.searchParams.set("code", String(params.code));
+    if (params.state) {
+      callbackUrl.searchParams.set("state", String(params.state));
+    }
+    redirect(callbackUrl.pathname + callbackUrl.search);
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
