@@ -1,4 +1,4 @@
-import { type NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -27,11 +27,10 @@ export async function GET(request: NextRequest) {
 
     console.log('Redirecting to callback:', callbackUrl.toString());
 
-    return Response.redirect(callbackUrl.toString());
+    return NextResponse.redirect(callbackUrl.toString());
   }
 
-  // Not a callback, return the home page
-  console.log('Not a LINE callback, serving home page');
-  const { notFound } = await import('next/navigation');
-  notFound();
+  // Not a callback, redirect to login
+  console.log('Not a LINE callback, redirecting to login');
+  return NextResponse.redirect(new URL('/login', request.nextUrl.origin));
 }
