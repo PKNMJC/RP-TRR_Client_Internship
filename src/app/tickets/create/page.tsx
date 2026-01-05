@@ -127,7 +127,8 @@ export default function CreateRepairRequest() {
     if (!token) {
       if (!formData.guestName.trim()) newErrors.guestName = "กรุณากรอกชื่อ";
       if (!formData.guestEmail.trim()) newErrors.guestEmail = "กรุณากรอกอีเมล";
-      if (!formData.guestPhone.trim()) newErrors.guestPhone = "กรุณากรอกเบอร์โทรศัพท์";
+      if (!formData.guestPhone.trim())
+        newErrors.guestPhone = "กรุณากรอกเบอร์โทรศัพท์";
     }
 
     setErrors(newErrors);
