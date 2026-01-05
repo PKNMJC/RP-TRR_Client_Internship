@@ -16,7 +16,15 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Match root path with query parameters
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // Match root path with code parameter (LINE OAuth callback)
+    {
+      source: '/',
+      has: [
+        {
+          type: 'query',
+          key: 'code',
+        },
+      ],
+    },
   ],
 };
