@@ -12,10 +12,12 @@ export default function CallbackContent() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // ✅ Prevent multiple calls - critical for avoiding duplicate code exchange
+      // ✅ CRITICAL GUARD: Prevent duplicate code exchange
+      // React Strict Mode will mount components twice in dev mode
+      // Without this guard, we'd send the same code twice, causing LINE to reject the second attempt
       if (hasCalled.current) {
         console.log(
-          "[LINE Callback] Already processing, skipping duplicate call"
+          "[Callback] Code exchange already in progress, skipping duplicate processing"
         );
         return;
       }
@@ -25,18 +27,25 @@ export default function CallbackContent() {
         const code = searchParams.get("code");
         const state = searchParams.get("state");
 
+        // ✅ GUARD: Ensure authorization code exists
         if (!code) {
-          setError("No authorization code received from LINE");
+          setError(
+            "No authorization code received from LINE. Please try logging in again."
+          );
           setIsLoading(false);
           return;
         }
 
         console.log(
-          "[LINE Callback] 🔵 Processing authorization code:",
+          "[Callback] 🔵 Processing LINE authorization code:",
           code.substring(0, 10) + "..."
         );
 
-        // Send the code and state to your backend
+        // ✅ Step 1: Send authorization code to backend for token exchange
+        // Backend will exchange the code with LINE and create/update the user
+        console.log(
+          "[Callback] Sending authorization code to backend for token exchange"
+        );
         const response = await fetch("/api/auth/line-callback", {
           method: "POST",
           headers: {
@@ -57,23 +66,23 @@ export default function CallbackContent() {
 
         const data = await response.json();
 
-        console.log("Authentication successful, received data:", {
+        console.log("[Callback] ✅ Authentication successful", {
           access_token: !!data.access_token,
           role: data.role,
         });
 
-        // Store the token and redirect
+        // ✅ Step 2: Store token and user info in localStorage
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token);
           localStorage.setItem("role", data.role || "USER");
           localStorage.setItem("userId", data.userId || "");
 
-          // Redirect based on role and context
+          // ✅ Step 3: Redirect based on user role
           const userRole = data.role || "USER";
+          console.log("[Callback] Redirecting user based on role:", userRole);
 
-          // For LINE/LIFF users, redirect to the LIFF chat interface
+          // For LINE/LIFF users, redirect to repairs form
           if (userRole === "USER") {
-            // Redirect to repairs LIFF form where they came from
             router.replace("/repairs/liff/form");
           } else if (userRole === "ADMIN") {
             router.replace("/admin");
@@ -83,14 +92,14 @@ export default function CallbackContent() {
             router.replace("/tickets");
           }
         } else {
-          throw new Error("No access token received");
+          throw new Error("No access token received from backend");
         }
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error
             ? err.message
             : "An unknown error occurred during authentication";
-        console.error("Callback error:", errorMessage);
+        console.error("[Callback] ❌ Authentication error:", errorMessage);
         setError(errorMessage);
         setIsLoading(false);
       }

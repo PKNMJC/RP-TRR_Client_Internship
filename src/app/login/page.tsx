@@ -37,7 +37,7 @@ function LoginContent() {
   }, [searchParams, router]);
 
   // Auto-initiate LINE login for guest/user login
-  // ✅ FIXED: Only initiate if NO code param (avoid redirect loop after LINE callback)
+  // ✅ GUARD: Prevent infinite redirect loops and repeated auth calls
   useEffect(() => {
     const initiateLineLogin = async () => {
       setIsLoading(true);
@@ -53,32 +53,46 @@ function LoginContent() {
       }
     };
 
-    // ✅ CRITICAL CHECKS:
-    // 1. Don't redirect if already attempting login
+    // ✅ CRITICAL GUARD 1: Prevent React Strict Mode double-mount
+    // Without this, redirectToLineAuth might be called twice, causing double redirect
     if (hasInitiatedLineLogin.current) {
-      console.log("[Login] Already initiating LINE login, skipping...");
+      console.log(
+        "[Login] Already initiating LINE login, skipping duplicate call..."
+      );
       return;
     }
 
-    // 2. Don't redirect if "code" query param exists (LINE already sent us the code)
+    // ✅ CRITICAL GUARD 2: If code exists in URL, redirect to /callback
+    // This prevents LINE authorization from being triggered again
+    // because we already HAVE the authorization code from LINE
     const code = searchParams.get("code");
     if (code) {
       console.log(
-        "[Login] Authorization code detected in URL, should go to /callback"
+        "[Login] Authorization code found in URL, redirecting to /callback for token exchange"
       );
-      // Let Next.js handle the redirect to callback page
       router.replace("/callback");
       return;
     }
 
-    // 3. Don't redirect if user already has access_token
+    // ✅ CRITICAL GUARD 3: If access_token exists in localStorage, user is already authenticated
+    // Skip LINE login and redirect based on user role
     const token = localStorage.getItem("access_token");
     if (token) {
-      console.log("[Login] User already authenticated, skipping LINE auth");
+      console.log(
+        "[Login] User already authenticated, skipping LINE authorization"
+      );
+      const role = localStorage.getItem("role");
+      if (role === "ADMIN") {
+        router.replace("/admin");
+      } else if (role === "IT") {
+        router.replace("/it/dashboard");
+      } else {
+        router.replace("/repairs/liff/form");
+      }
       return;
     }
 
-    // ✅ Safe to initiate LINE login
+    // ✅ Safe to initiate LINE login only when all guards pass
     hasInitiatedLineLogin.current = true;
     initiateLineLogin();
   }, [searchParams, router]);
