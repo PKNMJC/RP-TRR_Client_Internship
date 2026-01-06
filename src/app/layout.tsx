@@ -25,10 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
-          src="https://liff.line.me/sdk.js"
-          async
-        ></script>
+        <script src="https://liff.line.me/sdk.js" defer></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

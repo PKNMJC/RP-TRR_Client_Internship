@@ -19,24 +19,39 @@ export default function CallbackContent() {
   // ✅ Initialize LIFF SDK on component mount
   useEffect(() => {
     const initLiff = async () => {
-      if (window.liff) {
-        try {
-          console.log("[Callback] Initializing LIFF SDK...");
-          await window.liff.init({
-            liffId: "2008790464-dUziIobA",
-          });
-          console.log("[Callback] LIFF SDK initialized successfully");
-        } catch (error) {
-          console.error("[Callback] Failed to initialize LIFF SDK:", error);
+      const maxAttempts = 10;
+      let attempts = 0;
+
+      const tryInit = async () => {
+        attempts++;
+        console.log(`[Callback] Attempting LIFF init... (${attempts}/${maxAttempts})`);
+
+        if (window.liff) {
+          try {
+            console.log("[Callback] Initializing LIFF SDK...");
+            await window.liff.init({
+              liffId: "2008790464-dUziIobA",
+            });
+            console.log("[Callback] ✅ LIFF SDK initialized successfully");
+            return true;
+          } catch (error) {
+            console.error("[Callback] Failed to initialize LIFF SDK:", error);
+          }
+        } else {
+          console.log("[Callback] LIFF SDK not available yet, retrying...");
         }
-      } else {
-        console.warn("[Callback] LIFF SDK not loaded yet");
-      }
+
+        if (attempts < maxAttempts) {
+          setTimeout(tryInit, 200);
+        } else {
+          console.error("[Callback] Failed to load LIFF SDK after max attempts");
+        }
+      };
+
+      await tryInit();
     };
 
-    // Wait a bit for LIFF SDK to load
-    const timer = setTimeout(initLiff, 500);
-    return () => clearTimeout(timer);
+    initLiff();
   }, []);
 
   useEffect(() => {
@@ -55,25 +70,65 @@ export default function CallbackContent() {
       try {
         const code = searchParams.get("code");
         const state = searchParams.get("state");
-        const liffClientId = searchParams.get("liffClientId");
 
-        console.log("[Callback] Parameters:", { code: !!code, state, liffClientId });
+        console.log("[Callback] URL Parameters:", {
+          code: !!code,
+          state,
+        });
 
         // ✅ GUARD: Check if this is LIFF flow (no code in URL)
-        if (!code && liffClientId) {
-          console.log("[Callback] 🔵 LIFF flow detected, getting access token from LIFF SDK");
+        // LIFF doesn't send code in URL, instead we get access token from LIFF SDK
+        if (!code) {
+          console.log("[Callback] 🔵 No code in URL, checking for LIFF SDK...");
 
-          // LIFF SDK should have access token
+          // Wait for LIFF SDK to be ready
+          let maxAttempts = 20; // 20 * 200ms = 4 seconds
+          while (!window.liff || !window.liff.getAccessToken) {
+            console.log("[Callback] Waiting for LIFF SDK to be ready...");
+            await new Promise((resolve) => setTimeout(resolve, 200));
+            maxAttempts--;
+            if (maxAttempts <= 0) {
+              console.error("[Callback] LIFF SDK failed to load");
+              break;
+            }
+          }
+
+          // Try to get access token from LIFF SDK
           if (window.liff && window.liff.getAccessToken) {
             try {
               const accessToken = window.liff.getAccessToken();
-              console.log("[Callback] Access token:", accessToken ? "✅ obtained" : "❌ null");
-              
+              console.log(
+                "[Callback] LIFF Access token:",
+                accessToken ? "✅ obtained" : "❌ null"
+              );
+
               if (accessToken) {
-                console.log("[Callback] Got access token from LIFF SDK");
+                console.log("[Callback] ✅ Got access token from LIFF SDK");
                 // Store token and redirect
                 localStorage.setItem("access_token", accessToken);
                 localStorage.setItem("role", "USER");
+                router.replace("/repairs/liff/form");
+                return;
+              }
+            } catch (liffError) {
+              console.error("[Callback] LIFF SDK error:", liffError);
+            }
+          } else {
+            console.error("[Callback] LIFF SDK still not available after waiting");
+          }
+
+          setError(
+            "Failed to get authorization from LINE. Please try logging in again."
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        // ✅ Standard OAuth flow (code is present)
+        console.log(
+          "[Callback] 🔵 Processing LINE authorization code:",
+          code.substring(0, 10) + "..."
+        );
                 router.replace("/repairs/liff/form");
                 return;
               }
