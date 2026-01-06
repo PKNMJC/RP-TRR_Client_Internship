@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+declare global {
+  interface Window {
+    liff: any;
+  }
+}
+
 export default function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,8 +32,35 @@ export default function CallbackContent() {
       try {
         const code = searchParams.get("code");
         const state = searchParams.get("state");
+        const liffClientId = searchParams.get("liffClientId");
 
-        // ✅ GUARD: Ensure authorization code exists
+        // ✅ GUARD: Check if this is LIFF flow (no code in URL)
+        if (!code && liffClientId) {
+          console.log("[Callback] 🔵 LIFF flow detected");
+          
+          // Try to get access token from LIFF SDK
+          if (window.liff && window.liff.getAccessToken) {
+            try {
+              const accessToken = window.liff.getAccessToken();
+              if (accessToken) {
+                console.log("[Callback] Got access token from LIFF SDK");
+                // Store token and redirect
+                localStorage.setItem("access_token", accessToken);
+                localStorage.setItem("role", "USER");
+                router.replace("/repairs/liff/form");
+                return;
+              }
+            } catch (liffError) {
+              console.error("[Callback] LIFF SDK error:", liffError);
+            }
+          }
+          
+          setError("Failed to get authorization from LINE. Please try logging in again.");
+          setIsLoading(false);
+          return;
+        }
+
+        // ✅ GUARD: Ensure authorization code exists for standard OAuth flow
         if (!code) {
           setError(
             "No authorization code received from LINE. Please try logging in again."
