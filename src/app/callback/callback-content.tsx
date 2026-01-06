@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function CallbackContent() {
@@ -8,9 +8,17 @@ export default function CallbackContent() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const hasCalled = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // ✅ Prevent multiple calls - critical for avoiding duplicate code exchange
+      if (hasCalled.current) {
+        console.log("[LINE Callback] Already processing, skipping duplicate call");
+        return;
+      }
+      hasCalled.current = true;
+
       try {
         const code = searchParams.get("code");
         const state = searchParams.get("state");
@@ -21,7 +29,7 @@ export default function CallbackContent() {
           return;
         }
 
-        console.log("Processing LINE callback with code:", code);
+        console.log("[LINE Callback] 🔵 Processing authorization code:", code.substring(0, 10) + "...");
 
         // Send the code and state to your backend
         const response = await fetch("/api/auth/line-callback", {
@@ -61,13 +69,13 @@ export default function CallbackContent() {
           // For LINE/LIFF users, redirect to the LIFF chat interface
           if (userRole === "USER") {
             // Redirect to repairs LIFF form where they came from
-            router.push("/repairs/liff/form");
+            router.replace("/repairs/liff/form");
           } else if (userRole === "ADMIN") {
-            router.push("/admin");
+            router.replace("/admin");
           } else if (userRole === "IT") {
-            router.push("/it/dashboard");
+            router.replace("/it/dashboard");
           } else {
-            router.push("/tickets");
+            router.replace("/tickets");
           }
         } else {
           throw new Error("No access token received");
