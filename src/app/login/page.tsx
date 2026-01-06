@@ -1,12 +1,10 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LineOAuthService } from "@/services/lineOAuthService";
 
-export default function Login() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -107,5 +105,38 @@ export default function Login() {
         )}
       </div>
     </div>
+  );
+}
+
+function LoginLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <div className="text-center">
+        <div className="animate-spin mb-4">
+          <svg
+            className="w-12 h-12 text-blue-600 mx-auto"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4a8 8 0 018 8m0 0a8 8 0 11-16 0 8 8 0 0116 0z"
+            />
+          </svg>
+        </div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginContent />
+    </Suspense>
   );
 }
