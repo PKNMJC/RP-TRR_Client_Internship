@@ -16,6 +16,29 @@ export default function CallbackContent() {
   const [isLoading, setIsLoading] = useState(true);
   const hasCalled = useRef(false);
 
+  // ✅ Initialize LIFF SDK on component mount
+  useEffect(() => {
+    const initLiff = async () => {
+      if (window.liff) {
+        try {
+          console.log("[Callback] Initializing LIFF SDK...");
+          await window.liff.init({
+            liffId: "2008790464-dUziIobA",
+          });
+          console.log("[Callback] LIFF SDK initialized successfully");
+        } catch (error) {
+          console.error("[Callback] Failed to initialize LIFF SDK:", error);
+        }
+      } else {
+        console.warn("[Callback] LIFF SDK not loaded yet");
+      }
+    };
+
+    // Wait a bit for LIFF SDK to load
+    const timer = setTimeout(initLiff, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const handleCallback = async () => {
       // ✅ CRITICAL GUARD: Prevent duplicate code exchange
@@ -34,14 +57,18 @@ export default function CallbackContent() {
         const state = searchParams.get("state");
         const liffClientId = searchParams.get("liffClientId");
 
+        console.log("[Callback] Parameters:", { code: !!code, state, liffClientId });
+
         // ✅ GUARD: Check if this is LIFF flow (no code in URL)
         if (!code && liffClientId) {
-          console.log("[Callback] 🔵 LIFF flow detected");
-          
-          // Try to get access token from LIFF SDK
+          console.log("[Callback] 🔵 LIFF flow detected, getting access token from LIFF SDK");
+
+          // LIFF SDK should have access token
           if (window.liff && window.liff.getAccessToken) {
             try {
               const accessToken = window.liff.getAccessToken();
+              console.log("[Callback] Access token:", accessToken ? "✅ obtained" : "❌ null");
+              
               if (accessToken) {
                 console.log("[Callback] Got access token from LIFF SDK");
                 // Store token and redirect
@@ -53,9 +80,16 @@ export default function CallbackContent() {
             } catch (liffError) {
               console.error("[Callback] LIFF SDK error:", liffError);
             }
+          } else {
+            console.warn("[Callback] LIFF SDK not available:", {
+              liffExists: !!window.liff,
+              hasGetAccessToken: window.liff?.getAccessToken ? true : false,
+            });
           }
-          
-          setError("Failed to get authorization from LINE. Please try logging in again.");
+
+          setError(
+            "Failed to get authorization from LINE. Please try logging in again."
+          );
           setIsLoading(false);
           return;
         }

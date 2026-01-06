@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script
-          src="https://cdn.jsdelivr.net/npm/@line/liff/dist/liff.browser.min.js"
+          src="https://liff.line.me/sdk.js"
           async
         ></script>
       </head>
