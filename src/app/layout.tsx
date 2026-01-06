@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script src="https://liff.line.me/sdk.js" defer></script>
+        {/* LIFF SDK removed - using standard OAuth flow instead */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
