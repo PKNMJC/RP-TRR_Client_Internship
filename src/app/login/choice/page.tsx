@@ -1,47 +1,48 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Card from '@/components/Card';
-import Alert from '@/components/Alert';
-import { LineOAuthService } from '@/services/lineOAuthService';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Card from "@/components/Card";
+import Alert from "@/components/Alert";
+import { LineOAuthService } from "@/services/lineOAuthService";
 
 export default function AuthChoice() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Check if already logged in
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (token) {
-      const role = localStorage.getItem('role');
-      if (role === 'ADMIN') {
-        router.push('/admin');
-      } else if (role === 'IT') {
-        router.push('/it/dashboard');
+      const role = localStorage.getItem("role");
+      if (role === "ADMIN") {
+        router.push("/admin");
+      } else if (role === "IT") {
+        router.push("/it/dashboard");
       } else {
-        router.push('/tickets');
+        router.push("/tickets");
       }
     }
   }, [router]);
 
   const handleLineLogin = async () => {
     setIsLoading(true);
-    setErrorMessage('');
+    setErrorMessage("");
     try {
       await LineOAuthService.redirectToLineAuth();
     } catch (error: any) {
       setErrorMessage(
-        error.message || 'Failed to initiate LINE authentication. Please try again.'
+        error.message ||
+          "Failed to initiate LINE authentication. Please try again."
       );
       setIsLoading(false);
     }
   };
 
   const handleAdminLogin = () => {
-    router.push('/login/admin');
+    router.push("/login/admin");
   };
 
   return (
@@ -57,9 +58,7 @@ export default function AuthChoice() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               ยินดีต้อนรับ
             </h1>
-            <p className="text-gray-600">
-              เลือกวิธีการเข้าสู่ระบบของคุณ
-            </p>
+            <p className="text-gray-600">เลือกวิธีการเข้าสู่ระบบของคุณ</p>
           </div>
 
           {/* Alerts */}
@@ -67,7 +66,7 @@ export default function AuthChoice() {
             <Alert
               type="error"
               message={errorMessage}
-              onClose={() => setErrorMessage('')}
+              onClose={() => setErrorMessage("")}
             />
           )}
 
@@ -147,7 +146,8 @@ export default function AuthChoice() {
           {/* Footer Info */}
           <div className="mt-8 p-4 bg-blue-50 rounded-lg text-center">
             <p className="text-xs text-gray-600">
-              <strong>ผู้แจ้งเรื่อง:</strong> ไม่ต้องสมัครสมาชิก แค่เข้าสู่ระบบด้วย LINE
+              <strong>ผู้แจ้งเรื่อง:</strong> ไม่ต้องสมัครสมาชิก
+              แค่เข้าสู่ระบบด้วย LINE
             </p>
             <p className="text-xs text-gray-600 mt-2">
               <strong>แอดมิน:</strong> ใช้ชื่อผู้ใช้และรหัสผ่านที่ได้รับมา

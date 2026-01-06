@@ -55,9 +55,14 @@ export default function CallbackContent() {
           localStorage.setItem("role", data.role || "USER");
           localStorage.setItem("userId", data.userId || "");
 
-          // Redirect based on role
+          // Redirect based on role and context
           const userRole = data.role || "USER";
-          if (userRole === "ADMIN") {
+
+          // For LINE/LIFF users, redirect to the LIFF chat interface
+          if (userRole === "USER") {
+            // Redirect to repairs LIFF form where they came from
+            router.push("/repairs/liff/form");
+          } else if (userRole === "ADMIN") {
             router.push("/admin");
           } else if (userRole === "IT") {
             router.push("/it/dashboard");
