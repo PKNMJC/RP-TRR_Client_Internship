@@ -14,7 +14,9 @@ export default function CallbackContent() {
     const handleCallback = async () => {
       // ✅ Prevent multiple calls - critical for avoiding duplicate code exchange
       if (hasCalled.current) {
-        console.log("[LINE Callback] Already processing, skipping duplicate call");
+        console.log(
+          "[LINE Callback] Already processing, skipping duplicate call"
+        );
         return;
       }
       hasCalled.current = true;
@@ -29,7 +31,10 @@ export default function CallbackContent() {
           return;
         }
 
-        console.log("[LINE Callback] 🔵 Processing authorization code:", code.substring(0, 10) + "...");
+        console.log(
+          "[LINE Callback] 🔵 Processing authorization code:",
+          code.substring(0, 10) + "..."
+        );
 
         // Send the code and state to your backend
         const response = await fetch("/api/auth/line-callback", {

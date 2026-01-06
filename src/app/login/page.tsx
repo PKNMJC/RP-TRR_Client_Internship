@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LineOAuthService } from "@/services/lineOAuthService";
 
@@ -9,6 +9,8 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // ✅ Prevent multiple LINE auth calls (React Strict Mode double mount)
+  const hasInitiatedLineLogin = useRef(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -35,6 +37,7 @@ function LoginContent() {
   }, [searchParams, router]);
 
   // Auto-initiate LINE login for guest/user login
+  // ✅ FIXED: Only initiate if NO code param (avoid redirect loop after LINE callback)
   useEffect(() => {
     const initiateLineLogin = async () => {
       setIsLoading(true);
@@ -50,11 +53,35 @@ function LoginContent() {
       }
     };
 
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      initiateLineLogin();
+    // ✅ CRITICAL CHECKS:
+    // 1. Don't redirect if already attempting login
+    if (hasInitiatedLineLogin.current) {
+      console.log("[Login] Already initiating LINE login, skipping...");
+      return;
     }
-  }, []);
+
+    // 2. Don't redirect if "code" query param exists (LINE already sent us the code)
+    const code = searchParams.get("code");
+    if (code) {
+      console.log(
+        "[Login] Authorization code detected in URL, should go to /callback"
+      );
+      // Let Next.js handle the redirect to callback page
+      router.replace("/callback");
+      return;
+    }
+
+    // 3. Don't redirect if user already has access_token
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      console.log("[Login] User already authenticated, skipping LINE auth");
+      return;
+    }
+
+    // ✅ Safe to initiate LINE login
+    hasInitiatedLineLogin.current = true;
+    initiateLineLogin();
+  }, [searchParams, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
