@@ -129,39 +129,6 @@ export default function CallbackContent() {
           "[Callback] 🔵 Processing LINE authorization code:",
           code.substring(0, 10) + "..."
         );
-                router.replace("/repairs/liff/form");
-                return;
-              }
-            } catch (liffError) {
-              console.error("[Callback] LIFF SDK error:", liffError);
-            }
-          } else {
-            console.warn("[Callback] LIFF SDK not available:", {
-              liffExists: !!window.liff,
-              hasGetAccessToken: window.liff?.getAccessToken ? true : false,
-            });
-          }
-
-          setError(
-            "Failed to get authorization from LINE. Please try logging in again."
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        // ✅ GUARD: Ensure authorization code exists for standard OAuth flow
-        if (!code) {
-          setError(
-            "No authorization code received from LINE. Please try logging in again."
-          );
-          setIsLoading(false);
-          return;
-        }
-
-        console.log(
-          "[Callback] 🔵 Processing LINE authorization code:",
-          code.substring(0, 10) + "..."
-        );
 
         // ✅ Step 1: Send authorization code to backend for token exchange
         // Backend will exchange the code with LINE and create/update the user
