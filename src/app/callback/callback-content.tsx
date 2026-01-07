@@ -86,15 +86,15 @@ export default function CallbackContent() {
           const userRole = data.role || "USER";
           console.log("[Callback] Redirecting user based on role:", userRole);
 
-          // For LINE/LIFF users, redirect to repairs form
+          // For LINE/LIFF users, redirect to problem report form
           if (userRole === "USER") {
-            router.replace("/repairs/liff/form");
+            router.replace("/tickets/create");
           } else if (userRole === "ADMIN") {
             router.replace("/admin");
           } else if (userRole === "IT") {
             router.replace("/it/dashboard");
           } else {
-            router.replace("/tickets");
+            router.replace("/tickets/create");
           }
         } else {
           throw new Error("No access token received from backend");
