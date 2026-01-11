@@ -9,7 +9,8 @@ interface FetchOptions extends RequestInit {
 }
 
 export async function apiFetch(url: string, options?: string | FetchOptions | "GET" | "POST" | "PUT" | "DELETE", body?: any) {
-  const token = localStorage.getItem("token");
+  // Support both 'access_token' (LINE Login) and 'token' (normal login)
+  const token = localStorage.getItem("access_token") || localStorage.getItem("token");
 
   // Support both old style: apiFetch(url, method, body) and new style: apiFetch(url, options)
   let method = "GET";

@@ -19,15 +19,13 @@ import FileUpload from "@/components/FileUpload";
 import InputField from "@/components/InputField";
 import { apiFetch } from "@/services/api";
 
-// Problem Categories with Subcategories
+// Problem Categories with Subcategories - Must match Prisma ProblemCategory enum
 const PROBLEM_CATEGORIES = [
   { value: "NETWORK", label: "เครือข่าย" },
   { value: "HARDWARE", label: "ฮาร์ดแวร์" },
   { value: "SOFTWARE", label: "ซอฟต์แวร์" },
-  { value: "PRINTER", label: "เครื่องปริ้นเตอร์" },
-  { value: "AIR_CONDITIONING", label: "เครื่องปรับอากาศ" },
-  { value: "ELECTRICITY", label: "ไฟฟ้า" },
-  { value: "OTHER", label: "อื่นๆ" },
+  { value: "PERIPHERAL", label: "เครื่องปริ้นเตอร์/อุปกรณ์ต่อพ่วง" },
+  { value: "OTHER", label: "อื่นๆ (ปรับอากาศ, ไฟฟ้า, ฯลฯ)" },
 ];
 
 const SUBCATEGORIES: {
@@ -49,20 +47,19 @@ const SUBCATEGORIES: {
     { value: "LICENSE", label: "ปัญหาลิขสิทธิ์" },
     { value: "PERFORMANCE", label: "ปัญหาประสิทธิภาพ" },
   ],
-  PRINTER: [
-    { value: "JAM", label: "กระดาษค้าง" },
+  PERIPHERAL: [
+    { value: "JAM", label: "กระดาษค้าง (ปริ้นเตอร์)" },
     { value: "NO_PRINTING", label: "ไม่สามารถพิมพ์ได้" },
     { value: "CARTRIDGE", label: "ปัญหาตลับหมึก" },
+    { value: "OTHER", label: "อุปกรณ์ต่อพ่วงอื่นๆ" },
   ],
-  AIR_CONDITIONING: [
-    { value: "INSTALLATION_AC", label: "ติดตั้ง" },
-    { value: "MALFUNCTION_AC", label: "ขัดข้อง" },
-  ],
-  ELECTRICITY: [
+  OTHER: [
+    { value: "INSTALLATION_AC", label: "ติดตั้งแอร์" },
+    { value: "MALFUNCTION_AC", label: "แอร์ขัดข้อง" },
     { value: "POWER_DOWN", label: "ไฟฟ้าดับ" },
     { value: "LIGHT_PROBLEM", label: "ปัญหาแสงสว่าง" },
+    { value: "OTHER", label: "อื่นๆ" },
   ],
-  OTHER: [{ value: "OTHER", label: "อื่นๆ" }],
 };
 
 const PRIORITY_OPTIONS = [
