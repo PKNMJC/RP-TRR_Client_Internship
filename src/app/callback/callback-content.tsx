@@ -83,17 +83,16 @@ export default function CallbackContent() {
           localStorage.setItem("userId", data.userId || "");
 
           // ✅ Step 3: Redirect based on user role
-          const userRole = data.role || "USER";
+          const userRole = (data.role || "USER").toUpperCase();
           console.log("[Callback] Redirecting user based on role:", userRole);
 
-          // For LINE/LIFF users, redirect to problem report form
-          if (userRole === "USER") {
-            router.replace("/repairs/liff/form");
-          } else if (userRole === "ADMIN") {
+          // Redirect logic
+          if (userRole === "ADMIN") {
             router.replace("/admin");
           } else if (userRole === "IT") {
             router.replace("/it/dashboard");
           } else {
+            // Default for USER or unknown roles
             router.replace("/repairs/liff/form");
           }
         } else {

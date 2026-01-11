@@ -34,7 +34,7 @@ export class AuthService {
         localStorage.setItem('token', response.access_token);
         localStorage.setItem('userId', response.userId?.toString() || '');
         // ✅ ตรวจสอบ role จาก response ก่อน ไม่ใช่ใช้ default 'USER'
-        const role = response.role || 'USER';
+        const role = (response.role || 'USER').toUpperCase();
         localStorage.setItem('role', role);
         console.log('Login successful - Role:', role); // Debug log
         return { ...response, role };
@@ -90,7 +90,7 @@ export class AuthService {
 
   static getRole(): string {
     if (typeof window === 'undefined') return 'USER';
-    return localStorage.getItem('role') || 'USER';
+    return (localStorage.getItem('role') || 'USER').toUpperCase();
   }
 
   static isAdmin(): boolean {
