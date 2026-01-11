@@ -21,7 +21,7 @@ export default function LoginPage() {
       } else if (role === "IT") {
         router.push("/it/dashboard");
       } else {
-        router.push("/tickets");
+        router.push("/repairs/liff/form");
       }
     }
   }, [router]);
