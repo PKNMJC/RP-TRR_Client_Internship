@@ -88,13 +88,13 @@ export default function CallbackContent() {
 
           // For LINE/LIFF users, redirect to problem report form
           if (userRole === "USER") {
-            router.replace("/tickets/create");
+            router.replace("/repairs/liff/form");
           } else if (userRole === "ADMIN") {
             router.replace("/admin");
           } else if (userRole === "IT") {
             router.replace("/it/dashboard");
           } else {
-            router.replace("/tickets/create");
+            router.replace("/repairs/liff/form");
           }
         } else {
           throw new Error("No access token received from backend");
