@@ -168,7 +168,7 @@ export default function AdminRepairsPage() {
             {
               label: "เสร็จสิ้น",
               value: repairs.filter((r) => r.status === "COMPLETED").length,
-              icon: "✓",
+            
             },
           ].map((stat, i) => (
             <div
@@ -184,7 +184,7 @@ export default function AdminRepairsPage() {
                     {stat.value}
                   </p>
                 </div>
-                <span className="text-xl">{stat.icon}</span>
+                <span className="text-xl"></span>
               </div>
             </div>
           ))}
