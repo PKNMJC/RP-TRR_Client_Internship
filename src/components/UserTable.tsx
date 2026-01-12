@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "@/services/userService";
-import { Trash2, ChevronRight, Loader2 } from "lucide-react";
+import { Trash2, ChevronRight, Loader2, Mail, Phone, MessageCircle } from "lucide-react";
 
 interface UserTableProps {
   users: User[];
@@ -94,9 +94,23 @@ export default function UserTable({
                 </td>
   
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-slate-600">{user.email}</div>
-                  <div className="text-xs text-slate-400">
-                    {user.phoneNumber || "-"}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Mail size={14} className="text-slate-400" />
+                      {user.email}
+                    </div>
+                    {user.phoneNumber && (
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <Phone size={14} className="text-slate-400" />
+                        {user.phoneNumber}
+                      </div>
+                    )}
+                    {user.lineId && (
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <MessageCircle size={14} className="text-slate-400" />
+                        {user.lineId}
+                      </div>
+                    )}
                   </div>
                 </td>
   
@@ -178,6 +192,12 @@ export default function UserTable({
                 <div className="text-sm text-slate-600 flex items-center gap-2">
                    <span className="text-slate-400 text-xs w-16">เบอร์โทร:</span>
                   {user.phoneNumber}
+                </div>
+              )}
+              {user.lineId && (
+                <div className="text-sm text-slate-600 flex items-center gap-2">
+                   <span className="text-slate-400 text-xs w-16">Line ID:</span>
+                  {user.lineId}
                 </div>
               )}
                <div className="text-sm text-slate-600 flex items-center gap-2">

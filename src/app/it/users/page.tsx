@@ -20,7 +20,8 @@ import {
   Building2,
   UserCog,
   User as UserIcon,
-  Phone
+  Phone,
+  MessageCircle
 } from "lucide-react";
 
 // --- Types ---
@@ -380,6 +381,12 @@ export default function ITUsersPage() {
                           {user.phoneNumber}
                         </div>
                       )}
+                      {user.lineId && (
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <MessageCircle size={12} className="text-gray-400" />
+                          {user.lineId}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex justify-end gap-2 bg-gray-50 p-2 rounded-lg">
@@ -448,6 +455,12 @@ export default function ITUsersPage() {
                               <div className="flex items-center gap-2 text-xs text-gray-500">
                                 <Phone size={12} className="text-gray-400" />
                                 {user.phoneNumber}
+                              </div>
+                            )}
+                            {user.lineId && (
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <MessageCircle size={12} className="text-gray-400" />
+                                {user.lineId}
                               </div>
                             )}
                           </div>
