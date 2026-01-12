@@ -81,19 +81,28 @@ export default function AdminRepairsPage() {
   const itemsPerPage = 8;
 
   useEffect(() => {
-    const fetchRepairs = async () => {
+    const fetchRepairs = async (isBackground = false) => {
       try {
-        setLoading(true);
+        if (!isBackground) setLoading(true);
         // Changed endpoint to /api/repairs
         const data = await apiFetch("/api/repairs");
         setRepairs(data || []);
       } catch (err) {
         console.error('Error fetching repairs:', err);
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
       }
     };
+    
+    // Initial fetch
     fetchRepairs();
+
+    // Polling every 10 seconds
+    const intervalId = setInterval(() => {
+      fetchRepairs(true);
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleDelete = async (id: string, ticketCode: string) => {

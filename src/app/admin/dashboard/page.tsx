@@ -43,12 +43,14 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (isBackground = false) => {
       try {
-        setLoading(true);
-        setError(null);
+        if (!isBackground) {
+          setLoading(true);
+          setError(null);
+        }
 
-        console.log("Fetching dashboard data...");
+        if (!isBackground) console.log("Fetching dashboard data...");
 
         const [dashboardStats, monthlyData, activities, distribution] =
           await Promise.all([
@@ -58,9 +60,11 @@ export default function AdminDashboard() {
             getStatusDistribution(),
           ]);
 
-        console.log("Dashboard stats received:", dashboardStats);
-        console.log("Chart data received:", monthlyData);
-        console.log("Activities received:", activities);
+        if (!isBackground) {
+          console.log("Dashboard stats received:", dashboardStats);
+          console.log("Chart data received:", monthlyData);
+          console.log("Activities received:", activities);
+        }
 
         setStats(dashboardStats);
         setChartData(monthlyData);
@@ -68,13 +72,20 @@ export default function AdminDashboard() {
         setStatusDistribution(distribution);
       } catch (error: any) {
         console.error("Error loading dashboard data:", error);
-        setError(error?.message || "ไม่สามารถโหลดข้อมูลแดชบอร์ด");
+        if (!isBackground) setError(error?.message || "ไม่สามารถโหลดข้อมูลแดชบอร์ด");
       } finally {
-        setLoading(false);
+        if (!isBackground) setLoading(false);
       }
     };
 
     fetchDashboardData();
+
+    // Polling every 30 seconds for dashboard
+    const intervalId = setInterval(() => {
+      fetchDashboardData(true);
+    }, 30000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const StatCard = ({
