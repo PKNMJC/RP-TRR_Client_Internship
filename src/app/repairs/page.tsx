@@ -214,41 +214,50 @@ function RepairPageContent() {
 
   if (success.show) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 px-4 py-8">
-        <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center">
-          <div className="flex justify-center mb-4">
-            <CheckCircle2 className="w-16 h-16 text-green-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 px-4 py-8 transition-colors duration-300">
+        <div className="glass p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-200/50 dark:border-white/10">
+          <div className="flex justify-center mb-6">
+            <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-4">
+              <CheckCircle2 className="w-16 h-16 text-green-600 dark:text-green-400" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold mb-2 text-gray-800">
-            ✅ แจ้งซ่อมสำเร็จ!
+          <h2 className="text-3xl font-bold mb-3 text-gray-800 dark:text-white">
+            แจ้งซ่อมสำเร็จ!
           </h2>
-          <p className="text-gray-600 mb-6">ทีมงานจะดำเนินการโดยเร็วที่สุด</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">
+            เราได้รับข้อมูลของคุณเรียบร้อยแล้ว <br />
+            ทีมงานจะดำเนินการตรวจสอบโดยเร็วที่สุด
+          </p>
 
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-gray-500 mb-2">เลขที่รายการ:</p>
-            <p className="text-lg font-mono font-bold text-gray-800">
+          <div className="bg-gray-50 dark:bg-slate-800/50 p-6 rounded-xl mb-6 border border-gray-100 dark:border-white/5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
+              เลขที่รายการ (Ticket ID)
+            </p>
+            <p className="text-2xl font-mono font-bold text-gray-800 dark:text-white tracking-wider">
               {success.ticketCode}
             </p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-900">
-              คุณสามารถตรวจสอบสถานะได้ทันที่โดยกดปุ่ม "📋 ตรวจสอบสถานะ" ใน LINE
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl p-4 mb-8">
+            <p className="text-sm text-blue-900 dark:text-blue-200">
+              💡 คุณสามารถตรวจสอบสถานะได้ทันทีโดยกดปุ่ม <br />
+              <span className="font-semibold">"📋 ตรวจสอบสถานะ"</span> ใน LINE
+              Menu
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <button
               onClick={() => (window.location.href = "/")}
-              className="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-green-600/20 hover:shadow-green-600/30 hover:-translate-y-0.5 transition-all duration-200"
             >
               กลับหน้าหลัก
             </button>
             <button
               onClick={() => (window.location.href = "line://nv/notification")}
-              className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300 transition"
+              className="w-full bg-white dark:bg-slate-700 text-gray-700 dark:text-white py-3 rounded-xl font-medium border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition-all"
             >
-              ปิด
+              ปิดหน้านี้
             </button>
           </div>
         </div>
@@ -257,81 +266,103 @@ function RepairPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-8 md:py-12 transition-colors duration-300">
+      <div className="max-w-3xl mx-auto">
+        <div className="glass rounded-3xl shadow-xl p-6 md:p-10 border border-white/60 dark:border-white/10 backdrop-blur-xl dark:bg-slate-900/60">
           {/* Header */}
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              🔧 แจ้งซ่อมอุปกรณ์ IT
+          <div className="mb-10 text-center">
+            <div className="inline-flex items-center justify-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl mb-4 text-blue-600 dark:text-blue-400">
+              <Upload className="w-8 h-8" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-3 tracking-tight">
+              แจ้งซ่อมอุปกรณ์ IT
             </h1>
-            <p className="text-gray-600">
-              กรุณากรอกข้อมูลเพื่อให้เราสามารถช่วยเหลือคุณอย่างรวดเร็ว
+            <p className="text-gray-600 dark:text-gray-300 text-lg max-w-lg mx-auto leading-relaxed">
+              กรอกข้อมูลด้านล่างเพื่อให้ทีมงาน IT ช่วยเหลือคุณ <br className="hidden md:block" />
+              เราพร้อมดูแลทุกปัญหาการใช้งาน
             </p>
           </div>
 
           {/* Error Alert */}
           {errors.submit && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex gap-3 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-800">เกิดข้อผิดพลาด</h3>
-                <p className="text-red-700 text-sm">{errors.submit}</p>
+                <h3 className="font-semibold text-red-800 dark:text-red-300">
+                  เกิดข้อผิดพลาดในการส่งข้อมูล
+                </h3>
+                <p className="text-red-700 dark:text-red-400 text-sm mt-1">
+                  {errors.submit}
+                </p>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ชื่อเล่น */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ชื่อเล่น <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="reporterName"
-                value={formData.reporterName}
-                onChange={handleInputChange}
-                placeholder="เช่น ปอนด์, แนน, โจ"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {errors.reporterName && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.reporterName}
-                </p>
-              )}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ชื่อเล่น */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  ชื่อเล่นผู้แจ้ง <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="reporterName"
+                  value={formData.reporterName}
+                  onChange={handleInputChange}
+                  placeholder="เช่น ปอนด์, แนน"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                />
+                {errors.reporterName && (
+                  <p className="text-red-500 text-xs mt-1 font-medium">
+                    {errors.reporterName}
+                  </p>
+                )}
+              </div>
+
+              {/* แผนก */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  แผนก <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    name="reporterDepartment"
+                    value={formData.reporterDepartment}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                  >
+                    <option value="" disabled>
+                      -- เลือกแผนก --
+                    </option>
+                    <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
+                    <option value="ฝ่ายขาย">ฝ่ายขาย</option>
+                    <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
+                    <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
+                    <option value="ฝ่ายบุคคล">ฝ่ายบุคคล</option>
+                    <option value="ฝ่าย IT">ฝ่าย IT</option>
+                  </select>
+                  <div className="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400">
+                    <svg
+                      className="w-4 h-4 fill-current"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                    </svg>
+                  </div>
+                </div>
+                {errors.reporterDepartment && (
+                  <p className="text-red-500 text-xs mt-1 font-medium">
+                    {errors.reporterDepartment}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* แผนก */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                แผนก <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="reporterDepartment"
-                value={formData.reporterDepartment}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">-- เลือกแผนก --</option>
-                <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
-                <option value="ฝ่ายขาย">ฝ่ายขาย</option>
-                <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
-                <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
-                <option value="ฝ่ายบุคคล">ฝ่ายบุคคล</option>
-                <option value="ฝ่าย IT">ฝ่าย IT</option>
-              </select>
-              {errors.reporterDepartment && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.reporterDepartment}
-                </p>
-              )}
-            </div>
-
-            {/* เบอร์โทร (Optional) */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                เบอร์โทรศัพท์ (ไม่บังคับ)
+            {/* เบอร์โทร */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                เบอร์โทรศัพท์ติดต่อ (ไม่บังคับ)
               </label>
               <input
                 type="tel"
@@ -339,20 +370,30 @@ function RepairPageContent() {
                 value={formData.reporterPhone}
                 onChange={handleInputChange}
                 placeholder="0xx-xxx-xxxx"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
               />
             </div>
 
+            <div className="h-px bg-gray-200 dark:bg-slate-700/50 my-6" />
+
             {/* ประเภทปัญหา */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                ประเภทปัญหา <span className="text-red-500">*</span>
+            <div className="space-y-3">
+              <label className="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                <span className="w-1 h-5 bg-blue-600 rounded-full inline-block"></span>
+                เลือกประเภทปัญหา <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {PROBLEM_CATEGORIES.map((category) => (
                   <label
                     key={category.value}
-                    className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition"
+                    className={`
+                      relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200
+                      ${
+                        formData.problemCategory === category.value
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm ring-1 ring-blue-500 dark:border-blue-500"
+                          : "border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-700"
+                      }
+                    `}
                   >
                     <input
                       type="radio"
@@ -360,120 +401,141 @@ function RepairPageContent() {
                       value={category.value}
                       checked={formData.problemCategory === category.value}
                       onChange={handleInputChange}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-slate-600"
                     />
-                    <span className="ml-3 text-gray-700">{category.label}</span>
+                    <span
+                      className={`ml-3 font-medium ${
+                        formData.problemCategory === category.value
+                          ? "text-blue-900 dark:text-blue-100"
+                          : "text-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {category.label}
+                    </span>
                   </label>
                 ))}
               </div>
               {errors.problemCategory && (
-                <p className="text-red-600 text-sm mt-1">
+                <p className="text-red-500 text-xs mt-1 font-medium">
                   {errors.problemCategory}
                 </p>
               )}
             </div>
 
             {/* ปัญหาที่พบ */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                ปัญหาที่พบ <span className="text-red-500">*</span>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                หัวข้อปัญหา <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="problemTitle"
                 value={formData.problemTitle}
                 onChange={handleInputChange}
-                placeholder="เช่น คอมพิวเตอร์เปิดไม่ติด"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="เช่น คอมพิวเตอร์เปิดไม่ติด, จอภาพดับ"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {formData.problemTitle.length}/100 ตัวอักษร
-              </p>
-              {errors.problemTitle && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.problemTitle}
-                </p>
-              )}
+              <div className="flex justify-between items-center text-xs">
+                {errors.problemTitle ? (
+                  <p className="text-red-500 font-medium">
+                    {errors.problemTitle}
+                  </p>
+                ) : (
+                  <span></span>
+                )}
+                <span className="text-gray-400 dark:text-gray-500">
+                  {formData.problemTitle.length}/100
+                </span>
+              </div>
             </div>
 
             {/* สถานที่ */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                สถานที่ <span className="text-red-500">*</span>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                สถานที่/ห้องทำงาน <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                placeholder="เช่น อาคาร A ชั้น 2 ห้อง 201"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="ระบุตึก ชั้น หรือเลขห้องให้ชัดเจน"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
               />
               {errors.location && (
-                <p className="text-red-600 text-sm mt-1">{errors.location}</p>
+                <p className="text-red-500 text-xs mt-1 font-medium">
+                  {errors.location}
+                </p>
               )}
             </div>
 
-            {/* รายละเอียดเพิ่มเติม */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                รายละเอียดเพิ่มเติม (ไม่บังคับ)
+            {/* รายละเอียด */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                รายละเอียดเพิ่มเติม
               </label>
               <textarea
                 name="problemDescription"
                 value={formData.problemDescription}
                 onChange={handleInputChange}
-                placeholder="เช่น เปิดคอมแล้วจอดำ มีเสียงบี๊บ 3 ครั้ง เกิดขึ้นตั้งแต่เช้านี้"
+                placeholder="อธิบายอาการอย่างละเอียด เพื่อให้ทีมงานวิเคราะห์ปัญหาได้เร็วขึ้น..."
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600 resize-none"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {formData.problemDescription.length}/500 ตัวอักษร
-              </p>
+              <div className="flex justify-end text-xs text-gray-400 dark:text-gray-500">
+                {formData.problemDescription.length}/500
+              </div>
             </div>
 
             {/* รูปภาพ */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                แนบรูปภาพ (ไม่บังคับ - สูงสุด 3 รูป)
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                แนบรูปภาพ (สูงสุด 3 รูป)
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  disabled={files.length >= 3}
-                  className="hidden"
-                  id="file-input"
-                />
-                <label htmlFor="file-input" className="cursor-pointer">
-                  <p className="text-sm text-gray-600">
-                    คลิกเพื่อเลือกรูปภาพ หรือลากวางที่นี่
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    JPG, PNG - ไม่เกิน 5MB ต่อรูป
-                  </p>
-                </label>
+              <div className="border-2 border-dashed border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 text-gray-400 dark:text-gray-300 group-hover:text-blue-500" />
+                  </div>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={files.length >= 3}
+                    className="hidden"
+                    id="file-input"
+                  />
+                  <label htmlFor="file-input" className="cursor-pointer">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      คลิกเพื่อเลือกรูปภาพ
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      JPG, PNG ขนาดไม่เกิน 5MB ต่อรูป
+                    </p>
+                  </label>
+                </div>
               </div>
 
-              {/* File Preview */}
+              {/* Preview */}
               {filePreviews.length > 0 && (
-                <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-4 mt-4">
                   {filePreviews.map((preview, index) => (
-                    <div key={index} className="relative">
+                    <div
+                      key={index}
+                      className="relative group rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-slate-700 aspect-square"
+                    >
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
                       />
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        className="absolute top-2 right-2 bg-red-500/90 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors backdrop-blur-sm"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
                       </button>
                     </div>
                   ))}
@@ -481,16 +543,26 @@ function RepairPageContent() {
               )}
             </div>
 
+            <div className="h-px bg-gray-200 dark:bg-slate-700/50 my-6" />
+
             {/* ความเร่งด่วน */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <div className="space-y-3">
+              <label className="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                <span className="w-1 h-5 bg-orange-500 rounded-full inline-block"></span>
                 ระดับความเร่งด่วน
               </label>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {URGENCY_LEVELS.map((level) => (
                   <label
                     key={level.value}
-                    className="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 transition"
+                    className={`
+                      relative flex flex-col md:flex-row items-center justify-center md:justify-start p-4 border rounded-xl cursor-pointer transition-all duration-200 gap-3 text-center md:text-left
+                      ${
+                        formData.urgency === level.value
+                          ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-sm ring-1 ring-orange-500 dark:border-orange-500"
+                          : "border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-orange-300 dark:hover:border-orange-700"
+                      }
+                    `}
                   >
                     <input
                       type="radio"
@@ -498,29 +570,60 @@ function RepairPageContent() {
                       value={level.value}
                       checked={formData.urgency === level.value}
                       onChange={handleInputChange}
-                      className="w-4 h-4 text-blue-600"
+                      className="hidden"
                     />
-                    <span className="ml-3 text-gray-700">{level.label}</span>
+                    <span className="text-2xl">{level.emoji}</span>
+                    <div className="flex flex-col">
+                      <span
+                        className={`font-semibold ${
+                          formData.urgency === level.value
+                            ? "text-orange-900 dark:text-orange-100"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {level.label.split(" ")[1]}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {level.label.split("(")[1]?.replace(")", "") || "ปกติ"}
+                      </span>
+                    </div>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  กำลังส่งข้อมูล...
-                </>
-              ) : (
-                "ส่งแบบฟอร์ม"
-              )}
-            </button>
+            {/* Submit */}
+            <div className="pt-6">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span>กำลังส่งข้อมูล...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>ส่งแจ้งซ่อม</span>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M14 5l7 7m0 0l-7 7m7-7H3"
+                      />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>
