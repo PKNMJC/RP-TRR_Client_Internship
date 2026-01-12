@@ -1,8 +1,34 @@
 // Use environment variable, or fallback to production URL, then localhost for dev
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
-    ? 'https://rp-trr-server-internship.vercel.app' 
-    : 'http://localhost:3001');
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Check if running on localhost or local network IP (IPv4)
+    // 192.168.x.x is common for home/office networks
+    // 10.x.x.x and 172.16-31.x.x are also private ranges
+    const isLocalNetwork = 
+      hostname === 'localhost' || 
+      hostname === '127.0.0.1' || 
+      hostname.startsWith('192.168.') || 
+      hostname.startsWith('10.') || 
+      (hostname.startsWith('172.') && parseInt(hostname.split('.')[1], 10) >= 16 && parseInt(hostname.split('.')[1], 10) <= 31);
+
+    if (isLocalNetwork) {
+      // Use the same hostname but port 3001 (Backend)
+      // Note: Backend default is usually 3000, but frontend was hardcoded to 3001. 
+      // If connection fails, check if backend is running on 3000 or 3001.
+      return `http://${hostname}:3001`;
+    }
+  }
+
+  // Fallback to production
+  return 'https://rp-trr-server-internship.vercel.app';
+};
+
+const API_URL = getBaseUrl();
 
 export const API_BASE_URL = API_URL;
 
