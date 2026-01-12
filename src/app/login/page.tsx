@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Card from "@/components/Card";
 import Alert from "@/components/Alert";
 import { LineOAuthService } from "@/services/lineOAuthService";
+import Button from "@/components/Button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,69 +42,87 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 rounded-full bg-primary-400/20 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/10 blur-[100px]"></div>
+      </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <Card>
-          {/* Header */}
+        <Card className="glass border-white/40 shadow-2xl backdrop-blur-xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              ยินดีต้อนรับ
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-indigo-600 mb-4 shadow-lg shadow-primary-500/30">
+              <svg
+                className="w-8 h-8 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 mb-2">
+              Welcome Back
             </h1>
-            <p className="text-gray-600">กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ</p>
+            <p className="text-slate-500 dark:text-slate-400">
+              ระบบแจ้งซ่อมออนไลน์สำหรับพนักงาน
+            </p>
           </div>
 
-          {/* Alerts */}
           {errorMessage && (
-            <Alert
-              type="error"
-              message={errorMessage}
-              onClose={() => setErrorMessage("")}
-            />
+            <div className="mb-6">
+              <Alert
+                type="error"
+                message={errorMessage}
+                onClose={() => setErrorMessage("")}
+              />
+            </div>
           )}
 
-          {/* Login Button */}
-          <div className="space-y-4">
-            <button
+          <div className="space-y-6">
+            <Button
               onClick={handleLineLogin}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              isLoading={isLoading}
+              fullWidth
+              size="lg"
+              className="bg-[#06C755] hover:bg-[#05b34c] active:bg-[#04a044] text-white shadow-lg shadow-green-500/20 items-center justify-center gap-3 group"
             >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>กำลังเชื่อมต่อ...</span>
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M19.365 9.863c.356 0 .694.057 1.01.158a9.946 9.946 0 00-7.375-3.021c-5.539 0-10.082 4.543-10.082 10.082 0 2.332.804 4.468 2.143 6.151-.357-.033-.717-.05-1.08-.05C2.649 23.183 0 20.535 0 17.183c0-2.702 1.885-4.975 4.414-5.606C5.189 8.143 8.915 5.784 13.34 5.784c1.775 0 3.458.378 4.98 1.054-.02-.35-.031-.704-.031-1.062a3.624 3.624 0 017.248 0c0 1.037.358 1.99.957 2.744.599.754 1.54 1.237 2.562 1.237h1.309zm-6.555 6.915c0 1.464-1.187 2.651-2.651 2.651s-2.651-1.187-2.651-2.651 1.187-2.651 2.651-2.651 2.651 1.187 2.651 2.651zm6.368-1.326a1.326 1.326 0 110-2.651 1.326 1.326 0 010 2.651z" />
-                  </svg>
-                  <span>เข้าสู่ระบบด้วย LINE</span>
-                </>
+              {!isLoading && (
+                <svg
+                  className="w-6 h-6 transition-transform group-hover:scale-110"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 0C5.373 0 0 4.975 0 11.118c0 5.568 4.363 10.217 10.38 10.992.42.09.992.277 1.15.632.186.417.135 1.056.096 1.623-.044.636-.21 2.477.765 3.395.732.688 2.006.518 3.19.196 2.652-.72 7.82-4.104 7.82-9.697C23.385 5.55 18.28 0 12 0zm0 19.34c-4.99 0-9.215-3.665-9.215-8.21 0-4.545 4.225-8.21 9.215-8.21s9.215 3.665 9.215 8.21c0 4.545-4.225 8.21-9.215 8.21z" />
+                </svg>
               )}
-            </button>
+              <span>เข้าสู่ระบบด้วย LINE</span>
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white/50 dark:bg-slate-800/50 text-slate-500">
+                  Secure Access
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Footer */}
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg text-center">
-            <p className="text-xs text-gray-600">
-              สำหรับเจ้าหน้าที่และผู้แจ้งเรื่อง
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-400">
+              © 2025 TRR Internship Project. All rights reserved.
             </p>
           </div>
         </Card>
-
-        {/* Copyright */}
-        <p className="text-center text-gray-500 text-sm mt-8">
-          © 2025 Creat By Internship Project TRR .
-        </p>
       </div>
     </div>
   );

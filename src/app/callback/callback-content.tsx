@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import Button from "@/components/Button";
 
 export default function CallbackContent() {
   const router = useRouter();
@@ -12,13 +14,7 @@ export default function CallbackContent() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // ✅ CRITICAL GUARD: Prevent duplicate code exchange
-      // React Strict Mode will mount components twice in dev mode
-      // Without this guard, we'd send the same code twice, causing LINE to reject the second attempt
       if (hasCalled.current) {
-        console.log(
-          "[Callback] Code exchange already in progress, skipping duplicate processing"
-        );
         return;
       }
       hasCalled.current = true;
@@ -27,30 +23,12 @@ export default function CallbackContent() {
         const code = searchParams.get("code");
         const state = searchParams.get("state");
 
-        console.log("[Callback] URL Parameters:", {
-          code: !!code,
-          state,
-        });
-
-        // ✅ GUARD: Ensure authorization code exists
         if (!code) {
-          setError(
-            "No authorization code received from LINE. Please try logging in again."
-          );
+          setError("ไม่พบรหัสยืนยันจาก LINE กรุณาลองเข้าสู่ระบบอีกครั้ง");
           setIsLoading(false);
           return;
         }
 
-        console.log(
-          "[Callback] 🔵 Processing LINE authorization code:",
-          code.substring(0, 10) + "..."
-        );
-
-        // ✅ Step 1: Send authorization code to backend for token exchange
-        // Backend will exchange the code with LINE and create/update the user
-        console.log(
-          "[Callback] Sending authorization code to backend for token exchange"
-        );
         const response = await fetch("/api/auth/line-callback", {
           method: "POST",
           headers: {
@@ -65,45 +43,34 @@ export default function CallbackContent() {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.message || "Failed to authenticate with LINE"
+            errorData.message || "การยืนยันตัวตนกับ LINE ล้มเหลว"
           );
         }
 
         const data = await response.json();
 
-        console.log("[Callback] ✅ Authentication successful", {
-          access_token: !!data.access_token,
-          role: data.role,
-        });
-
-        // ✅ Step 2: Store token and user info in localStorage
         if (data.access_token) {
           localStorage.setItem("access_token", data.access_token);
           localStorage.setItem("role", data.role || "USER");
           localStorage.setItem("userId", data.userId || "");
 
-          // ✅ Step 3: Redirect based on user role
           const userRole = (data.role || "USER").toUpperCase();
-          console.log("[Callback] Redirecting user based on role:", userRole);
 
-          // Redirect logic
           if (userRole === "ADMIN") {
             router.replace("/admin");
           } else if (userRole === "IT") {
             router.replace("/it/dashboard");
           } else {
-            // Default for USER or unknown roles
             router.replace("/repairs/liff/form");
           }
         } else {
-          throw new Error("No access token received from backend");
+          throw new Error("ไม่ได้รับ Token จากระบบ");
         }
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "An unknown error occurred during authentication";
-        console.error("[Callback] ❌ Authentication error:", errorMessage);
+            : "เกิดข้อผิดพลาดในการยืนยันตัวตน";
         setError(errorMessage);
         setIsLoading(false);
       }
@@ -114,24 +81,11 @@ export default function CallbackContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="text-center">
-          <div className="animate-spin mb-4">
-            <svg
-              className="w-12 h-12 text-blue-600 mx-auto"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4a8 8 0 018 8m0 0a8 8 0 11-16 0 8 8 0 0116 0z"
-              />
-            </svg>
-          </div>
-          <p className="text-gray-600">Processing authentication...</p>
+          <Loader2 className="w-12 h-12 text-primary-600 mx-auto animate-spin mb-4" />
+          <p className="text-slate-600 font-medium">กำลังเข้าสู่ระบบ...</p>
+          <p className="text-slate-400 text-sm mt-1">รอสักครู่</p>
         </div>
       </div>
     );
@@ -139,19 +93,23 @@ export default function CallbackContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center max-w-md">
-          <div className="text-red-600 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Authentication Error
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
+        <div className="glass rounded-2xl p-8 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
+            เข้าสู่ระบบไม่สำเร็จ
           </h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <a
-            href="/login"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          <p className="text-slate-500 mb-8">{error}</p>
+          <Button
+            onClick={() => router.push("/login")}
+            fullWidth
+            className="gap-2"
           >
-            Back to Login
-          </a>
+            <ArrowLeft className="w-4 h-4" />
+            กลับหน้าล็อกอิน
+          </Button>
         </div>
       </div>
     );

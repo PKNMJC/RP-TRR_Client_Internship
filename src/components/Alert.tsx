@@ -1,4 +1,4 @@
-import React from 'react';
+import { AlertCircle, CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
 
 interface AlertProps {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -7,34 +7,38 @@ interface AlertProps {
 }
 
 export default function Alert({ type, message, onClose }: AlertProps) {
-  const baseClasses = 'p-4 rounded-lg mb-4 flex items-center justify-between';
-
-  const typeClasses = {
-    success: 'bg-green-50 text-green-800 border border-green-200',
-    error: 'bg-red-50 text-red-800 border border-red-200',
-    warning: 'bg-yellow-50 text-yellow-800 border border-yellow-200',
-    info: 'bg-blue-50 text-blue-800 border border-blue-200',
+  const config = {
+    success: {
+      icon: <CheckCircle2 className="w-5 h-5" />,
+      classes: 'bg-green-50 text-green-800 border-green-200',
+    },
+    error: {
+      icon: <AlertCircle className="w-5 h-5" />,
+      classes: 'bg-red-50 text-red-800 border-red-200',
+    },
+    warning: {
+      icon: <AlertTriangle className="w-5 h-5" />,
+      classes: 'bg-amber-50 text-amber-800 border-amber-200',
+    },
+    info: {
+      icon: <Info className="w-5 h-5" />,
+      classes: 'bg-blue-50 text-blue-800 border-blue-200',
+    },
   };
 
-  const iconClasses = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
-  };
+  const { icon, classes } = config[type];
 
   return (
-    <div className={`${baseClasses} ${typeClasses[type]}`}>
-      <div className="flex items-center gap-3">
-        <span className="text-xl font-bold">{iconClasses[type]}</span>
-        <span>{message}</span>
-      </div>
+    <div className={`p-4 rounded-xl border flex items-start gap-3 ${classes}`}>
+      <span className="flex-shrink-0 mt-0.5">{icon}</span>
+      <p className="flex-1 text-sm font-medium">{message}</p>
       {onClose && (
         <button
           onClick={onClose}
-          className="text-lg font-bold hover:opacity-70 transition"
+          className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+          aria-label="Close alert"
         >
-          ✕
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>

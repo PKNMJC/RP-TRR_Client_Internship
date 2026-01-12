@@ -86,14 +86,14 @@ export default function ITDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-zinc-400 animate-pulse">Loading Dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-slate-50">
       <ITSidebar />
 
       <main className="lg:ml-64 pt-20 lg:pt-8 pb-12">
@@ -142,7 +142,7 @@ export default function ITDashboard() {
                   <span className="text-xs text-zinc-500">กิจกรรมวันนี้</span>
                   <span className="text-lg font-bold text-zinc-900">{stats.activeLoans + stats.pendingRepairs}</span>
                 </div>
-                <div className="w-full bg-zinc-100 rounded-full h-2">
+                <div className="w-full bg-slate-100 rounded-full h-2">
                   <div
                     className="bg-blue-600 h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(((stats.activeLoans + stats.pendingRepairs) / 10) * 100, 100)}%` }}
@@ -237,7 +237,7 @@ function QuickActionButton({
   return (
     <a
       href={href}
-      className="flex flex-col items-center justify-center gap-2 p-4 border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:border-zinc-300 transition-all text-zinc-600 hover:text-zinc-900"
+      className="flex flex-col items-center justify-center gap-2 p-4 border border-zinc-200 rounded-lg hover:bg-slate-50 hover:border-zinc-300 transition-all text-zinc-600 hover:text-zinc-900"
     >
       {icon}
       <span className="text-xs font-medium text-center">{label}</span>

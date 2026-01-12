@@ -2,9 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, Upload, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Upload, X, MapPin, Phone, User, Building2, Wrench } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
+import Button from "@/components/Button";
+import Card from "@/components/Card";
 
 export const dynamic = "force-dynamic";
 
@@ -19,17 +21,9 @@ const PROBLEM_CATEGORIES = [
 ];
 
 const URGENCY_LEVELS = [
-  { value: "NORMAL", label: "🟢 ปกติ (สามารถทำงานได้ต่อ)", emoji: "🟢" },
-  {
-    value: "URGENT",
-    label: "🟡 ด่วน (ส่งผลต่อการทำงาน)",
-    emoji: "🟡",
-  },
-  {
-    value: "CRITICAL",
-    label: "🔴 ด่วนมาก (หยุดงานทันที)",
-    emoji: "🔴",
-  },
+  { value: "NORMAL", label: "ปกติ (รอได้)", subLabel: "ใช้งานได้ต่อ", color: "bg-green-100 text-green-700 border-green-200" },
+  { value: "URGENT", label: "ด่วน", subLabel: "งานสะดุด", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+  { value: "CRITICAL", label: "ด่วนที่สุด", subLabel: "ทำงานไม่ได้", color: "bg-red-100 text-red-700 border-red-200" },
 ];
 
 interface SuccessState {
@@ -75,7 +69,6 @@ function RepairLiffFormContent() {
     // Initialize LIFF
     const initLiff = async () => {
       try {
-        // Replace with your actual LIFF ID from LINE Developers Console
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
 
         if (!liffId) {
@@ -90,18 +83,14 @@ function RepairLiffFormContent() {
           return;
         }
 
-        // Get LINE user profile
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
 
-        // Set LINE user ID to form data
         setLineUserId(lineUserId);
         setFormData((prev) => ({
           ...prev,
           reporterLineId: lineUserId,
         }));
-
-        console.log("LIFF initialized with user ID:", lineUserId);
       } catch (error) {
         console.error("LIFF initialization error:", error);
       }
@@ -120,7 +109,6 @@ function RepairLiffFormContent() {
       ...prev,
       [name]: value,
     }));
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -143,7 +131,6 @@ function RepairLiffFormContent() {
       ) {
         const file = selectedFiles[i];
         if (file.size <= 5 * 1024 * 1024) {
-          // 5MB max
           newFiles.push(file);
 
           const reader = new FileReader();
@@ -167,24 +154,14 @@ function RepairLiffFormContent() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.reporterName.trim()) {
-      newErrors.reporterName = "กรุณากรอกชื่อเล่น";
+    if (!formData.reporterName.trim()) newErrors.reporterName = "ระบุชื่อผู้แจ้ง";
+    if (!formData.reporterDepartment.trim()) newErrors.reporterDepartment = "ระบุแผนก";
+    if (!formData.problemCategory) newErrors.problemCategory = "เลือกประเภทปัญหา";
+    if (!formData.problemTitle.trim()) newErrors.problemTitle = "ระบุหัวข้อปัญหา";
+    if (formData.problemTitle.length > 0 && formData.problemTitle.length < 5) {
+      newErrors.problemTitle = "ระบุอย่างน้อย 5 ตัวอักษร";
     }
-    if (!formData.reporterDepartment.trim()) {
-      newErrors.reporterDepartment = "กรุณาเลือกแผนก";
-    }
-    if (!formData.problemCategory) {
-      newErrors.problemCategory = "กรุณาเลือกประเภทปัญหา";
-    }
-    if (!formData.problemTitle.trim()) {
-      newErrors.problemTitle = "กรุณากรอกปัญหาที่พบ";
-    }
-    if (formData.problemTitle.length < 10) {
-      newErrors.problemTitle = "ปัญหาต้องมีความยาวอย่างน้อย 10 ตัวอักษร";
-    }
-    if (!formData.location.trim()) {
-      newErrors.location = "กรุณากรอกสถานที่";
-    }
+    if (!formData.location.trim()) newErrors.location = "ระบุสถานที่";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -201,28 +178,19 @@ function RepairLiffFormContent() {
 
     try {
       const formPayload = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value) formPayload.append(key, value);
+      });
 
-      // Append form data
-      formPayload.append("reporterName", formData.reporterName);
-      formPayload.append("reporterDepartment", formData.reporterDepartment);
-      formPayload.append("reporterPhone", formData.reporterPhone);
-      if (formData.reporterLineId) {
-        formPayload.append("reporterLineId", formData.reporterLineId);
-      }
-      formPayload.append("problemCategory", formData.problemCategory);
-      formPayload.append("problemTitle", formData.problemTitle);
-      formPayload.append("problemDescription", formData.problemDescription);
-      formPayload.append("location", formData.location);
-      formPayload.append("urgency", formData.urgency);
-
-      // Append files
       files.forEach((file) => {
         formPayload.append("files", file);
       });
 
-      // Use LIFF endpoint - no token needed
       const data = await apiFetch("/api/repairs/liff/create", {
         method: "POST",
+        headers: {
+          Authorization: "",
+        },
         body: formPayload,
       });
 
@@ -238,303 +206,264 @@ function RepairLiffFormContent() {
 
   if (success.show) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 px-4 py-8">
-        <div className="bg-white p-8 rounded-xl shadow-xl w-full max-w-md text-center">
-          <div className="flex justify-center mb-4">
-            <CheckCircle2 className="w-16 h-16 text-green-600" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <Card className="glass text-center p-8 max-w-sm mx-auto">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold mb-2 text-gray-800">
-            ✅ แจ้งซ่อมสำเร็จ!
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            บันทึกสำเร็จ!
           </h2>
-          <p className="text-gray-600 mb-6">ทีมงานจะดำเนินการโดยเร็วที่สุด</p>
+          <p className="text-slate-500 mb-8">
+            เราได้รับเรื่องแจ้งซ่อมของคุณแล้ว
+            <br />เจ้าหน้าที่จะรีบดำเนินการตรวจสอบ
+          </p>
 
-          <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-gray-500 mb-2">เลขที่รายการ:</p>
-            <p className="text-lg font-mono font-bold text-gray-800">
+          <div className="bg-slate-50/80 rounded-xl p-4 mb-8 border border-slate-100">
+            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Ticket ID</p>
+            <p className="text-2xl font-mono font-bold text-primary-600 tracking-wider">
               {success.ticketCode}
             </p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-900">
-              คุณสามารถตรวจสอบสถานะได้ทันที่โดยกดปุ่ม "📋 ตรวจสอบสถานะ" ใน LINE
-            </p>
-          </div>
-
-          <button
-            onClick={() => (window.location.href = "line://nv/notification")}
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700 transition"
+          <Button
+            onClick={() => liff.closeWindow()}
+            fullWidth
+            className="bg-slate-900 hover:bg-slate-800 text-white"
           >
-            ปิด
-          </button>
-        </div>
+            ปิดหน้าต่าง
+          </Button>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              🔧 แจ้งซ่อมอุปกรณ์ IT
-            </h1>
-            <p className="text-gray-600">
-              กรุณากรอกข้อมูลเพื่อให้เราสามารถช่วยเหลือคุณอย่างรวดเร็ว
-            </p>
+    <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-10 glass border-b border-slate-200/50 px-4 py-4 backdrop-blur-md">
+        <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <Wrench className="w-5 h-5 text-primary-600" />
+          แจ้งซ่อมอุปกรณ์ IT
+        </h1>
+      </div>
+
+      <div className="max-w-md mx-auto p-4">
+        {errors.submit && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800 font-medium">{errors.submit}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section: ผู้แจ้ง */}
+          <div className="space-y-4">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">ข้อมูลผู้แจ้ง</h2>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <div className="relative">
+                  <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <input
+                    type="text"
+                    name="reporterName"
+                    value={formData.reporterName}
+                    onChange={handleInputChange}
+                    placeholder="ชื่อ-เล่นของคุณ"
+                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${
+                      errors.reporterName ? "border-red-300 bg-red-50" : "border-slate-200"
+                    }`}
+                  />
+                </div>
+                {errors.reporterName && <p className="text-xs text-red-500 mt-1 ml-1">{errors.reporterName}</p>}
+              </div>
+
+              <div className="col-span-2">
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <select
+                    name="reporterDepartment"
+                    value={formData.reporterDepartment}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all appearance-none ${
+                        errors.reporterDepartment ? "border-red-300 bg-red-50" : "border-slate-200"
+                    }`}
+                  >
+                    <option value="">เลือกแผนกของคุณ</option>
+                    <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
+                    <option value="ฝ่ายขาย">ฝ่ายขาย</option>
+                    <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
+                    <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
+                    <option value="ฝ่ายการตลาด">ฝ่ายการตลาด</option>
+                    <option value="ฝ่ายอื่นๆ">ฝ่ายอื่นๆ</option>
+                  </select>
+                </div>
+                {errors.reporterDepartment && <p className="text-xs text-red-500 mt-1 ml-1">{errors.reporterDepartment}</p>}
+              </div>
+
+              <div className="col-span-2">
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <input
+                    type="tel"
+                    name="reporterPhone"
+                    value={formData.reporterPhone}
+                    onChange={handleInputChange}
+                    placeholder="เบอร์โทรติดต่อ (ถ้ามี)"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {errors.submit && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-red-800">{errors.submit}</p>
-            </div>
-          )}
+          <div className="h-px bg-slate-200/60 my-6" />
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* ชื่อเล่น */}
+          {/* Section: ปัญหา */}
+          <div className="space-y-4">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">รายละเอียดปัญหา</h2>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ชื่อเล่น <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                name="reporterName"
-                value={formData.reporterName}
-                onChange={handleInputChange}
-                placeholder="เช่น ปอนด์, แนน, โจ"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
-                  errors.reporterName ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.reporterName && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.reporterName}
-                </p>
-              )}
+               <div className="relative">
+                 <Wrench className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <select
+                    name="problemCategory"
+                    value={formData.problemCategory}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all appearance-none"
+                  >
+                    {PROBLEM_CATEGORIES.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </option>
+                    ))}
+                  </select>
+               </div>
             </div>
 
-            {/* แผนก */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                แผนก <span className="text-red-600">*</span>
-              </label>
-              <select
-                name="reporterDepartment"
-                value={formData.reporterDepartment}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
-                  errors.reporterDepartment
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-              >
-                <option value="">เลือกแผนก</option>
-                <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
-                <option value="ฝ่ายขาย">ฝ่ายขาย</option>
-                <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
-                <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
-                <option value="ฝ่ายการตลาด">ฝ่ายการตลาด</option>
-                <option value="ฝ่ายอื่นๆ">ฝ่ายอื่นๆ</option>
-              </select>
-              {errors.reporterDepartment && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.reporterDepartment}
-                </p>
-              )}
-            </div>
-
-            {/* เบอร์โทรศัพท์ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                เบอร์โทรศัพท์ (ตัวเลือก)
-              </label>
-              <input
-                type="tel"
-                name="reporterPhone"
-                value={formData.reporterPhone}
-                onChange={handleInputChange}
-                placeholder="0xx-xxx-xxxx"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              />
-            </div>
-
-            {/* ประเภทปัญหา */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ประเภทปัญหา <span className="text-red-600">*</span>
-              </label>
-              <select
-                name="problemCategory"
-                value={formData.problemCategory}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
-                  errors.problemCategory ? "border-red-500" : "border-gray-300"
-                }`}
-              >
-                {PROBLEM_CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-              {errors.problemCategory && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.problemCategory}
-                </p>
-              )}
-            </div>
-
-            {/* ปัญหาที่พบ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                ปัญหาที่พบ <span className="text-red-600">*</span>
-              </label>
               <input
                 type="text"
                 name="problemTitle"
                 value={formData.problemTitle}
                 onChange={handleInputChange}
-                placeholder="เช่น คอมพิวเตอร์เปิดไม่ติด"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
-                  errors.problemTitle ? "border-red-500" : "border-gray-300"
+                placeholder="ระบุปัญหาที่พบ (สั้นๆ เข้าใจง่าย)"
+                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${
+                  errors.problemTitle ? "border-red-300 bg-red-50" : "border-slate-200"
                 }`}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                ต้องมีความยาวอย่างน้อย 10 ตัวอักษร
-              </p>
-              {errors.problemTitle && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.problemTitle}
-                </p>
-              )}
+              {errors.problemTitle && <p className="text-xs text-red-500 mt-1 ml-1">{errors.problemTitle}</p>}
             </div>
 
-            {/* สถานที่ */}
+            <textarea
+              name="problemDescription"
+              value={formData.problemDescription}
+              onChange={handleInputChange}
+              rows={3}
+              placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)..."
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all resize-none"
+            />
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                สถานที่ <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder="เช่น อาคาร A ชั้น 2 ห้อง 201"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
-                  errors.location ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.location && (
-                <p className="mt-1 text-sm text-red-600">{errors.location}</p>
-              )}
+               <div className="relative">
+                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="สถานที่แจ้งซ่อม (ตึก/ชั้น/ห้อง)"
+                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${
+                      errors.location ? "border-red-300 bg-red-50" : "border-slate-200"
+                    }`}
+                  />
+               </div>
+               {errors.location && <p className="text-xs text-red-500 mt-1 ml-1">{errors.location}</p>}
             </div>
+          </div>
 
-            {/* รายละเอียดเพิ่มเติม */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                รายละเอียดเพิ่มเติม (ตัวเลือก)
-              </label>
-              <textarea
-                name="problemDescription"
-                value={formData.problemDescription}
-                onChange={handleInputChange}
-                placeholder="เช่น เปิดคอมแล้วจอดำ มีเสียงบี๊บ 3 ครั้ง"
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none"
-              />
+           {/* Section: ความเร่งด่วน */}
+           <div className="space-y-3 pt-2">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">ระดับความเร่งด่วน</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {URGENCY_LEVELS.map((level) => (
+                <label
+                  key={level.value}
+                  className={`
+                    relative flex flex-col items-center justify-center p-3 rounded-xl cursor-pointer border-2 transition-all
+                    ${formData.urgency === level.value 
+                      ? `${level.color} border-current ring-1 ring-offset-1 ring-current/20` 
+                      : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'}
+                  `}
+                >
+                  <input
+                    type="radio"
+                    name="urgency"
+                    value={level.value}
+                    checked={formData.urgency === level.value}
+                    onChange={handleInputChange}
+                    className="sr-only"
+                  />
+                  <span className="text-sm font-bold">{level.label}</span>
+                  <span className="text-[10px] opacity-80">{level.subLabel}</span>
+                </label>
+              ))}
             </div>
+           </div>
 
-            {/* แนบรูปภาพ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                แนบรูปภาพ (ตัวเลือก - สูงสุด 3 รูป)
-              </label>
-              <div className="space-y-4">
-                {filePreviews.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4">
-                    {filePreviews.map((preview, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
 
-                {files.length < 3 && (
-                  <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition">
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload size={24} className="text-gray-400" />
-                      <span className="text-sm text-gray-600">
-                        คลิกเลือกรูปภาพหรือลากมาวาง
-                      </span>
-                    </div>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-            </div>
-
-            {/* ความเร่งด่วน */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                ระดับความเร่งด่วน
-              </label>
-              <div className="space-y-2">
-                {URGENCY_LEVELS.map((level) => (
-                  <label
-                    key={level.value}
-                    className="flex items-center gap-3 cursor-pointer"
+          {/* Section: รูปภาพ */}
+          <div className="space-y-3 pt-2">
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">รูปประกอบ (ถ้ามี)</h2>
+            
+            <div className="grid grid-cols-3 gap-3">
+              {filePreviews.map((preview, index) => (
+                <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group">
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <input
-                      type="radio"
-                      name="urgency"
-                      value={level.value}
-                      checked={formData.urgency === level.value}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <span className="text-gray-700">{level.label}</span>
-                  </label>
-                ))}
-              </div>
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+              
+              {files.length < 3 && (
+                <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors">
+                  <Upload className="w-6 h-6 text-slate-400 mb-1" />
+                  <span className="text-[10px] text-slate-400">เพิ่มรูป</span>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
+          </div>
 
-            {/* Submit Button */}
-            <button
+          <div className="pt-4 pb-8">
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+              isLoading={loading}
+              fullWidth
+              size="lg"
+              className="mt-4 shadow-xl shadow-primary-500/20"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  กำลังส่งข้อมูล...
-                </>
-              ) : (
-                "ส่งแบบฟอร์มแจ้งซ่อม"
-              )}
-            </button>
-          </form>
-        </div>
+              ส่งแจ้งซ่อม
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -542,7 +471,7 @@ function RepairLiffFormContent() {
 
 export default function RepairLiffFormPage() {
   return (
-    <Suspense fallback={<div>กำลังโหลด...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400"><Loader2 className="animate-spin w-8 h-8" /></div>}>
       <RepairLiffFormContent />
     </Suspense>
   );
