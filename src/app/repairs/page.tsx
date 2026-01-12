@@ -214,14 +214,14 @@ function RepairPageContent() {
 
   if (success.show) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 px-4 py-8 transition-colors duration-300">
-        <div className="glass p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-200/50 dark:border-white/10">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 px-4 py-8 transition-colors duration-300">
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md text-center border border-gray-100 dark:border-slate-700">
           <div className="flex justify-center mb-6">
             <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-4">
               <CheckCircle2 className="w-16 h-16 text-green-600 dark:text-green-400" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold mb-3 text-gray-800 dark:text-white">
+          <h2 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
             แจ้งซ่อมสำเร็จ!
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-8">
@@ -229,11 +229,11 @@ function RepairPageContent() {
             ทีมงานจะดำเนินการตรวจสอบโดยเร็วที่สุด
           </p>
 
-          <div className="bg-gray-50 dark:bg-slate-800/50 p-6 rounded-xl mb-6 border border-gray-100 dark:border-white/5">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
+          <div className="bg-gray-50 dark:bg-slate-700/50 p-6 rounded-xl mb-6 border border-gray-200 dark:border-slate-600">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide font-semibold">
               เลขที่รายการ (Ticket ID)
             </p>
-            <p className="text-2xl font-mono font-bold text-gray-800 dark:text-white tracking-wider">
+            <p className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider">
               {success.ticketCode}
             </p>
           </div>
@@ -249,7 +249,7 @@ function RepairPageContent() {
           <div className="space-y-3">
             <button
               onClick={() => (window.location.href = "/")}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-xl font-semibold shadow-lg shadow-green-600/20 hover:shadow-green-600/30 hover:-translate-y-0.5 transition-all duration-200"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold shadow-lg shadow-blue-600/20 transition-all duration-200"
             >
               กลับหน้าหลัก
             </button>
@@ -266,18 +266,18 @@ function RepairPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-8 md:py-12 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 px-4 py-8 md:py-12 transition-colors duration-300">
       <div className="max-w-3xl mx-auto">
-        <div className="glass rounded-3xl shadow-xl p-6 md:p-10 border border-white/60 dark:border-white/10 backdrop-blur-xl dark:bg-slate-900/60">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl p-6 md:p-10 border border-gray-100 dark:border-slate-800">
           {/* Header */}
           <div className="mb-10 text-center">
             <div className="inline-flex items-center justify-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl mb-4 text-blue-600 dark:text-blue-400">
               <Upload className="w-8 h-8" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-3 tracking-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
               แจ้งซ่อมอุปกรณ์ IT
             </h1>
-            <p className="text-gray-600 dark:text-gray-300 text-lg max-w-lg mx-auto leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 text-lg max-w-lg mx-auto leading-relaxed">
               กรอกข้อมูลด้านล่างเพื่อให้ทีมงาน IT ช่วยเหลือคุณ <br className="hidden md:block" />
               เราพร้อมดูแลทุกปัญหาการใช้งาน
             </p>
@@ -302,7 +302,7 @@ function RepairPageContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ชื่อเล่น */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                   ชื่อเล่นผู้แจ้ง <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -311,7 +311,7 @@ function RepairPageContent() {
                   value={formData.reporterName}
                   onChange={handleInputChange}
                   placeholder="เช่น ปอนด์, แนน"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                 />
                 {errors.reporterName && (
                   <p className="text-red-500 text-xs mt-1 font-medium">
@@ -322,7 +322,7 @@ function RepairPageContent() {
 
               {/* แผนก */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                   แผนก <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -330,9 +330,9 @@ function RepairPageContent() {
                     name="reporterDepartment"
                     value={formData.reporterDepartment}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none transition duration-200"
                   >
-                    <option value="" disabled>
+                    <option value="" disabled className="text-gray-400">
                       -- เลือกแผนก --
                     </option>
                     <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
@@ -361,7 +361,7 @@ function RepairPageContent() {
 
             {/* เบอร์โทร */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                 เบอร์โทรศัพท์ติดต่อ (ไม่บังคับ)
               </label>
               <input
@@ -370,16 +370,16 @@ function RepairPageContent() {
                 value={formData.reporterPhone}
                 onChange={handleInputChange}
                 placeholder="0xx-xxx-xxxx"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               />
             </div>
 
-            <div className="h-px bg-gray-200 dark:bg-slate-700/50 my-6" />
+            <div className="h-px bg-gray-200 dark:bg-slate-700 my-6" />
 
             {/* ประเภทปัญหา */}
             <div className="space-y-3">
-              <label className="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                <span className="w-1 h-5 bg-blue-600 rounded-full inline-block"></span>
+              <label className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <span className="w-1.5 h-6 bg-blue-600 rounded-full inline-block"></span>
                 เลือกประเภทปัญหา <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -390,8 +390,8 @@ function RepairPageContent() {
                       relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-200
                       ${
                         formData.problemCategory === category.value
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-sm ring-1 ring-blue-500 dark:border-blue-500"
-                          : "border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-700"
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500 dark:border-blue-500"
+                          : "border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transform hover:scale-[1.01]"
                       }
                     `}
                   >
@@ -406,7 +406,7 @@ function RepairPageContent() {
                     <span
                       className={`ml-3 font-medium ${
                         formData.problemCategory === category.value
-                          ? "text-blue-900 dark:text-blue-100"
+                          ? "text-blue-700 dark:text-blue-300"
                           : "text-gray-700 dark:text-gray-300"
                       }`}
                     >
@@ -424,7 +424,7 @@ function RepairPageContent() {
 
             {/* ปัญหาที่พบ */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                 หัวข้อปัญหา <span className="text-red-500">*</span>
               </label>
               <input
@@ -433,17 +433,17 @@ function RepairPageContent() {
                 value={formData.problemTitle}
                 onChange={handleInputChange}
                 placeholder="เช่น คอมพิวเตอร์เปิดไม่ติด, จอภาพดับ"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               />
               <div className="flex justify-between items-center text-xs">
-                {errors.problemTitle ? (
+                 {errors.problemTitle ? (
                   <p className="text-red-500 font-medium">
                     {errors.problemTitle}
                   </p>
                 ) : (
-                  <span></span>
+                  <span></span> 
                 )}
-                <span className="text-gray-400 dark:text-gray-500">
+                <span className="text-gray-500 dark:text-gray-400">
                   {formData.problemTitle.length}/100
                 </span>
               </div>
@@ -451,7 +451,7 @@ function RepairPageContent() {
 
             {/* สถานที่ */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                 สถานที่/ห้องทำงาน <span className="text-red-500">*</span>
               </label>
               <input
@@ -460,7 +460,7 @@ function RepairPageContent() {
                 value={formData.location}
                 onChange={handleInputChange}
                 placeholder="ระบุตึก ชั้น หรือเลขห้องให้ชัดเจน"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               />
               {errors.location && (
                 <p className="text-red-500 text-xs mt-1 font-medium">
@@ -471,7 +471,7 @@ function RepairPageContent() {
 
             {/* รายละเอียด */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                 รายละเอียดเพิ่มเติม
               </label>
               <textarea
@@ -480,41 +480,39 @@ function RepairPageContent() {
                 onChange={handleInputChange}
                 placeholder="อธิบายอาการอย่างละเอียด เพื่อให้ทีมงานวิเคราะห์ปัญหาได้เร็วขึ้น..."
                 rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition duration-200 hover:border-gray-300 dark:hover:border-slate-600 resize-none"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none"
               />
-              <div className="flex justify-end text-xs text-gray-400 dark:text-gray-500">
+               <div className="flex justify-end text-xs text-gray-500 dark:text-gray-400">
                 {formData.problemDescription.length}/500
               </div>
             </div>
 
             {/* รูปภาพ */}
             <div className="space-y-3">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300">
                 แนบรูปภาพ (สูงสุด 3 รูป)
               </label>
-              <div className="border-2 border-dashed border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-slate-800 transition-all duration-200 group">
-                <div className="flex flex-col items-center justify-center">
+              <div className="border-2 border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 transition-all duration-200 group cursor-pointer">
+                <div className="flex flex-col items-center justify-center pointer-events-none">
                   <div className="w-12 h-12 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform">
-                    <Upload className="w-6 h-6 text-gray-400 dark:text-gray-300 group-hover:text-blue-500" />
+                    <Upload className="w-6 h-6 text-gray-400 dark:text-gray-300 group-hover:text-blue-500 dark:group-hover:text-blue-400" />
                   </div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    disabled={files.length >= 3}
-                    className="hidden"
-                    id="file-input"
-                  />
-                  <label htmlFor="file-input" className="cursor-pointer">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                      คลิกเพื่อเลือกรูปภาพ
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      JPG, PNG ขนาดไม่เกิน 5MB ต่อรูป
-                    </p>
-                  </label>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    คลิกเพื่อเลือกรูปภาพ
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    JPG, PNG ขนาดไม่เกิน 5MB ต่อรูป
+                  </p>
                 </div>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={files.length >= 3}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  title="" 
+                />
               </div>
 
               {/* Preview */}
@@ -533,7 +531,7 @@ function RepairPageContent() {
                       <button
                         type="button"
                         onClick={() => removeFile(index)}
-                        className="absolute top-2 right-2 bg-red-500/90 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors backdrop-blur-sm"
+                        className="absolute top-2 right-2 bg-red-500/90 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors backdrop-blur-sm shadow-sm"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -543,24 +541,24 @@ function RepairPageContent() {
               )}
             </div>
 
-            <div className="h-px bg-gray-200 dark:bg-slate-700/50 my-6" />
+            <div className="h-px bg-gray-200 dark:bg-slate-700 my-6" />
 
             {/* ความเร่งด่วน */}
             <div className="space-y-3">
-              <label className="text-base font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                <span className="w-1 h-5 bg-orange-500 rounded-full inline-block"></span>
+              <label className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                 <span className="w-1.5 h-6 bg-orange-500 rounded-full inline-block"></span>
                 ระดับความเร่งด่วน
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {URGENCY_LEVELS.map((level) => (
-                  <label
+                   <label
                     key={level.value}
                     className={`
                       relative flex flex-col md:flex-row items-center justify-center md:justify-start p-4 border rounded-xl cursor-pointer transition-all duration-200 gap-3 text-center md:text-left
                       ${
                         formData.urgency === level.value
-                          ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-sm ring-1 ring-orange-500 dark:border-orange-500"
-                          : "border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-orange-300 dark:hover:border-orange-700"
+                          ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20 ring-1 ring-orange-500 dark:border-orange-500"
+                          : "border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 transform hover:scale-[1.01]"
                       }
                     `}
                   >
@@ -570,11 +568,11 @@ function RepairPageContent() {
                       value={level.value}
                       checked={formData.urgency === level.value}
                       onChange={handleInputChange}
-                      className="hidden"
+                      className="hidden" 
                     />
                     <span className="text-2xl">{level.emoji}</span>
                     <div className="flex flex-col">
-                      <span
+                       <span
                         className={`font-semibold ${
                           formData.urgency === level.value
                             ? "text-orange-900 dark:text-orange-100"
@@ -583,9 +581,9 @@ function RepairPageContent() {
                       >
                         {level.label.split(" ")[1]}
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {level.label.split("(")[1]?.replace(")", "") || "ปกติ"}
-                      </span>
+                       <span className="text-xs text-gray-500 dark:text-gray-400">
+                         {level.label.split("(")[1]?.replace(")", "") || "ปกติ"}
+                       </span>
                     </div>
                   </label>
                 ))}
@@ -597,7 +595,7 @@ function RepairPageContent() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -607,7 +605,7 @@ function RepairPageContent() {
                 ) : (
                   <>
                     <span>ส่งแจ้งซ่อม</span>
-                    <svg
+                     <svg
                       className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
