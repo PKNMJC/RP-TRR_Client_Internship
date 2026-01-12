@@ -39,10 +39,10 @@ export default function ITDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         const role = localStorage.getItem('role');
 
-        if (!token || role !== 'IT') {
+        if (!token || (role !== 'IT' && role !== 'ADMIN')) {
           router.push('/login');
           return;
         }
