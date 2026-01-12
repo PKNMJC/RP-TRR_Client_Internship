@@ -89,6 +89,7 @@ function RepairLiffFormContent() {
 
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
+        const lineDisplayName = profile.displayName;
 
         if (!lineUserId) {
             setLiffError("ไม่สามารถระบุตัวตนได้ (No User ID)");
@@ -98,6 +99,7 @@ function RepairLiffFormContent() {
         setFormData((prev) => ({
           ...prev,
           reporterLineId: lineUserId,
+          reporterName: lineDisplayName || "",
         }));
       } catch (error) {
         // Extract useful error message
