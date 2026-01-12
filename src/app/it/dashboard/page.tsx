@@ -88,7 +88,7 @@ export default function ITDashboard() {
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [router]);
+  }, []);
 
   if (loading) {
     return (
