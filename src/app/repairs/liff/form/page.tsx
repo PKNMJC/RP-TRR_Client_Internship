@@ -65,6 +65,9 @@ function RepairLiffFormContent() {
   const [success, setSuccess] = useState<SuccessState>({ show: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [liffError, setLiffError] = useState<string | null>(null);
+  const [isLiffInitializing, setIsLiffInitializing] = useState(true);
+
   useEffect(() => {
     // Initialize LIFF
     const initLiff = async () => {
@@ -72,7 +75,8 @@ function RepairLiffFormContent() {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
 
         if (!liffId) {
-          console.error("LIFF ID is not set");
+          setLiffError("System Error: LIFF ID missing");
+          setIsLiffInitializing(false);
           return;
         }
 
@@ -86,17 +90,33 @@ function RepairLiffFormContent() {
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
 
+        if (!lineUserId) {
+            setLiffError("ไม่สามารถระบุตัวตนได้ (No User ID)");
+        }
+
         setLineUserId(lineUserId);
         setFormData((prev) => ({
           ...prev,
           reporterLineId: lineUserId,
         }));
       } catch (error) {
-        console.error("LIFF initialization error:", error);
+        // Extract useful error message
+        let errMsg = "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE";
+        const err = error as { code?: string; message?: string };
+        
+        if (err.code === "403") {
+            errMsg = "คุณไม่มีสิทธิ์เข้าถึง (Permission Denied) - ระบบจะบันทึกเป็น Guest";
+        } else if (err.message) {
+            errMsg = `LIFF Error: ${err.message} - ระบบจะบันทึกเป็น Guest`;
+        }
+        setLiffError(errMsg);
+      } finally {
+        setIsLiffInitializing(false);
       }
     };
 
     initLiff();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (
@@ -162,6 +182,11 @@ function RepairLiffFormContent() {
       newErrors.problemTitle = "ระบุอย่างน้อย 5 ตัวอักษร";
     }
     if (!formData.location.trim()) newErrors.location = "ระบุสถานที่";
+    
+    // Critical validation removed for Guest Access
+    // if (!formData.reporterLineId) {
+    //    newErrors.authentication = "ไม่พบข้อมูลยืนยันตัวตน LINE (กรุณารีโหลด)";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -171,7 +196,11 @@ function RepairLiffFormContent() {
     e.preventDefault();
 
     if (!validateForm()) {
-      return;
+       // Warn if no Line ID but allow proceed (managed by backend guest)
+       if (!formData.reporterLineId) {
+           console.warn("Submitting as Guest (No LINE ID)");
+       }
+       return;
     }
 
     setLoading(true);
@@ -238,6 +267,25 @@ function RepairLiffFormContent() {
     );
   }
 
+  // Blocking State: Loading LIFF
+  if (isLiffInitializing) {
+     return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="text-center">
+                <Loader2 className="w-10 h-10 text-primary-600 animate-spin mx-auto mb-4" />
+                <p className="text-slate-500">กำลังตรวจสอบข้อมูล LINE...</p>
+            </div>
+        </div>
+     );
+  }
+
+  // Blocking State: LIFF Error (e.g. Permission Denied) - CHANGED TO WARNING ONLY
+  // We now allow users to proceed even if LIFF fails (as Guest)
+  if (liffError) {
+      // Just render the form, but maybe show a banner?
+      // For now, we will just proceed to render the form below.
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
@@ -249,6 +297,20 @@ function RepairLiffFormContent() {
       </div>
 
       <div className="max-w-md mx-auto p-4">
+        {/* Guest Mode Warning */}
+        {(!formData.reporterLineId || liffError) && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex gap-3">
+              <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                  <p className="text-sm text-yellow-800 font-medium">Guest Mode</p>
+                  <p className="text-xs text-yellow-700 mt-0.5">
+                      ระบบไม่สามารถระบุตัวตน LINE ได้ (คุณอาจไม่มีสิทธิ์หรือระบบขัดข้อง) 
+                      <br/>การแจ้งซ่อมจะถูกบันทึกในชื่อ <b>Guest</b>
+                  </p>
+              </div>
+            </div>
+        )}
+
         {errors.submit && (
           <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
