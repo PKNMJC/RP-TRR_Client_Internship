@@ -217,7 +217,7 @@ export default function ITLoansPage() {
     <div className="min-h-screen bg-white flex">
       <ITSidebar />
 
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8">
+      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
@@ -295,7 +295,71 @@ export default function ITLoansPage() {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="lg:hidden">
+              {filteredLoans.map((loan) => (
+                <div
+                  key={loan.id}
+                  className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-semibold text-black">{loan.itemName}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {loan.description || "ไม่มีรายละเอียด"}
+                      </p>
+                    </div>
+                    <StatusBadge status={loan.status} />
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <User size={14} className="text-gray-400" />
+                    <span className="text-sm text-gray-700">
+                      {loan.borrowerName}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      | {loan.borrowerDepartment}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 bg-gray-50 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500">
+                      <div>คืน: {format(new Date(loan.expectedReturnDate), "dd MMM yy", { locale: th })}</div>
+                      <div className="mt-0.5">ยืม: {format(new Date(loan.borrowDate), "dd/MM/yy")}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedLoan(loan);
+                          setShowDetailModal(true);
+                        }}
+                        className="p-2 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm"
+                      >
+                        <FileText size={16} />
+                      </button>
+                      {loan.status !== "RETURNED" && (
+                        <button
+                          onClick={() => handleReturnItem(loan.id)}
+                          className="p-2 bg-black text-white rounded-lg shadow-sm"
+                        >
+                          <Check size={16} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteLoan(loan.id)}
+                        className="p-2 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredLoans.length === 0 && <EmptyState />}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 text-left">

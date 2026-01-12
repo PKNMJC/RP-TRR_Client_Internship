@@ -198,7 +198,7 @@ export default function ITRepairsPage() {
     <div className="min-h-screen bg-white flex">
       <ITSidebar />
 
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8">
+      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
@@ -277,7 +277,67 @@ export default function ITRepairsPage() {
               </select>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="lg:hidden">
+              {filteredRepairs.map((repair) => (
+                <div
+                  key={repair.id}
+                  className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-semibold font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                          #{repair.ticketCode}
+                        </span>
+                        <StatusBadge status={repair.status} />
+                      </div>
+                      <h3 className="font-semibold text-black">{repair.problemTitle}</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        แจ้งเมื่อ: {format(new Date(repair.createdAt), "dd MMM yy HH:mm", { locale: th })}
+                      </p>
+                    </div>
+                    <UrgencyBadge urgency={repair.urgency} />
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-3 mt-3">
+                    <span className="text-xs text-gray-400">ผู้รับผิดชอบ:</span>
+                    {repair.assignee?.name ? (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
+                          {repair.assignee.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm text-gray-700">{repair.assignee.name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs italic">- ไม่ระบุ -</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 bg-gray-50 p-2 rounded-lg">
+                    {repair.status === "PENDING" && (
+                      <button
+                        onClick={() => handleAcceptRepair(repair.id)}
+                        disabled={submitting}
+                        className="px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 text-xs font-medium"
+                      >
+                        รับเรื่อง
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedRepair(repair)}
+                      className="p-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm"
+                    >
+                      <Eye size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {filteredRepairs.length === 0 && <EmptyState />}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 text-left">

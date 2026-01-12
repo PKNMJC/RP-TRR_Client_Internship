@@ -259,7 +259,7 @@ export default function ITUsersPage() {
     <div className="min-h-screen bg-gray-50 flex">
       <ITSidebar />
 
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8">
+      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -340,7 +340,68 @@ export default function ITUsersPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="lg:hidden">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((user) => (
+                  <div
+                    key={user.id}
+                    className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{user.name}</div>
+                          <div className="text-xs text-gray-500">{user.department || "ไม่ระบุแผนก"}</div>
+                        </div>
+                      </div>
+                      <RoleBadge role={user.role} />
+                    </div>
+
+                    <div className="space-y-1.5 mb-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Mail size={12} className="text-gray-400" />
+                        {user.email}
+                      </div>
+                      {user.phoneNumber && (
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <Phone size={12} className="text-gray-400" />
+                          {user.phoneNumber}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-end gap-2 bg-gray-50 p-2 rounded-lg">
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm hover:text-blue-600 text-xs font-medium flex items-center gap-1"
+                      >
+                        <Edit2 size={14} /> แก้ไข
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="px-3 py-1.5 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm hover:bg-red-50 text-xs font-medium flex items-center gap-1"
+                      >
+                        <Trash2 size={14} /> ลบ
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 text-center text-gray-400">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <UserCog size={48} className="text-gray-200" />
+                    <p>ไม่พบข้อมูลผู้ใช้</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-gray-100">
