@@ -22,31 +22,35 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
 // --- Types ---
-interface Ticket {
+interface RepairTicket {
   id: number;
   ticketCode: string;
-  title: string;
-  status: "OPEN" | "IN_PROGRESS" | "DONE";
-  priority: "HIGH" | "MEDIUM" | "LOW";
+  problemTitle: string;
+  problemDescription?: string;
+  problemCategory?: string;
+  location?: string;
+  status: "PENDING" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
+  urgency: "NORMAL" | "URGENT" | "CRITICAL";
   createdAt: string;
   assignee?: { name: string };
+  reporterName?: string;
 }
 
 export default function ITRepairsPage() {
   const router = useRouter();
-  const [repairs, setRepairs] = useState<Ticket[]>([]);
+  const [repairs, setRepairs] = useState<RepairTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedRepair, setSelectedRepair] = useState<Ticket | null>(null);
+  const [selectedRepair, setSelectedRepair] = useState<RepairTicket | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [editForm, setEditForm] = useState({ title: "", priority: "MEDIUM" });
+  const [editForm, setEditForm] = useState({ title: "", priority: "NORMAL" });
 
   const fetchRepairs = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch("/api/tickets");
+      const data = await apiFetch("/api/repairs");
       setRepairs(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch repairs:", err);
@@ -62,7 +66,7 @@ export default function ITRepairsPage() {
   const handleAcceptRepair = async (id: number) => {
     try {
       setSubmitting(true);
-      await apiFetch(`/api/tickets/${id}`, {
+      await apiFetch(`/api/repairs/${id}`, {
         method: "PUT",
         body: JSON.stringify({ status: "IN_PROGRESS" }),
       });
@@ -80,8 +84,8 @@ export default function ITRepairsPage() {
   const handleOpenEdit = () => {
     if (selectedRepair) {
       setEditForm({
-        title: selectedRepair.title,
-        priority: selectedRepair.priority,
+        title: selectedRepair.problemTitle,
+        priority: selectedRepair.urgency,
       });
       setShowEditModal(true);
     }
@@ -95,11 +99,11 @@ export default function ITRepairsPage() {
 
     try {
       setSubmitting(true);
-      await apiFetch(`/api/tickets/${selectedRepair.id}`, {
+      await apiFetch(`/api/repairs/${selectedRepair.id}`, {
         method: "PUT",
         body: JSON.stringify({
-          title: editForm.title,
-          priority: editForm.priority,
+          problemTitle: editForm.title,
+          urgency: editForm.priority,
         }),
       });
       fetchRepairs();
@@ -114,7 +118,7 @@ export default function ITRepairsPage() {
 
   const filteredRepairs = repairs.filter((repair) => {
     const matchesSearch =
-      repair.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      repair.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       repair.ticketCode.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === "all" || repair.status === filterStatus;
@@ -123,9 +127,9 @@ export default function ITRepairsPage() {
 
   const stats = {
     total: repairs.length,
-    pending: repairs.filter((r) => r.status === "OPEN").length,
+    pending: repairs.filter((r) => r.status === "PENDING").length,
     inProgress: repairs.filter((r) => r.status === "IN_PROGRESS").length,
-    completed: repairs.filter((r) => r.status === "DONE").length,
+    completed: repairs.filter((r) => r.status === "COMPLETED").length,
   };
 
   if (loading) return <LoadingState />;
@@ -233,7 +237,7 @@ export default function ITRepairsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-semibold text-black">
-                          {repair.title}
+                          {repair.problemTitle}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           แจ้งเมื่อ:{" "}
@@ -241,7 +245,7 @@ export default function ITRepairsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <PriorityBadge priority={repair.priority} />
+                        <UrgencyBadge urgency={repair.urgency} />
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={repair.status} />
@@ -257,7 +261,7 @@ export default function ITRepairsPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {repair.status === "OPEN" && (
+                          {repair.status === "PENDING" && (
                             <button
                               onClick={() => handleAcceptRepair(repair.id)}
                               disabled={submitting}
@@ -317,7 +321,7 @@ export default function ITRepairsPage() {
                     หัวข้อแจ้งซ่อม
                   </h3>
                   <p className="text-sm text-gray-700">
-                    {selectedRepair.title}
+                    {selectedRepair.problemTitle}
                   </p>
                 </div>
 
@@ -328,8 +332,8 @@ export default function ITRepairsPage() {
                   </h3>
                   <div className="grid grid-cols-2 gap-6 text-sm">
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">ความสำคัญ</p>
-                      <PriorityBadge priority={selectedRepair.priority} />
+                      <p className="text-xs text-gray-500 mb-1">ความเร่งด่วน</p>
+                      <UrgencyBadge urgency={selectedRepair.urgency} />
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">ผู้รับผิดชอบ</p>
@@ -376,7 +380,7 @@ export default function ITRepairsPage() {
 
             {/* Footer */}
             <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
-              {selectedRepair.status === "OPEN" && (
+              {selectedRepair.status === "PENDING" && (
                 <button
                   onClick={() => handleAcceptRepair(selectedRepair.id)}
                   disabled={submitting}
@@ -385,7 +389,7 @@ export default function ITRepairsPage() {
                   {submitting ? "กำลังบันทึก..." : "รับเรื่อง"}
                 </button>
               )}
-              {selectedRepair.status !== "DONE" && (
+              {selectedRepair.status !== "COMPLETED" && (
                 <button
                   onClick={handleOpenEdit}
                   className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-all font-medium text-sm"
@@ -497,16 +501,16 @@ function StatCard({ label, count, icon }: any) {
   );
 }
 
-function PriorityBadge({ priority }: { priority: string }) {
+function UrgencyBadge({ urgency }: { urgency: string }) {
   const config: any = {
-    HIGH: { label: "สูงมาก", class: "text-red-700 bg-red-50 border-red-200" },
-    MEDIUM: {
-      label: "ปกติ",
+    CRITICAL: { label: "ด่วนมาก", class: "text-red-700 bg-red-50 border-red-200" },
+    URGENT: {
+      label: "ด่วน",
       class: "text-amber-700 bg-amber-50 border-amber-200",
     },
-    LOW: { label: "ต่ำ", class: "text-gray-600 bg-gray-100 border-gray-200" },
+    NORMAL: { label: "ปกติ", class: "text-gray-600 bg-gray-100 border-gray-200" },
   };
-  const active = config[priority] || config.LOW;
+  const active = config[urgency] || config.NORMAL;
   return (
     <span
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${active.class}`}
@@ -519,7 +523,7 @@ function PriorityBadge({ priority }: { priority: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const config: any = {
-    OPEN: {
+    PENDING: {
       label: "รอรับเรื่อง",
       icon: <Clock size={12} />,
       class: "bg-gray-600 text-white",
@@ -529,13 +533,23 @@ function StatusBadge({ status }: { status: string }) {
       icon: <Settings2 size={12} />,
       class: "bg-blue-600 text-white",
     },
-    DONE: {
+    WAITING_PARTS: {
+      label: "รออะไหล่",
+      icon: <Clock size={12} />,
+      class: "bg-orange-500 text-white",
+    },
+    COMPLETED: {
       label: "เสร็จสิ้น",
       icon: <CheckCircle size={12} />,
       class: "bg-green-600 text-white",
     },
+    CANCELLED: {
+      label: "ยกเลิก",
+      icon: <AlertCircle size={12} />,
+      class: "bg-red-600 text-white",
+    },
   };
-  const active = config[status] || config.OPEN;
+  const active = config[status] || config.PENDING;
   return (
     <span
       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${active.class}`}
