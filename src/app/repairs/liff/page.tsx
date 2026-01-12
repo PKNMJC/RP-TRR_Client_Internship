@@ -54,7 +54,17 @@ function RepairLiffContent() {
   const fetchTickets = async () => {
     setLoading(true);
     try {
-      const data = await apiFetch("/api/repairs/user/my-tickets");
+      let data;
+      // Get lineUserId directly from params to avoid state race conditions
+      const currentLineUserId = searchParams.get("lineUserId");
+      
+      // If we have a lineUserId, use the public LIFF endpoint
+      if (currentLineUserId) {
+        data = await apiFetch(`/api/repairs/liff/my-tickets?lineUserId=${currentLineUserId}`);
+      } else {
+        // Fallback for testing or if auth token exists (legacy)
+        data = await apiFetch("/api/repairs/user/my-tickets");
+      }
       setTickets(data || []);
     } catch (error) {
       console.error("Failed to fetch tickets:", error);
