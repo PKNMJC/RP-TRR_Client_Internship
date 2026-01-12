@@ -58,6 +58,16 @@ export async function apiFetch(url: string, options?: string | FetchOptions | "G
     });
 
     if (!res.ok) {
+      if (res.status === 401) {
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('role');
+          window.location.href = '/login';
+          throw new Error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+        }
+      }
+
       try {
         const clonedRes = res.clone();
         const error = await clonedRes.json();

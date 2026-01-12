@@ -101,6 +101,12 @@ export default function ITLoansPage() {
 
   const fetchLoans = useCallback(async () => {
     try {
+      const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+      
       setLoading(true);
       // ดึงข้อมูลทั้งหมดของการยืมเหมือนแอดมิน
       const data = await apiFetch("/api/loans/admin/all");
@@ -110,7 +116,7 @@ export default function ITLoansPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     fetchLoans();

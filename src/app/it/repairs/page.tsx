@@ -72,6 +72,12 @@ export default function ITRepairsPage() {
 
   const fetchRepairs = useCallback(async (isBackground = false) => {
     try {
+      const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       if (!isBackground) setLoading(true);
       const data = await apiFetch("/api/repairs");
       setRepairs(Array.isArray(data) ? data : []);
@@ -81,7 +87,7 @@ export default function ITRepairsPage() {
     } finally {
       if (!isBackground) setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   const fetchSupportingData = async () => {
     try {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import ITSidebar from "@/components/ITSidebar";
 import { apiFetch } from "@/services/api";
 import {
@@ -36,6 +37,7 @@ interface User {
 }
 
 export default function ITUsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,6 +63,12 @@ export default function ITUsersPage() {
 
   const fetchUsers = useCallback(async () => {
     try {
+      const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       setLoading(true);
       // Fetch only USER and IT roles
       const data = await apiFetch("/users?roles=USER,IT");
@@ -70,7 +78,7 @@ export default function ITUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     fetchUsers();
