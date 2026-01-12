@@ -82,6 +82,12 @@ export default function ITDashboard() {
     };
 
     fetchData();
+
+    const interval = setInterval(() => {
+        fetchData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, [router]);
 
   if (loading) {

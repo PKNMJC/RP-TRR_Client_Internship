@@ -32,8 +32,15 @@ interface RepairTicket {
   status: "PENDING" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
   urgency: "NORMAL" | "URGENT" | "CRITICAL";
   createdAt: string;
-  assignee?: { name: string };
+  assignee?: { id: number; name: string };
   reporterName?: string;
+  updatedAt?: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  department?: string;
 }
 
 export default function ITRepairsPage() {
@@ -45,30 +52,79 @@ export default function ITRepairsPage() {
   const [selectedRepair, setSelectedRepair] = useState<RepairTicket | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [editForm, setEditForm] = useState({ title: "", priority: "NORMAL" });
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    priority: string;
+    description: string;
+    assigneeId: string;
+  }>({
+    title: "",
+    priority: "NORMAL",
+    description: "",
+    assigneeId: "",
+  });
 
-  const fetchRepairs = useCallback(async () => {
+  // New states for Assignee & Realtime
+  const [itStaff, setItStaff] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+
+  const fetchRepairs = useCallback(async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       const data = await apiFetch("/api/repairs");
       setRepairs(Array.isArray(data) ? data : []);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error("Failed to fetch repairs:", err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }, []);
 
+  const fetchSupportingData = async () => {
+    try {
+      // Fetch IT Staff
+      const staff = await apiFetch("/users/it-staff");
+      if (Array.isArray(staff)) setItStaff(staff);
+
+      // Fetch Current User
+      const profile = await apiFetch("/auth/profile");
+      if (profile) setCurrentUser(profile);
+    } catch (err) {
+      console.error("Failed to fetch supporting data:", err);
+    }
+  };
+
   useEffect(() => {
     fetchRepairs();
-  }, [fetchRepairs]);
+    fetchSupportingData();
+
+    // Polling every 10 seconds
+    const interval = setInterval(() => {
+      if (isAutoRefresh) {
+        fetchRepairs(true);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [fetchRepairs, isAutoRefresh]);
 
   const handleAcceptRepair = async (id: number) => {
+    if (!currentUser) {
+      alert("ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่");
+      return;
+    }
+
     try {
       setSubmitting(true);
       await apiFetch(`/api/repairs/${id}`, {
         method: "PUT",
-        body: JSON.stringify({ status: "IN_PROGRESS" }),
+        body: JSON.stringify({
+          status: "IN_PROGRESS",
+          assignedTo: currentUser.id, // Auto-assign to self
+        }),
       });
       fetchRepairs();
       if (selectedRepair?.id === id) {
@@ -86,6 +142,8 @@ export default function ITRepairsPage() {
       setEditForm({
         title: selectedRepair.problemTitle,
         priority: selectedRepair.urgency,
+        description: selectedRepair.problemDescription || "",
+        assigneeId: selectedRepair.assignee?.id.toString() || "",
       });
       setShowEditModal(true);
     }
@@ -103,7 +161,9 @@ export default function ITRepairsPage() {
         method: "PUT",
         body: JSON.stringify({
           problemTitle: editForm.title,
+          problemDescription: editForm.description,
           urgency: editForm.priority,
+          assignedTo: editForm.assigneeId ? parseInt(editForm.assigneeId) : null,
         }),
       });
       fetchRepairs();
@@ -144,9 +204,24 @@ export default function ITRepairsPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
               <h1 className="text-3xl font-bold text-black">แจ้งซ่อมทั้งหมด</h1>
-              <p className="text-gray-600 font-medium mt-2">
-                จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
-              </p>
+              <div className="flex items-center gap-3 mt-2">
+                <p className="text-gray-600 font-medium">
+                  จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
+                </p>
+                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                  <div className={`w-2 h-2 rounded-full ${isAutoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                  <span className="text-xs text-gray-500 font-mono">
+                    Updated: {lastUpdated.toLocaleTimeString('th-TH')}
+                  </span>
+                  <button
+                    onClick={() => fetchRepairs()}
+                    className="p-1 hover:bg-gray-200 rounded-full transition-colors ml-1"
+                    title="Refresh Now"
+                  >
+                    <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -252,9 +327,16 @@ export default function ITRepairsPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-black">
-                          {repair.assignee?.name || (
-                            <span className="text-gray-400 text-xs">
-                              ยังไม่ระบุ
+                          {repair.assignee?.name ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                                {repair.assignee.name.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="truncate max-w-[100px]">{repair.assignee.name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs italic">
+                              - ไม่ระบุ -
                             </span>
                           )}
                         </div>
@@ -455,7 +537,43 @@ export default function ITRepairsPage() {
                 >
                   <option value="LOW">ต่ำ</option>
                   <option value="MEDIUM">ปกติ</option>
-                  <option value="HIGH">สูงมาก</option>
+                  <option value="URGENT">ด่วน</option>
+                  <option value="CRITICAL">ด่วนมาก</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-black mb-2">
+                  รายละเอียดเพิ่มเติม
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm resize-none"
+                  rows={3}
+                  placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-black mb-2">
+                  ผู้รับผิดชอบ
+                </label>
+                <select
+                  value={editForm.assigneeId}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, assigneeId: e.target.value })
+                  }
+                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium text-sm"
+                >
+                  <option value="">-- ยังไม่ระบุ --</option>
+                  {itStaff.map((staff) => (
+                    <option key={staff.id} value={staff.id}>
+                      {staff.name} {staff.id === currentUser?.id ? "(คุณ)" : ""}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
