@@ -21,29 +21,50 @@ import {
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 
-// Config labels for monochrome style
+// Config labels for RepairTicketStatus
 const statusLabels = {
-  OPEN: {
+  PENDING: {
     label: "รอดำเนินการ",
     color: "border-zinc-200 text-zinc-600",
     dot: "bg-zinc-400",
+    bg: "bg-zinc-100 text-zinc-700",
+    dotColor: "bg-zinc-500",
   },
   IN_PROGRESS: {
     label: "กำลังดำเนินการ",
-    color: "border-zinc-900 text-zinc-900",
-    dot: "bg-zinc-900",
+    color: "border-amber-200 text-amber-700",
+    dot: "bg-amber-500",
+    bg: "bg-amber-50 text-amber-700",
+    dotColor: "bg-amber-500",
   },
-  DONE: {
+  WAITING_PARTS: {
+    label: "รออะไหล่",
+    color: "border-orange-200 text-orange-700",
+    dot: "bg-orange-500",
+    bg: "bg-orange-50 text-orange-700",
+    dotColor: "bg-orange-500",
+  },
+  COMPLETED: {
     label: "เสร็จสิ้น",
-    color: "border-zinc-200 text-zinc-400",
-    dot: "bg-zinc-200",
+    color: "border-green-200 text-green-700",
+    dot: "bg-green-500",
+    bg: "bg-green-50 text-green-700",
+    dotColor: "bg-green-500",
+  },
+  CANCELLED: {
+    label: "ยกเลิก",
+    color: "border-red-200 text-red-700",
+    dot: "bg-red-500",
+    bg: "bg-red-50 text-red-700",
+    dotColor: "bg-red-500",
   },
 };
 
-const priorityLabels = {
-  LOW: { label: "ต่ำ", dot: "bg-zinc-300" },
-  MEDIUM: { label: "กลาง", dot: "bg-zinc-600" },
-  HIGH: { label: "สูง", dot: "bg-black" },
+// Config labels for UrgencyLevel
+const urgencyLabels = {
+  NORMAL: { label: "ปกติ", dot: "bg-zinc-400" },
+  URGENT: { label: "ด่วน", dot: "bg-amber-500" },
+  CRITICAL: { label: "ด่วนมาก", dot: "bg-red-600" },
 };
 
 export default function AdminRepairsPage() {
@@ -63,10 +84,11 @@ export default function AdminRepairsPage() {
     const fetchRepairs = async () => {
       try {
         setLoading(true);
-        const data = await apiFetch("/api/tickets");
+        // Changed endpoint to /api/repairs
+        const data = await apiFetch("/api/repairs");
         setRepairs(data || []);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching repairs:', err);
       } finally {
         setLoading(false);
       }
@@ -80,7 +102,7 @@ export default function AdminRepairsPage() {
     }
 
     try {
-      await apiFetch(`/api/tickets/${id}`, {
+      await apiFetch(`/api/repairs/${id}`, {
         method: "DELETE",
       });
       setRepairs(repairs.filter((repair) => repair.id !== id));
@@ -94,7 +116,7 @@ export default function AdminRepairsPage() {
     let filtered = repairs.filter((item) => {
       const matchesSearch =
         item.ticketCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.title.toLowerCase().includes(searchTerm.toLowerCase());
+        (item.problemTitle && item.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesStatus =
         filterStatus === "all" || item.status === filterStatus;
       return matchesSearch && matchesStatus;
@@ -128,7 +150,7 @@ export default function AdminRepairsPage() {
             { label: "งานทั้งหมด", value: repairs.length },
             {
               label: "รอดำเนินการ",
-              value: repairs.filter((r) => r.status === "OPEN").length,
+              value: repairs.filter((r) => r.status === "PENDING").length,
             },
             {
               label: "กำลังดำเนินการ",
@@ -136,7 +158,7 @@ export default function AdminRepairsPage() {
             },
             {
               label: "เสร็จสิ้น",
-              value: repairs.filter((r) => r.status === "DONE").length,
+              value: repairs.filter((r) => r.status === "COMPLETED").length,
               icon: "✓",
             },
           ].map((stat, i) => (
@@ -169,22 +191,34 @@ export default function AdminRepairsPage() {
               color: "text-zinc-600",
             },
             {
-              key: "OPEN",
+              key: "PENDING",
               label: "รอดำเนินการ",
-              count: repairs.filter((r) => r.status === "OPEN").length,
-              color: "text-amber-600",
+              count: repairs.filter((r) => r.status === "PENDING").length,
+              color: "text-zinc-600",
             },
             {
               key: "IN_PROGRESS",
               label: "กำลังดำเนินการ",
               count: repairs.filter((r) => r.status === "IN_PROGRESS").length,
-              color: "text-blue-600",
+              color: "text-amber-600",
             },
             {
-              key: "DONE",
+              key: "WAITING_PARTS",
+              label: "รออะไหล่",
+              count: repairs.filter((r) => r.status === "WAITING_PARTS").length,
+              color: "text-orange-600",
+            },
+            {
+              key: "COMPLETED",
               label: "เสร็จสิ้น",
-              count: repairs.filter((r) => r.status === "DONE").length,
+              count: repairs.filter((r) => r.status === "COMPLETED").length,
               color: "text-green-600",
+            },
+             {
+              key: "CANCELLED",
+              label: "ยกเลิก",
+              count: repairs.filter((r) => r.status === "CANCELLED").length,
+              color: "text-red-600",
             },
           ].map((tab) => (
             <button
@@ -235,7 +269,7 @@ export default function AdminRepairsPage() {
                   สถานะ
                 </th>
                 <th className="px-6 py-4 text-xs font-bold text-zinc-600">
-                  ความสำคัญ
+                  ความเร่งด่วน
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-bold text-zinc-600">
                   การกระทำ
@@ -258,15 +292,17 @@ export default function AdminRepairsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-semibold text-zinc-900">
-                        {repair.title}
+                        {repair.problemTitle}
                       </div>
                       <div className="text-xs text-zinc-500 mt-1.5 space-y-1">
                         <div className="flex items-center gap-2">
                           <Wrench size={13} className="text-zinc-400" />
-                          <span>{repair.equipmentName}</span>
+                          <span>{repair.problemCategory}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <User size={13} className="text-zinc-400" />
+                          <span>{repair.reporterName}</span>
+                          <span className="text-zinc-300">|</span>
                           <span>{repair.assignee?.name || "ยังไม่กำหนด"}</span>
                         </div>
                       </div>
@@ -274,26 +310,18 @@ export default function AdminRepairsPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold ${
-                          repair.status === "OPEN"
-                            ? "bg-blue-50 text-blue-700"
-                            : repair.status === "IN_PROGRESS"
-                            ? "bg-amber-50 text-amber-700"
-                            : "bg-green-50 text-green-700"
+                           statusLabels[repair.status as keyof typeof statusLabels]?.bg || 'bg-zinc-50 text-zinc-700'
                         }`}
                       >
                         <span
                           className={`w-2 h-2 rounded-full ${
-                            repair.status === "OPEN"
-                              ? "bg-blue-500"
-                              : repair.status === "IN_PROGRESS"
-                              ? "bg-amber-500"
-                              : "bg-green-500"
+                             statusLabels[repair.status as keyof typeof statusLabels]?.dotColor || 'bg-zinc-500'
                           }`}
                         />
                         {
                           statusLabels[
                             repair.status as keyof typeof statusLabels
-                          ]?.label
+                          ]?.label || repair.status
                         }
                       </span>
                     </td>
@@ -301,15 +329,15 @@ export default function AdminRepairsPage() {
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-2.5 h-2.5 rounded-full ${
-                            priorityLabels[
-                              repair.priority as keyof typeof priorityLabels
+                            urgencyLabels[
+                              repair.urgency as keyof typeof urgencyLabels
                             ]?.dot
                           }`}
                         />
                         <span className="text-xs font-medium text-zinc-600">
                           {
-                            priorityLabels[
-                              repair.priority as keyof typeof priorityLabels
+                            urgencyLabels[
+                              repair.urgency as keyof typeof urgencyLabels
                             ]?.label
                           }
                         </span>

@@ -6,17 +6,20 @@ import { apiFetch } from "@/services/api";
 
 interface RepairForm {
   ticketCode: string;
-  title: string;
-  description: string;
-  equipmentName: string;
-  equipmentId: string;
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  status: "OPEN" | "IN_PROGRESS" | "DONE";
+  reporterName: string;
+  reporterDepartment: string;
+  reporterPhone: string;
+  problemCategory: string;
+  problemTitle: string;
+  problemDescription: string;
+  location: string;
+  urgency: "NORMAL" | "URGENT" | "CRITICAL";
+  status: "PENDING" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
   assigneeId: string;
-  createdDate: string;
-  requiredDate: string;
+  createdAt: string;
   notes: string;
   files: File[];
+  fileUrls: { id: number; url: string; filename: string }[];
 }
 
 export default function RepairDetailPage() {
@@ -26,17 +29,20 @@ export default function RepairDetailPage() {
 
   const [formData, setFormData] = useState<RepairForm>({
     ticketCode: "",
-    title: "",
-    description: "",
-    equipmentName: "",
-    equipmentId: "",
-    priority: "MEDIUM",
-    status: "OPEN",
+    reporterName: "",
+    reporterDepartment: "",
+    reporterPhone: "",
+    problemCategory: "HARDWARE",
+    problemTitle: "",
+    problemDescription: "",
+    location: "",
+    urgency: "NORMAL",
+    status: "PENDING",
     assigneeId: "",
-    createdDate: new Date().toISOString().split("T")[0],
-    requiredDate: "",
+    createdAt: "",
     notes: "",
     files: [],
+    fileUrls: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -50,7 +56,8 @@ export default function RepairDetailPage() {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const data = await apiFetch(`/api/tickets/${repairId}`);
+        // Changed endpoint to /api/repairs
+        const data = await apiFetch(`/api/repairs/${repairId}`);
 
         if (!data) {
           setError("ไม่พบข้อมูลใบซ่อม");
@@ -59,18 +66,24 @@ export default function RepairDetailPage() {
 
         setFormData({
           ticketCode: data.ticketCode || "",
-          title: data.title || "",
-          description: data.description || "",
-          equipmentName: data.equipmentName || "",
-          equipmentId: data.equipmentId || "",
-          priority: data.priority || "MEDIUM",
-          status: data.status || "OPEN",
-          assigneeId: data.assignee?.id || "",
-          createdDate:
-            data.createdDate || new Date().toISOString().split("T")[0],
-          requiredDate: data.requiredDate || "",
+          reporterName: data.reporterName || "",
+          reporterDepartment: data.reporterDepartment || "",
+          reporterPhone: data.reporterPhone || "",
+          problemCategory: data.problemCategory || "HARDWARE",
+          problemTitle: data.problemTitle || "",
+          problemDescription: data.problemDescription || "",
+          location: data.location || "",
+          urgency: data.urgency || "NORMAL",
+          status: data.status || "PENDING",
+          assigneeId: data.assignedTo ? String(data.assignedTo) : "",
+          createdAt: data.createdAt || "",
           notes: data.notes || "",
           files: [],
+          fileUrls: data.attachments?.map((f: any) => ({
+             id: f.id,
+             url: f.fileUrl,
+             filename: f.filename
+          })) || [],
         });
       } catch (e: any) {
         setError(e.message || "โหลดข้อมูลไม่สำเร็จ");
@@ -105,30 +118,32 @@ export default function RepairDetailPage() {
     setError("");
     setSuccess("");
 
-    if (!formData.title || !formData.equipmentName) {
-      setError("กรุณากรอกข้อมูลที่จำเป็น");
-      return;
-    }
-
-    if (formData.requiredDate && formData.requiredDate < formData.createdDate) {
-      setError("วันที่ต้องการแล้วเสร็จ ต้องไม่น้อยกว่าวันที่สร้าง");
-      return;
-    }
-
     try {
       setLoading(true);
 
       const payload = {
-        ...formData,
-        files: undefined, // ส่งไฟล์แยก ถ้า backend รองรับ multipart
+        status: formData.status,
+        urgency: formData.urgency,
+        notes: formData.notes,
+        assignee: formData.assigneeId ? { id: formData.assigneeId } : null,
+        // Other fields might be read-only logically, but sending them if updated
+        problemCategory: formData.problemCategory,
+        problemTitle: formData.problemTitle,
+        problemDescription: formData.problemDescription,
+        location: formData.location,
       };
 
       if (repairId && repairId !== "new") {
-        await apiFetch(`/api/tickets/${repairId}`, "PUT", payload);
+        await apiFetch(`/api/repairs/${repairId}`, {
+           method: "PUT",
+           body: payload
+        });
         setSuccess("บันทึกการแก้ไขเรียบร้อย");
       } else {
-        await apiFetch("/api/tickets", "POST", payload);
-        setSuccess("สร้างใบซ่อมเรียบร้อย");
+        // Create not supported here yet or follows different flow
+        // For now focusing on update
+        setError("การสร้างใบซ่อมใหม่ผ่าน Admin ยังไม่รองรับในขณะนี้");
+        return;
       }
 
       setTimeout(() => router.push("/admin/repairs"), 1200);
@@ -140,7 +155,7 @@ export default function RepairDetailPage() {
   };
 
   /* ---------------- Loading ---------------- */
-  if (loading && repairId !== "new") {
+  if (loading && !formData.ticketCode) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-600">
         กำลังโหลดข้อมูล...
@@ -151,7 +166,7 @@ export default function RepairDetailPage() {
   /* ---------------- UI ---------------- */
   return (
     <div className="min-h-screen bg-white pt-20 pb-12">
-      <div className="max-w-full mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Alerts */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded">{error}</div>
@@ -165,138 +180,161 @@ export default function RepairDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* ซ้าย */}
           <div className="space-y-6">
-            {/* ข้อมูลใบงาน */}
-            <Section title="ข้อมูลซ่อมแซม">
+            {/* ข้อมูลผู้แจ้ง */}
+            <Section title="ข้อมูลผู้แจ้ง">
               <Input
                 label="เลขใบงาน"
-                name="ticketCode"
                 value={formData.ticketCode}
-                onChange={handleChange}
-                readOnly={repairId !== "new"}
+                readOnly
+                className="bg-gray-50"
               />
               <Input
-                label="ชื่อปัญหา"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
+                label="ชื่อผู้แจ้ง"
+                value={formData.reporterName}
+                readOnly
+                 className="bg-gray-50"
               />
-              <Textarea
-                label="รายละเอียดปัญหา"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                    label="แผนก"
+                    value={formData.reporterDepartment}
+                    readOnly
+                     className="bg-gray-50"
+                />
+                <Input
+                    label="เบอร์โทร"
+                    value={formData.reporterPhone}
+                    readOnly
+                     className="bg-gray-50"
+                />
+              </div>
             </Section>
 
-            {/* ข้อมูลอุปกรณ์ */}
-            <Section title="ข้อมูลอุปกรณ์">
+            {/* ข้อมูลปัญหา */}
+            <Section title="รายละเอียดปัญหา">
+               <Select
+                label="หมวดหมู่ปัญหา"
+                name="problemCategory"
+                value={formData.problemCategory}
+                onChange={handleChange}
+              >
+                <option value="HARDWARE">Hardware</option>
+                <option value="SOFTWARE">Software</option>
+                <option value="NETWORK">Network</option>
+                <option value="PERIPHERAL">Peripheral</option>
+                <option value="EMAIL_OFFICE365">Email/Office 365</option>
+                <option value="ACCOUNT_PASSWORD">Account/Password</option>
+                <option value="OTHER">อื่นๆ</option>
+              </Select>
               <Input
-                label="ชื่ออุปกรณ์"
-                name="equipmentName"
-                value={formData.equipmentName}
+                label="หัวข้อปัญหา"
+                name="problemTitle"
+                value={formData.problemTitle}
                 onChange={handleChange}
                 required
               />
-              <Input
-                label="ประเภทอุปกรณ์"
-                name="equipmentId"
-                value={formData.equipmentId}
-                onChange={handleChange}
-              />
-              <Input label="หมายเลขชุด" disabled value="บันทึก" />
-              <Select
-                label="ความสำคัญ"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-              >
-                <option value="LOW">ต่ำ</option>
-                <option value="MEDIUM">กลาง</option>
-                <option value="HIGH">สูง</option>
-              </Select>
               <Textarea
-                label="ปัญหาประเมิน"
-                name="notes"
-                value={formData.notes}
+                label="รายละเอียด"
+                name="problemDescription"
+                value={formData.problemDescription}
                 onChange={handleChange}
               />
               <Input
-                label="ไฟล์แนบ"
-                type="file"
-                multiple
-                onChange={handleFileChange}
+                label="สถานที่"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
               />
+               {formData.fileUrls.length > 0 && (
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">รูปภาพแนบ</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {formData.fileUrls.map((file) => (
+                      <a key={file.id} href={file.url} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 rounded border overflow-hidden hover:opacity-80">
+                         <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Section>
           </div>
 
           {/* ขวา */}
           <div className="space-y-6">
-            {/* ผู้รับผิดชอบ */}
-            <Section title="ผู้รับผิดชอบ">
-              <Input label="เลขที่ผู้รับผิดชอบ" placeholder="ค้นหา" />
+            {/* การจัดการ */}
+            <Section title="การจัดการงานซ่อม">
               <Select
-                label="ผู้รับผิดชอบ"
-                name="assigneeId"
-                value={formData.assigneeId}
+                label="ความเร่งด่วน"
+                name="urgency"
+                value={formData.urgency}
                 onChange={handleChange}
               >
-                <option value="">--ยังไม่ได้กำหนด--</option>
-                <option value="1">ช่างไอที 1</option>
-                <option value="2">ช่างไอที 2</option>
+                <option value="NORMAL">ปกติ</option>
+                <option value="URGENT">ด่วน</option>
+                <option value="CRITICAL">ด่วนมาก</option>
               </Select>
-            </Section>
 
-            {/* ผลการทำงาน */}
-            <Section title="✓ ผลการทำงาน">
-              <Input
-                label="วันที่เจอ"
-                type="date"
-                name="createdDate"
-                value={formData.createdDate}
-                onChange={handleChange}
-              />
-          
-              <Textarea
-                label="รายละเอียดการซ่อม"
-                placeholder="บรรยายเพิ่มเติม"
-              />
-              <Input label="ไฟล์แนบ" type="file" multiple />
-            </Section>
-
-         
-
-            {/* สถานะ */}
-            <Section title="สถานะ">
               <Select
                 label="สถานะ"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
               >
-                <option value="OPEN">รอดำเนินการ</option>
+                <option value="PENDING">รอดำเนินการ</option>
                 <option value="IN_PROGRESS">กำลังดำเนินการ</option>
-                <option value="DONE">เสร็จสิ้น</option>
+                <option value="WAITING_PARTS">รออะไหล่</option>
+                <option value="COMPLETED">เสร็จสิ้น</option>
+                <option value="CANCELLED">ยกเลิก</option>
               </Select>
+
+               <Select
+                label="ผู้รับผิดชอบ"
+                name="assigneeId"
+                value={formData.assigneeId}
+                onChange={handleChange}
+              >
+                <option value="">--ยังไม่ได้กำหนด--</option>
+                {/* TODO: Fetch real users list */}
+                <option value="1">Admin</option>
+              </Select>
+            </Section>
+
+            {/* บันทึกเพิ่มเติม */}
+            <Section title="บันทึกการซ่อม">
+              <Input
+                label="วันที่แจ้ง"
+                value={formData.createdAt ? new Date(formData.createdAt).toLocaleString('th-TH') : ''}
+                readOnly
+                className="bg-gray-50"
+              />
+              <Textarea
+                label="หมายเหตุ / การแก้ไข"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                placeholder="บันทึกรายละเอียดการซ่อม..."
+                rows={6}
+              />
             </Section>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="mt-8 flex justify-end gap-3">
+        <div className="mt-8 flex justify-end gap-3 pb-10">
           <button
             type="button"
             onClick={() => router.back()}
             className="px-6 py-2 border border-gray-300 rounded text-gray-900 font-semibold hover:bg-gray-50"
           >
-            ยกเลิก
+            ย้อนกลับ
           </button>
           <button
             disabled={loading}
             onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-500 text-white rounded font-semibold hover:bg-blue-600 disabled:opacity-50"
+            className="px-6 py-2 bg-slate-900 text-white rounded font-semibold hover:bg-slate-800 disabled:opacity-50 shadow-lg"
           >
-            {loading ? "กำลังบันทึก..." : "บันทึก"}
+            {loading ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
           </button>
         </div>
       </div>
@@ -315,7 +353,7 @@ function Section({
 }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-      <h2 className="bg-gray-700 text-white px-6 py-3 font-semibold text-sm">
+      <h2 className="bg-gray-50 border-b border-gray-100 text-gray-800 px-6 py-3 font-bold text-sm uppercase tracking-wide">
         {title}
       </h2>
       <div className="p-5 space-y-4">{children}</div>
@@ -326,12 +364,12 @@ function Section({
 function Input(props: any) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-900 mb-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
         {props.label}
       </label>
       <input
         {...props}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+        className={`w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all ${props.className || ''}`}
       />
     </div>
   );
@@ -340,13 +378,12 @@ function Input(props: any) {
 function Textarea(props: any) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-900 mb-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
         {props.label}
       </label>
       <textarea
         {...props}
-        rows={4}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
       />
     </div>
   );
@@ -355,15 +392,20 @@ function Textarea(props: any) {
 function Select(props: any) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-900 mb-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
         {props.label}
       </label>
+      <div className="relative">
       <select
         {...props}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent appearance-none bg-white transition-all"
       >
         {props.children}
       </select>
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      </div>
     </div>
   );
 }

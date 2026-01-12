@@ -270,28 +270,30 @@ export default function AdminDashboard() {
         <div className="space-y-4">
           {recentActivities.length > 0 ? (
             recentActivities.map((activity) => {
-              const isCompleted = activity.status === "DONE";
-              const isInProgress = activity.status === "IN_PROGRESS";
-              const statusLabel = isCompleted
-                ? "สำเร็จ"
-                : isInProgress
-                ? "กำลังดำเนินการ"
-                : "รอการอนุมัติ";
-              const statusColor = isCompleted
-                ? "bg-green-100 text-green-700"
-                : isInProgress
-                ? "bg-orange-100 text-orange-700"
-                : "bg-yellow-100 text-yellow-700";
-              const iconColor = isCompleted
-                ? "text-green-600"
-                : isInProgress
-                ? "text-orange-600"
-                : "text-yellow-600";
-              const bgColor = isCompleted
-                ? "bg-green-100"
-                : isInProgress
-                ? "bg-orange-100"
-                : "bg-yellow-100";
+              const isCompleted = activity.status === "COMPLETED";
+              const isInProgress = activity.status === "IN_PROGRESS" || activity.status === "WAITING_PARTS";
+              
+              let statusLabel = "รอการอนุมัติ";
+              let statusColor = "bg-yellow-100 text-yellow-700";
+              let iconColor = "text-yellow-600";
+              let bgColor = "bg-yellow-100";
+
+              if (isCompleted) {
+                statusLabel = "สำเร็จ";
+                statusColor = "bg-green-100 text-green-700";
+                iconColor = "text-green-600";
+                bgColor = "bg-green-100";
+              } else if (isInProgress) {
+                statusLabel = activity.status === "WAITING_PARTS" ? "รออะไหล่" : "กำลังดำเนินการ";
+                statusColor = "bg-orange-100 text-orange-700";
+                iconColor = "text-orange-600";
+                bgColor = "bg-orange-100";
+              } else if (activity.status === "CANCELLED") {
+                statusLabel = "ยกเลิก";
+                statusColor = "bg-red-100 text-red-700";
+                iconColor = "text-red-600";
+                bgColor = "bg-red-100";
+              }
 
               return (
                 <div

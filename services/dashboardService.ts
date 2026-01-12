@@ -26,15 +26,22 @@ export interface RecentActivity {
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
     console.log('Fetching tickets, users, and loans...');
+    
+    // Fetch concurrently but handle individual failures for non-critical stats
     const [ticketsResponse, usersResponse, loansResponse] = await Promise.all([
-      apiFetch('/api/tickets'),
-      apiFetch('/users'),
-      apiFetch('/api/loans'),
+      apiFetch('/api/repairs').catch(err => {
+        console.error('Failed to fetch repairs:', err);
+        return [];
+      }),
+      apiFetch('/users').catch(err => {
+        console.error('Failed to fetch users (possibly 403):', err);
+        return [];
+      }),
+      apiFetch('/api/loans').catch(err => {
+        console.error('Failed to fetch loans:', err);
+        return [];
+      }),
     ]);
-
-    console.log('Tickets response:', ticketsResponse);
-    console.log('Users response:', usersResponse);
-    console.log('Loans response:', loansResponse);
 
     // Extract tickets array - could be direct array or wrapped in object
     let tickets = [];
@@ -50,6 +57,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       users = usersResponse;
     } else if (usersResponse && Array.isArray(usersResponse.data)) {
       users = usersResponse.data;
+    } else if (usersResponse && Array.isArray(usersResponse.users)) {
+       // Users controller might return { users: [], meta: ... }
+       users = usersResponse.users;
     }
 
     // Extract loans array - could be direct array or wrapped in object
@@ -60,14 +70,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       loans = loansResponse.data;
     }
 
-    console.log('Total tickets:', tickets.length);
-    console.log('Total users:', users.length);
-    console.log('Total loans:', loans.length);
-
     const totalRepairs = tickets.length;
-    const pendingRepairs = tickets.filter((t: any) => t.status === 'OPEN').length;
-    const inProgressRepairs = tickets.filter((t: any) => t.status === 'IN_PROGRESS').length;
-    const completedRepairs = tickets.filter((t: any) => t.status === 'DONE').length;
+    // Update status filtering for RepairTicketStatus
+    const pendingRepairs = tickets.filter((t: any) => t.status === 'PENDING').length;
+    // Include WAITING_PARTS in inProgress if desired, or separate
+    const inProgressRepairs = tickets.filter((t: any) => ['IN_PROGRESS', 'WAITING_PARTS'].includes(t.status)).length;
+    const completedRepairs = tickets.filter((t: any) => t.status === 'COMPLETED').length;
     const totalUsers = users.length;
     const totalLoans = loans.length;
     const completionRate = totalRepairs > 0 
@@ -84,7 +92,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       completionRate,
     };
 
-    console.log('Dashboard stats calculated:', result);
     return result;
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -94,9 +101,9 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function getMonthlyRepairData(): Promise<ChartData[]> {
   try {
-    const ticketsResponse = await apiFetch('/api/tickets');
+    // Use /api/repairs instead of /api/tickets
+    const ticketsResponse = await apiFetch('/api/repairs').catch(() => []);
     
-    // Extract tickets array - could be direct array or wrapped in object
     let ticketArray = [];
     if (Array.isArray(ticketsResponse)) {
       ticketArray = ticketsResponse;
@@ -125,7 +132,9 @@ export async function getMonthlyRepairData(): Promise<ChartData[]> {
         const createdDate = new Date(ticket.createdAt);
         const monthIndex = createdDate.getMonth();
         const monthName = thaiMonths[monthIndex];
-        monthData[monthName] = (monthData[monthName] || 0) + 1;
+        if (monthData[monthName] !== undefined) {
+             monthData[monthName] = (monthData[monthName] || 0) + 1;
+        }
       }
     });
 
@@ -141,9 +150,9 @@ export async function getMonthlyRepairData(): Promise<ChartData[]> {
 
 export async function getRecentActivities(limit: number = 5): Promise<RecentActivity[]> {
   try {
-    const ticketsResponse = await apiFetch('/api/tickets');
+     // Use /api/repairs instead of /api/tickets
+    const ticketsResponse = await apiFetch('/api/repairs').catch(() => []);
     
-    // Extract tickets array - could be direct array or wrapped in object
     let ticketArray = [];
     if (Array.isArray(ticketsResponse)) {
       ticketArray = ticketsResponse;
@@ -162,7 +171,7 @@ export async function getRecentActivities(limit: number = 5): Promise<RecentActi
       .map((ticket: any) => ({
         id: ticket.id,
         ticketCode: ticket.ticketCode,
-        title: ticket.title,
+        title: ticket.problemTitle || ticket.title || '-', // Map problemTitle
         status: ticket.status,
         createdAt: ticket.createdAt,
       }));
