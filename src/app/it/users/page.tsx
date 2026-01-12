@@ -633,7 +633,16 @@ function UserModal({ title, children, onClose, onSubmit, submitting }: any) {
   );
 }
 
-function FormInput({ label, type = "text", required, value, onChange, placeholder }: any) {
+interface FormInputProps {
+  label: string;
+  type?: string;
+  required?: boolean;
+  value: string | number | undefined;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
+
+function FormInput({ label, type = "text", required, value, onChange, placeholder }: FormInputProps) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-2">
