@@ -63,13 +63,13 @@ export default function ITDashboard() {
 
         // Fetch repairs data
         try {
-          const repairsData = await apiFetch('/api/tickets');
+          const repairsData = await apiFetch('/api/repairs');
           const repairs = Array.isArray(repairsData) ? repairsData : [];
           setStats((prev) => ({
             ...prev,
             totalRepairs: repairs.length,
-            pendingRepairs: repairs.filter((r) => r.status === 'OPEN').length,
-            completedRepairs: repairs.filter((r) => r.status === 'DONE').length,
+            pendingRepairs: repairs.filter((r) => r.status === 'PENDING').length,
+            completedRepairs: repairs.filter((r) => r.status === 'COMPLETED').length,
           }));
         } catch (err) {
           console.error('Failed to fetch repairs:', err);
