@@ -19,11 +19,37 @@ function RepairLiffContent() {
     const id = searchParams.get("lineUserId") || "";
     setLineUserId(id);
 
-    // โหลดข้อมูลเมื่อ action เป็น status
+
+    // โหลดข้อมูลเมื่อ action เป็น status หรือ history
     if (action === "status") {
       fetchTickets();
+    } else if (action === "history") {
+      const ticketId = searchParams.get("id");
+      if (ticketId) {
+        fetchTicketDetail(ticketId);
+      }
     }
   }, [action, searchParams]);
+
+  const [ticketDetail, setTicketDetail] = useState<any>(null);
+
+  const fetchTicketDetail = async (code: string) => {
+    setLoading(true);
+    const lineId = searchParams.get("lineUserId");
+    if (!lineId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await apiFetch(`/api/repairs/liff/ticket/${code}?lineUserId=${lineId}`);
+      setTicketDetail(data);
+    } catch (error) {
+      console.error("Failed to fetch ticket detail:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -292,6 +318,151 @@ function RepairLiffContent() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+
+  // Action: History (Detail View)
+  if (action === "history") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {loading ? (
+             <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="text-gray-600 mt-4">กำลังโหลดข้อมูล...</p>
+              </div>
+          ) : !ticketDetail ? (
+            <div className="bg-white rounded-xl shadow-lg p-6 text-center">
+              <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-gray-800 mb-2">ไม่พบข้อมูล</h3>
+              <p className="text-gray-600 mb-4">ไม่พบรายการแจ้งซ่อมที่คุณระบุ หรือคุณไม่มีสิทธิ์เข้าถึง</p>
+              <button
+                onClick={() => router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`)}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition"
+              >
+                กลับไปหน้าตรวจสอบสถานะ
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {ticketDetail.ticketCode}
+                    </span>
+                    <h1 className="text-xl font-bold text-gray-800 mt-2">
+                      {ticketDetail.problemTitle}
+                    </h1>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      ticketDetail.status === "COMPLETED"
+                        ? "bg-green-100 text-green-800"
+                        : ticketDetail.status === "IN_PROGRESS"
+                        ? "bg-blue-100 text-blue-800"
+                        : ticketDetail.status === "PENDING"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : ticketDetail.status === "CANCELLED"
+                        ? "bg-gray-100 text-gray-800"
+                        : "bg-orange-100 text-orange-800"
+                    }`}
+                  >
+                   {ticketDetail.status === 'PENDING' ? 'รอดำเนินการ' :
+                    ticketDetail.status === 'IN_PROGRESS' ? 'กำลังดำเนินการ' :
+                    ticketDetail.status === 'WAITING_PARTS' ? 'รออะไหล่' :
+                    ticketDetail.status === 'COMPLETED' ? 'เสร็จสิ้น' :
+                    ticketDetail.status === 'CANCELLED' ? 'ยกเลิก' : ticketDetail.status}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm mt-4 pt-4 border-t border-gray-100">
+                  <div>
+                    <p className="text-gray-500 text-xs">ความเร่งด่วน</p>
+                    <p className={`font-medium ${
+                      ticketDetail.urgency === 'CRITICAL' ? 'text-red-600' :
+                      ticketDetail.urgency === 'URGENT' ? 'text-orange-600' : 'text-green-600'
+                    }`}>
+                      {ticketDetail.urgency === 'CRITICAL' ? 'ด่วนที่สุด' :
+                       ticketDetail.urgency === 'URGENT' ? 'ด่วน' : 'ทั่วไป'}
+                    </p>
+                  </div>
+                  <div>
+                     <p className="text-gray-500 text-xs">วันที่แจ้ง</p>
+                     <p className="text-gray-800 font-medium">
+                       {new Date(ticketDetail.createdAt).toLocaleDateString('th-TH', {
+                         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                       })}
+                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                   <p className="text-gray-500 text-xs mb-1">รายละเอียดปัญหา</p>
+                   <p className="text-gray-700 whitespace-pre-wrap">{ticketDetail.problemDescription}</p>
+                </div>
+              </div>
+
+               {/* Timeline / History */}
+               <div className="bg-white rounded-xl shadow-lg p-6">
+                 <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                   <Clock className="w-5 h-5 text-blue-600" />
+                   ประวัติการดำเนินการ
+                 </h2>
+                 
+                 {ticketDetail.logs && ticketDetail.logs.length > 0 ? (
+                   <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
+                      {ticketDetail.logs.map((log: any, idx: number) => (
+                        <div key={idx} className="relative flex items-start group is-active">
+                          <div className={`absolute left-0 mt-1 rounded-full border-2 border-white w-5 h-5 flex items-center justify-center z-10 ${
+                             log.status === 'COMPLETED' ? 'bg-green-500' : 
+                             log.status === 'IN_PROGRESS' ? 'bg-blue-500' : 
+                             log.status === 'WAITING_PARTS' ? 'bg-orange-500' : 'bg-gray-400'
+                          }`}></div>
+                          <div className="ml-8 w-full">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-1">
+                               <span className="font-medium text-gray-900">
+                                 {log.status === 'PENDING' ? 'แจ้งซ่อม' :
+                                  log.status === 'IN_PROGRESS' ? 'เริ่มดำเนินการ' :
+                                  log.status === 'WAITING_PARTS' ? 'รออะไหล่' :
+                                  log.status === 'COMPLETED' ? 'ดำเนินการเสร็จสิ้น' :
+                                  log.status === 'CANCELLED' ? 'ยกเลิกรายการ' : log.action}
+                               </span>
+                               <span className="text-xs text-gray-500 font-mono">
+                                 {new Date(log.createdAt).toLocaleDateString('th-TH', { 
+                                   day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit'
+                                 })}
+                               </span>
+                            </div>
+                            {log.comment && (
+                               <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded mt-1 border border-gray-100">
+                                 "{log.comment}"
+                               </p>
+                            )}
+                            <p className="text-xs text-gray-400 mt-1">
+                              โดย: {log.user?.name || 'System'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                   </div>
+                 ) : (
+                   <p className="text-gray-500 text-center py-4">ยังไม่มีประวัติการดำเนินการ</p>
+                 )}
+               </div>
+
+               <button
+                  onClick={() => router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`)}
+                  className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition shadow-sm"
+                >
+                  กลับหน้ารายการของฉัน
+               </button>
+            </div>
+          )}
         </div>
       </div>
     );
