@@ -73,7 +73,7 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-zinc-200 z-50 px-6 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-zinc-200 z-[50] px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-zinc-900 tracking-tight">
             TRR-RP

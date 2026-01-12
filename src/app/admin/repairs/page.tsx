@@ -141,12 +141,12 @@ export default function AdminRepairsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-zinc-50 pt-20 pb-12">
-      <div className="max-w-[1400px] mx-auto px-6">
+    <div className="min-h-screen bg-zinc-50 pt-6 pb-12">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900">งานซ่อมแซม</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">งานซ่อมแซม</h1>
             <p className="text-sm text-zinc-500 mt-2">
               จัดการและติดตามสถานะงานซ่อมบำรุงทั้งหมดในระบบ
             </p>
@@ -154,7 +154,7 @@ export default function AdminRepairsPage() {
         </div>
 
         {/* Mini Stats (Clean) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-8">
           {[
             { label: "งานทั้งหมด", value: repairs.length },
             {
@@ -191,7 +191,7 @@ export default function AdminRepairsPage() {
         </div>
 
         {/* Status Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-zinc-200">
+        <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-zinc-200 overflow-x-auto">
           {[
             {
               key: "all",
@@ -233,7 +233,7 @@ export default function AdminRepairsPage() {
             <button
               key={tab.key}
               onClick={() => setFilterStatus(tab.key)}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
                 filterStatus === tab.key
                   ? `${tab.color} bg-opacity-10 border-b-2 border-current`
                   : "text-zinc-500 hover:text-zinc-600"
@@ -263,8 +263,8 @@ export default function AdminRepairsPage() {
           </div>
         </div>
 
-        {/* Table Container */}
-        <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+        {/* Desktop Table View */}
+        <div className="hidden md:block bg-white border border-zinc-200 rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-100/50">
@@ -387,6 +387,106 @@ export default function AdminRepairsPage() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+          {filteredRepairs
+            .slice(
+              (currentPage - 1) * itemsPerPage,
+              currentPage * itemsPerPage
+            )
+            .map((repair) => (
+              <div
+                key={repair.id}
+                className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-xs font-bold text-zinc-500">
+                    #{repair.ticketCode}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                         statusLabels[repair.status as keyof typeof statusLabels]?.bg || 'bg-zinc-50 text-zinc-700'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                           statusLabels[repair.status as keyof typeof statusLabels]?.dotColor || 'bg-zinc-500'
+                        }`}
+                      />
+                      {
+                        statusLabels[
+                          repair.status as keyof typeof statusLabels
+                        ]?.label || repair.status
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <h3 className="text-sm font-semibold text-zinc-900 mb-1">
+                    {repair.problemTitle}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
+                    <div className="flex items-center gap-1.5">
+                      <Wrench size={12} className="text-zinc-400" />
+                      <span>{repair.problemCategory}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <User size={12} className="text-zinc-400" />
+                      <span>{repair.reporterName}</span>
+                    </div>
+                  </div>
+                </div>
+
+                 <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          urgencyLabels[
+                            repair.urgency as keyof typeof urgencyLabels
+                          ]?.dot
+                        }`}
+                      />
+                      <span className="text-xs font-medium text-zinc-600">
+                        {
+                          urgencyLabels[
+                            repair.urgency as keyof typeof urgencyLabels
+                          ]?.label
+                        }
+                      </span>
+                    </div>
+                   
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          router.push(`/admin/repairs/${repair.id}`)
+                        }
+                        className="p-2 text-zinc-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      >
+                         <ChevronRight size={18} />
+                      </button>
+                         <button
+                          onClick={() =>
+                            handleDelete(repair.id, repair.ticketCode)
+                          }
+                          className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                    </div>
+                 </div>
+              </div>
+            ))}
+             {filteredRepairs.length === 0 && (
+              <div className="py-12 text-center bg-white rounded-lg border border-zinc-200">
+                <p className="text-zinc-400 text-sm">
+                  ไม่พบรายการที่ตรงกับการค้นหา
+                </p>
+              </div>
+            )}
         </div>
 
         {/* Pagination */}
