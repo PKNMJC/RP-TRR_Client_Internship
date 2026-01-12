@@ -302,12 +302,12 @@ export default function AdminLoansPage() {
     );
 
   return (
-    <div className="min-h-screen bg-zinc-50 pt-20 pb-12">
-      <div className="max-w-[1400px] mx-auto px-6">
+    <div className="min-h-screen bg-zinc-50 pt-6 pb-12">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-6">
         {/* Header */}
-        <div className="flex justify-between items-start mb-8">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900">
+            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">
               ระบบยืมของ (IT)
             </h1>
             <p className="text-sm text-zinc-500 mt-2">
@@ -316,7 +316,7 @@ export default function AdminLoansPage() {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all"
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all w-full md:w-auto"
           >
             <Plus size={20} />
             เพิ่มการยืมใหม่
@@ -324,7 +324,7 @@ export default function AdminLoansPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
           <StatCard label="ทั้งหมด" count={loanStats.total} icon="📊" />
           <StatCard label="กำลังยืม" count={loanStats.active} icon="📦" />
           <StatCard label="คืนแล้ว" count={loanStats.returned} icon="✓" />
@@ -332,7 +332,7 @@ export default function AdminLoansPage() {
         </div>
 
         {/* Search & Filter */}
-        <div className="mb-6 flex gap-3">
+        <div className="mb-6 flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
@@ -346,27 +346,29 @@ export default function AdminLoansPage() {
               className="w-full pl-12 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 transition-all text-sm"
             />
           </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 cursor-pointer transition-all"
-          >
-            <option value="all">ทุกสถานะ</option>
-            <option value="BORROWED">กำลังยืม</option>
-            <option value="RETURNED">คืนแล้ว</option>
-            <option value="OVERDUE">เกินกำหนด</option>
-            <option value="LOST">หายไป</option>
-          </select>
-          <button
-            onClick={fetchLoans}
-            className="p-2.5 text-zinc-600 hover:text-zinc-900 hover:bg-white rounded-lg transition-all border border-zinc-200"
-          >
-            <RefreshCw size={18} strokeWidth={1.5} />
-          </button>
+          <div className="flex gap-2">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="flex-1 px-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 cursor-pointer transition-all"
+            >
+              <option value="all">ทุกสถานะ</option>
+              <option value="BORROWED">กำลังยืม</option>
+              <option value="RETURNED">คืนแล้ว</option>
+              <option value="OVERDUE">เกินกำหนด</option>
+              <option value="LOST">หายไป</option>
+            </select>
+            <button
+              onClick={fetchLoans}
+              className="p-2.5 text-zinc-600 hover:text-zinc-900 hover:bg-white rounded-lg transition-all border border-zinc-200"
+            >
+              <RefreshCw size={18} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+        {/* Desktop Table View */}
+        <div className="hidden md:block bg-white border border-zinc-200 rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-100/50">
@@ -491,6 +493,94 @@ export default function AdminLoansPage() {
           {filteredLoans.length === 0 && (
             <div className="p-12 text-center">
               <Package className="mx-auto mb-4 text-zinc-300" size={48} />
+              <p className="text-zinc-500 text-sm">ไม่พบรายการยืมของ</p>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+          {filteredLoans.map((loan) => (
+            <div
+              key={loan.id}
+              className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-zinc-900">{loan.itemName}</h3>
+                  <p className="text-xs text-zinc-500 mt-1 line-clamp-2">
+                    {loan.description}
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ml-2 ${
+                    getStatusLabel(loan.status).color
+                  }`}
+                >
+                  {getStatusIcon(loan.status)}
+                  {getStatusLabel(loan.status).label}
+                </span>
+              </div>
+
+              <div className="border-t border-zinc-100 pt-3 mt-3 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">ผู้ยืม:</span>
+                  <div className="text-right">
+                    <span className="font-medium text-zinc-900 block">
+                      {loan.borrowerName || loan.borrowedBy.name}
+                    </span>
+                    {loan.borrowerDepartment && (
+                      <span className="text-zinc-400 block">
+                        {loan.borrowerDepartment}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-between text-xs">
+                  <span className="text-zinc-500">กำหนดคืน:</span>
+                  <span className="font-medium text-zinc-900">
+                    {new Date(loan.expectedReturnDate).toLocaleDateString("th-TH")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-zinc-100">
+                <button
+                  onClick={() => {
+                    setSelectedLoan(loan);
+                    setShowDetailModal(true);
+                  }}
+                  className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                >
+                  <Eye size={18} />
+                </button>
+                <button
+                  onClick={() => handleOpenEditModal(loan)}
+                  className="p-2 text-zinc-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors border border-transparent hover:border-amber-100"
+                >
+                  <Package size={18} />
+                </button>
+                {loan.status === "BORROWED" && (
+                  <button
+                    onClick={() => handleReturnItem(loan.id)}
+                    className="p-2 text-zinc-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-100"
+                  >
+                    <Check size={18} />
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDelete(loan.id)}
+                  className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+           {filteredLoans.length === 0 && (
+            <div className="p-8 text-center bg-white rounded-lg border border-zinc-200">
+              <Package className="mx-auto mb-3 text-zinc-300" size={32} />
               <p className="text-zinc-500 text-sm">ไม่พบรายการยืมของ</p>
             </div>
           )}
