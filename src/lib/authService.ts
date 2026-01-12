@@ -31,7 +31,7 @@ export class AuthService {
       });
 
       if (response.access_token) {
-        localStorage.setItem('token', response.access_token);
+        localStorage.setItem('access_token', response.access_token);
         localStorage.setItem('userId', response.userId?.toString() || '');
         // ✅ ตรวจสอบ role จาก response ก่อน ไม่ใช่ใช้ default 'USER'
         const role = (response.role || 'USER').toUpperCase();
@@ -73,19 +73,19 @@ export class AuthService {
   }
 
   static logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
     localStorage.removeItem('userId');
     localStorage.removeItem('role');
   }
 
   static isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('access_token');
   }
 
   static getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
+    return localStorage.getItem('access_token');
   }
 
   static getRole(): string {
