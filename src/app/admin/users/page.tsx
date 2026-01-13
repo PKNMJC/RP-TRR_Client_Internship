@@ -256,8 +256,97 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        {/* Users Table */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Users List - Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {isLoading ? (
+            [...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-slate-100 rounded-2xl"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-32 bg-slate-100 rounded"></div>
+                    <div className="h-3 w-48 bg-slate-100 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : filteredUsers.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <UserIcon className="text-slate-300" size={32} />
+              </div>
+              <h3 className="text-slate-900 font-medium">ไม่พบข้อมูลผู้ใช้งาน</h3>
+              <p className="text-slate-500 text-sm mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+            </div>
+          ) : (
+            filteredUsers.map((user) => (
+              <div 
+                key={user.id} 
+                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+              >
+                <div className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm
+                      ${user.role === 'ADMIN' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600' : 
+                        user.role === 'IT' ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600' : 
+                        'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600'}`}>
+                      {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900">{user.displayName || user.name}</span>
+                        {getRoleBadge(user.role)}
+                      </div>
+                      {user.department && (
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-slate-100 text-xs font-medium text-slate-500 border border-slate-200">
+                          {user.department}
+                        </span>
+                      )}
+                      <div className="mt-2 space-y-1 text-xs text-slate-500">
+                        <div className="flex items-center gap-1.5">
+                          <Mail size={12} className="text-slate-400 shrink-0" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
+                        {user.phoneNumber && (
+                          <div className="flex items-center gap-1.5">
+                            <Phone size={12} className="text-slate-400 shrink-0" />
+                            <span>{user.phoneNumber}</span>
+                          </div>
+                        )}
+                        {user.displayName && user.name !== user.displayName && (
+                          <div className="text-slate-400">ชื่อระบบ: {user.name}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex border-t border-slate-100 divide-x divide-slate-100">
+                  <button
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setIsViewOnly(false);
+                      setIsModalOpen(true);
+                    }}
+                    className="flex-1 py-3 text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Edit2 size={16} />
+                    แก้ไข
+                  </button>
+                  <button
+                    onClick={() => setDeleteUser(user)}
+                    className="flex-1 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    ลบ
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Users Table - Desktop View */}
+        <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -362,52 +451,82 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* Pagination */}
-          <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white text-sm">
-            <div className="text-slate-500">
-              แสดง <span className="font-medium text-slate-900">{(currentPage - 1) * LIMIT + 1}</span> ถึง <span className="font-medium text-slate-900">{Math.min(currentPage * LIMIT, totalUsers)}</span> จาก <span className="font-medium text-slate-900">{totalUsers}</span> รายการ
+        {/* Pagination - Responsive */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 md:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+          <div className="text-slate-500 text-center sm:text-left">
+            <span className="hidden sm:inline">แสดง </span>
+            <span className="font-medium text-slate-900">{(currentPage - 1) * LIMIT + 1}</span>
+            <span className="hidden sm:inline"> ถึง </span>
+            <span className="sm:hidden">-</span>
+            <span className="font-medium text-slate-900">{Math.min(currentPage * LIMIT, totalUsers)}</span>
+            <span className="hidden sm:inline"> จาก </span>
+            <span className="sm:hidden"> / </span>
+            <span className="font-medium text-slate-900">{totalUsers}</span>
+            <span className="hidden sm:inline"> รายการ</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || isLoading}
+              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-all text-slate-600"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex items-center gap-1">
+               {/* Show fewer page buttons on mobile */}
+               {[...Array(Math.min(3, totalPages))].map((_, i) => {
+                  let pageNum = i + 1;
+                  if(totalPages > 3 && currentPage > 2) {
+                     pageNum = currentPage - 1 + i;
+                     if (pageNum > totalPages) pageNum = totalPages - (3 - i - 1);
+                  }
+                  
+                  return (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all sm:hidden ${
+                      currentPage === pageNum
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                  )
+               })}
+               {/* Show more page buttons on desktop */}
+               {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                  let pageNum = i + 1;
+                  if(totalPages > 5 && currentPage > 3) {
+                     pageNum = currentPage - 3 + i;
+                     if (pageNum > totalPages) pageNum = totalPages - (5 - i - 1);
+                  }
+                  
+                  return (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all hidden sm:block ${
+                      currentPage === pageNum
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                        : "text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                  )
+               })}
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1 || isLoading}
-                className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-all text-slate-600"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <div className="flex items-center gap-1">
-                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                    // Simple pagination logic for display
-                    let pageNum = i + 1;
-                    if(totalPages > 5 && currentPage > 3) {
-                       pageNum = currentPage - 3 + i;
-                       if (pageNum > totalPages) pageNum = totalPages - (5 - i - 1); // Adjust if near end
-                    }
-                    
-                    return (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                        currentPage === pageNum
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                    )
-                 })}
-              </div>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages || isLoading}
-                className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-all text-slate-600"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || isLoading}
+              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-all text-slate-600"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
 
