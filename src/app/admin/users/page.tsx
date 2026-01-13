@@ -298,11 +298,11 @@ export default function AdminUsersPage() {
                             ${user.role === 'ADMIN' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600' : 
                               user.role === 'IT' ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600' : 
                               'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600'}`}>
-                            {(user.name || user.displayName || "?").charAt(0).toUpperCase()}
+                            {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
                           </div>
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900 text-base">{user.name}</span>
+                                <span className="font-bold text-slate-900 text-base">{user.displayName || user.name}</span>
                                 {user.department && (
                                     <span className="px-2 py-0.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-500 border border-slate-200">
                                         {user.department}
@@ -325,8 +325,7 @@ export default function AdminUsersPage() {
 
                             {user.displayName && user.name !== user.displayName && (
                                 <div className="flex items-center gap-1.5 mt-1">
-                                    <MessageCircle size={12} className="text-[#06C755]" />
-                                    <span className="text-xs text-slate-600">Line: {user.displayName}</span>
+                                    <span className="text-xs text-slate-400">ชื่อระบบ: {user.name}</span>
                                 </div>
                             )}
                           </div>
