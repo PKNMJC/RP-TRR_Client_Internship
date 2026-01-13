@@ -16,7 +16,10 @@ import {
   Bell,
   User,
   Package,
+  Shield,
+  Mail,
 } from "lucide-react";
+import { userService, User as UserType } from "../../services/userService";
 
 interface MenuItem {
   icon: React.ComponentType<{ size: number; strokeWidth?: number }>;
@@ -29,8 +32,29 @@ export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [adminProfile, setAdminProfile] = useState<UserType | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Fetch admin profile on mount
+  useEffect(() => {
+    const fetchAdminProfile = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          const user = await userService.getUserById(parseInt(userId));
+          setAdminProfile(user);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin profile:", error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchAdminProfile();
+  }, []);
 
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "แดชบอร์ด", href: "/admin/dashboard" },
@@ -188,32 +212,94 @@ export default function AdminSidebar() {
         </nav>
 
         {/* User Profile Area */}
-        <div className="absolute bottom-0 w-full p-4 border-t border-zinc-100 bg-zinc-50/50">
-          <div className="flex items-center gap-3 px-2 py-3">
-            <div className="w-9 h-9 rounded-full bg-zinc-200 flex items-center justify-center text-zinc-600">
-              <User size={18} />
+        <div className="absolute bottom-0 w-full p-4 border-t border-zinc-200/80 bg-gradient-to-b from-zinc-50/50 to-zinc-100/80">
+          {isLoadingProfile ? (
+            // Loading skeleton
+            <div className="animate-pulse">
+              <div className="flex items-center gap-3 px-2 py-3">
+                <div className="w-11 h-11 rounded-full bg-zinc-200" />
+                <div className="flex-1">
+                  <div className="h-3 bg-zinc-200 rounded w-20 mb-2" />
+                  <div className="h-2 bg-zinc-200 rounded w-24" />
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-zinc-800 truncate">
-                PKN
-              </span>
-              <span className="text-[10px] text-zinc-400 uppercase tracking-tight">
-                Administrator
-              </span>
-            </div>
-          </div>
+          ) : adminProfile ? (
+            // Admin profile card
+            <div className="group">
+              <div className="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-white/60 transition-all duration-200">
+                {/* Avatar */}
+                <div className="relative">
+                  {adminProfile.pictureUrl ? (
+                    <Image
+                      src={adminProfile.pictureUrl}
+                      alt={adminProfile.name}
+                      width={44}
+                      height={44}
+                      className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-md"
+                    />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center ring-2 ring-white shadow-md">
+                      <span className="text-white font-semibold text-sm">
+                        {adminProfile.name?.charAt(0)?.toUpperCase() || "A"}
+                      </span>
+                    </div>
+                  )}
+                  {/* Online indicator */}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full ring-2 ring-white" />
+                </div>
 
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            <button className="flex items-center justify-center p-2 rounded-md bg-white border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-400 transition-all">
-              <Bell size={16} />
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center p-2 rounded-md bg-white border border-zinc-200 text-zinc-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+                {/* Profile Info */}
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-zinc-800 truncate max-w-[100px]">
+                      {adminProfile.name || "Admin User"}
+                    </span>
+                    {/* Role Badge */}
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-200/50">
+                      <Shield size={10} className="text-violet-600" />
+                      <span className="text-[10px] font-medium text-violet-700 uppercase tracking-wide">
+                        {adminProfile.role || "Admin"}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Mail size={10} className="text-zinc-400" />
+                    <span className="text-[11px] text-zinc-500 truncate max-w-[140px]">
+                      {adminProfile.email || "admin@example.com"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 mt-3">
+                <button className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white border border-zinc-200 text-zinc-500 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50/50 transition-all duration-200 shadow-sm hover:shadow group/btn">
+                  <Bell size={15} />
+                  <span className="text-xs font-medium hidden group-hover/btn:inline">แจ้งเตือน</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white border border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-all duration-200 shadow-sm hover:shadow group/btn disabled:opacity-50"
+                >
+                  <LogOut size={15} className={isLoggingOut ? "animate-spin" : ""} />
+                  <span className="text-xs font-medium hidden group-hover/btn:inline">ออกจากระบบ</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Fallback if no profile
+            <div className="flex items-center gap-3 px-2 py-3">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-zinc-400 to-zinc-500 flex items-center justify-center">
+                <User size={18} className="text-white" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-zinc-800">Guest</span>
+                <span className="text-xs text-zinc-400">ไม่ได้เข้าสู่ระบบ</span>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
