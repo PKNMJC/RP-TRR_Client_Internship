@@ -262,27 +262,23 @@ export default function AdminUsersPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                  <th className="px-6 py-4 rounded-tl-2xl">ชื่อไลน์ (Display Name)</th>
-                  <th className="px-6 py-4">ไอดีไลน์ (LINE ID)</th>
-                  <th className="px-6 py-4">สถานะ</th>
-                  <th className="px-6 py-4">ข้อมูลติดต่ออื่นๆ</th>
-                   <th className="px-6 py-4 text-right rounded-tr-2xl">จัดการ</th>
+                  <th className="px-6 py-4 rounded-tl-2xl w-full">ชื่อผู้แจ้ง (Name)</th>
+                  <th className="px-6 py-4 whitespace-nowrap">สถานะ</th>
+                   <th className="px-6 py-4 text-right rounded-tr-2xl whitespace-nowrap">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
                   [...Array(5)].map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4"><div className="h-10 w-40 bg-slate-100 rounded-lg"></div></td>
-                      <td className="px-6 py-4"><div className="h-6 w-24 bg-slate-100 rounded"></div></td>
+                      <td className="px-6 py-4"><div className="h-12 w-64 bg-slate-100 rounded-lg"></div></td>
                       <td className="px-6 py-4"><div className="h-6 w-20 bg-slate-100 rounded-full"></div></td>
-                      <td className="px-6 py-4"><div className="h-8 w-32 bg-slate-100 rounded"></div></td>
                       <td className="px-6 py-4"><div className="h-8 w-16 bg-slate-100 rounded ml-auto"></div></td>
                     </tr>
                   ))
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-20 text-center">
+                    <td colSpan={3} className="px-6 py-20 text-center">
                       <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <UserIcon className="text-slate-300" size={40} />
                       </div>
@@ -298,61 +294,48 @@ export default function AdminUsersPage() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ring-2 ring-white
-                            ${user.role === 'ADMIN' ? 'bg-rose-100 text-rose-600' : 
-                              user.role === 'IT' ? 'bg-indigo-100 text-indigo-600' : 
-                              'bg-emerald-100 text-emerald-600'}`}>
+                          <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm ring-4 ring-white
+                            ${user.role === 'ADMIN' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600' : 
+                              user.role === 'IT' ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600' : 
+                              'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600'}`}>
                             {(user.name || user.displayName || "?").charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <div className="font-semibold text-slate-900">{user.name}</div>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-900 text-base">{user.name}</span>
+                                {user.department && (
+                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-500 border border-slate-200">
+                                        {user.department}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            <div className="flex items-center gap-3 text-xs text-slate-500">
+                                <span className="flex items-center gap-1.5 ">
+                                    <Mail size={12} className="text-slate-400" />
+                                    {user.email}
+                                </span>
+                                {user.phoneNumber && (
+                                    <span className="flex items-center gap-1.5 opacity-75">
+                                        <Phone size={12} className="text-slate-400" />
+                                        {user.phoneNumber}
+                                    </span>
+                                )}
+                            </div>
+
                             {user.displayName && user.name !== user.displayName && (
-                                <div className="text-xs text-slate-400 flex items-center gap-1">
-                                    <span className="opacity-70">Line:</span>
-                                    <span>{user.displayName}</span>
+                                <div className="flex items-center gap-1.5 mt-1">
+                                    <MessageCircle size={12} className="text-[#06C755]" />
+                                    <span className="text-xs text-slate-600">Line: {user.displayName}</span>
                                 </div>
                             )}
-                            <div className="text-xs text-slate-500 font-medium mt-0.5">Department: {user.department || "-"}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          {user.lineId && (
-                             <div className="flex items-center gap-2 mb-1">
-                               <MessageCircle size={16} className="text-[#06C755]" />
-                               <span className="font-semibold text-slate-700">{user.lineId}</span>
-                             </div>
-                          )}
-                          {user.lineUserId ? (
-                             <span className={`text-xs font-mono px-2 py-0.5 rounded w-fit ${user.lineId ? 'text-slate-400 bg-slate-50' : 'text-[#06C755] bg-[#06C755]/10 font-semibold'}`}>
-                               {user.lineUserId}
-                             </span>
-                          ) : (
-                             !user.lineId && <span className="text-slate-400 text-sm italic">ยังไม่ระบุ</span>
-                          )}
-                        </div>
-                      </td>
-                      </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         {getRoleBadge(user.role)}
                       </td>
-                      <td className="px-6 py-4">
-                         <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                               <Mail size={14} className="text-slate-400" />
-                               <span>{user.email}</span>
-                            </div>
-                            {user.phoneNumber && (
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
-                                  <Phone size={14} className="text-slate-400" />
-                                  <span>{user.phoneNumber}</span>
-                                </div>
-                            )}
-                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
                             <button
                                 onClick={() => {
@@ -360,14 +343,14 @@ export default function AdminUsersPage() {
                                   setIsViewOnly(false);
                                   setIsModalOpen(true);
                                 }}
-                                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
                                 title="แก้ไข"
                               >
                                 <Edit2 size={18} />
                               </button>
                               <button
                                 onClick={() => setDeleteUser(user)}
-                                className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                                 title="ลบ"
                               >
                                 <Trash2 size={18} />
