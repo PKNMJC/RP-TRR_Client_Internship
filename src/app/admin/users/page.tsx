@@ -312,14 +312,23 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {user.lineUserId ? (
-                           <div className="flex items-center gap-2 px-3 py-1.5 bg-[#06C755]/10 text-[#06C755] rounded-lg w-fit">
-                             <MessageCircle size={16} />
-                             <span className="font-semibold text-sm">{user.lineUserId}</span>
-                           </div>
-                        ) : (
-                          <span className="text-slate-400 text-sm italic">ยังไม่ระบุ</span>
-                        )}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          {user.lineId && (
+                             <div className="flex items-center gap-2 mb-1">
+                               <MessageCircle size={16} className="text-[#06C755]" />
+                               <span className="font-semibold text-slate-700">{user.lineId}</span>
+                             </div>
+                          )}
+                          {user.lineUserId ? (
+                             <span className={`text-xs font-mono px-2 py-0.5 rounded w-fit ${user.lineId ? 'text-slate-400 bg-slate-50' : 'text-[#06C755] bg-[#06C755]/10 font-semibold'}`}>
+                               {user.lineUserId}
+                             </span>
+                          ) : (
+                             !user.lineId && <span className="text-slate-400 text-sm italic">ยังไม่ระบุ</span>
+                          )}
+                        </div>
+                      </td>
                       </td>
                       <td className="px-6 py-4">
                         {getRoleBadge(user.role)}
