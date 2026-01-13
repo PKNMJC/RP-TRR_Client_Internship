@@ -17,6 +17,13 @@ import {
   Settings2,
   AlertTriangle,
   X,
+  User,
+  Phone,
+  Building2,
+  MessageCircle,
+  MapPin,
+  FileText,
+  Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -32,15 +39,29 @@ interface RepairTicket {
   status: "PENDING" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
   urgency: "NORMAL" | "URGENT" | "CRITICAL";
   createdAt: string;
-  assignee?: { id: number; name: string };
-  reporterName?: string;
   updatedAt?: string;
+  completedAt?: string;
+  assignee?: { id: number; name: string; email?: string };
+  // Reporter information
+  reporterName?: string;
+  reporterDepartment?: string;
+  reporterPhone?: string;
+  reporterLineId?: string;
+  // User relation (owner of ticket)
+  user?: {
+    id: number;
+    name: string;
+    email?: string;
+    department?: string;
+  };
+  notes?: string;
 }
 
 interface User {
   id: number;
   name: string;
   department?: string;
+  email?: string;
 }
 
 export default function ITRepairsPage() {
@@ -441,89 +462,236 @@ export default function ITRepairsPage() {
       {/* Detail Modal */}
       {selectedRepair && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
             {/* Header */}
-            <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-5 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-semibold text-black">
-                  รายละเอียดการแจ้งซ่อม
-                </h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  ID: #{selectedRepair.ticketCode}
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/10 rounded-lg">
+                    <Wrench className="text-white" size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      รายละเอียดการแจ้งซ่อม
+                    </h2>
+                    <p className="text-sm text-gray-300 mt-0.5 font-mono">
+                      #{selectedRepair.ticketCode}
+                    </p>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => setSelectedRepair(null)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-lg transition-all"
+                className="text-gray-300 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-all"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
-              <div className="space-y-5">
-                {/* หัวข้อแจ้งซ่อม */}
-                <div className="border-b border-gray-200 pb-5">
-                  <h3 className="text-sm font-semibold text-black mb-2">
-                    หัวข้อแจ้งซ่อม
+            <div className="p-6 overflow-y-auto max-h-[65vh] space-y-6">
+              {/* Reporter Info Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-1.5 bg-blue-100 rounded-lg">
+                    <User className="text-blue-600" size={16} />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900">
+                    ข้อมูลผู้แจ้ง
                   </h3>
-                  <p className="text-sm text-gray-700">
-                    {selectedRepair.problemTitle}
-                  </p>
                 </div>
 
-                {/* ข้อมูลซ่อม */}
-                <div className="border-b border-gray-200 pb-5">
-                  <h3 className="text-sm font-semibold text-black mb-3">
-                    ข้อมูลการแจ้ง
-                  </h3>
-                  <div className="grid grid-cols-2 gap-6 text-sm">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">ความเร่งด่วน</p>
-                      <UrgencyBadge urgency={selectedRepair.urgency} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* ชื่อผู้แจ้ง */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                      <span className="text-white font-bold text-sm">
+                        {(selectedRepair.reporterName || selectedRepair.user?.name || "?").charAt(0).toUpperCase()}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">ผู้รับผิดชอบ</p>
-                      <p className="font-medium text-black">
-                        {selectedRepair.assignee?.name || (
-                          <span className="text-gray-400 text-xs">
-                            ยังไม่ระบุ
-                          </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">ชื่อผู้แจ้ง</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {selectedRepair.reporterName || selectedRepair.user?.name || <span className="text-gray-400 italic">ไม่ระบุ</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* แผนก */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Building2 className="text-white" size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">แผนก/หน่วยงาน</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {selectedRepair.reporterDepartment || selectedRepair.user?.department || <span className="text-gray-400 italic">ไม่ระบุ</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* เบอร์โทร */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                      <Phone className="text-white" size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">เบอร์โทรศัพท์</p>
+                      {selectedRepair.reporterPhone ? (
+                        <a href={`tel:${selectedRepair.reporterPhone}`} className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">
+                          {selectedRepair.reporterPhone}
+                        </a>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">ไม่ระบุ</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* LINE ID */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C300] flex items-center justify-center flex-shrink-0 shadow-md">
+                      <MessageCircle className="text-white" size={18} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">LINE</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate font-mono">
+                        {selectedRepair.reporterLineId ? (
+                          <span className="text-[#00B900]">{selectedRepair.reporterLineId.slice(0, 10)}...</span>
+                        ) : (
+                          <span className="text-gray-400 italic font-sans">ไม่ระบุ</span>
                         )}
                       </p>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* วันที่ */}
-                <div className="border-b border-gray-200 pb-5">
-                  <h3 className="text-sm font-semibold text-black mb-2">
-                    วันที่แจ้ง
+              {/* Problem Info */}
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-1.5 bg-red-100 rounded-lg">
+                    <AlertCircle className="text-red-600" size={16} />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900">
+                    รายละเอียดปัญหา
                   </h3>
-                  <p className="text-sm text-gray-700">
-                    {format(
-                      new Date(selectedRepair.createdAt),
-                      "dd MMM yyyy HH:mm",
-                      { locale: th }
-                    )}
-                  </p>
                 </div>
 
-                {/* สถานะ */}
-                <div className="flex items-center justify-between">
+                <div className="space-y-4">
+                  {/* หัวข้อแจ้งซ่อม */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-2">สถานะ</p>
-                    <StatusBadge status={selectedRepair.status} />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500 mb-1">เลขที่</p>
-                    <p className="text-lg font-semibold text-black font-mono">
-                      #{selectedRepair.ticketCode}
+                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5">หัวข้อแจ้งซ่อม</p>
+                    <p className="text-sm font-semibold text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                      {selectedRepair.problemTitle}
                     </p>
+                  </div>
+
+                  {/* รายละเอียด */}
+                  {selectedRepair.problemDescription && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5">รายละเอียดเพิ่มเติม</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg whitespace-pre-wrap">
+                        {selectedRepair.problemDescription}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Category & Location */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedRepair.problemCategory && (
+                      <div className="flex items-center gap-2">
+                        <FileText className="text-gray-400" size={14} />
+                        <div>
+                          <p className="text-[10px] text-gray-500 font-semibold">ประเภท</p>
+                          <p className="text-sm font-medium text-gray-900">{selectedRepair.problemCategory}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedRepair.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="text-gray-400" size={14} />
+                        <div>
+                          <p className="text-[10px] text-gray-500 font-semibold">สถานที่</p>
+                          <p className="text-sm font-medium text-gray-900">{selectedRepair.location}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Status & Assignment Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* สถานะ */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">สถานะ</p>
+                  <StatusBadge status={selectedRepair.status} />
+                </div>
+
+                {/* ความเร่งด่วน */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">ความเร่งด่วน</p>
+                  <UrgencyBadge urgency={selectedRepair.urgency} />
+                </div>
+
+                {/* ผู้รับผิดชอบ */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">ผู้รับผิดชอบ</p>
+                  {selectedRepair.assignee?.name ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                        {selectedRepair.assignee.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900">{selectedRepair.assignee.name}</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-gray-400 italic">ยังไม่ระบุ</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Info */}
+              <div className="bg-gray-50 rounded-xl p-4 flex flex-wrap gap-6">
+                <div className="flex items-center gap-2">
+                  <Calendar className="text-gray-400" size={14} />
+                  <div>
+                    <p className="text-[10px] text-gray-500 font-semibold">วันที่แจ้ง</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {format(new Date(selectedRepair.createdAt), "dd MMM yyyy HH:mm", { locale: th })}
+                    </p>
+                  </div>
+                </div>
+                {selectedRepair.updatedAt && selectedRepair.updatedAt !== selectedRepair.createdAt && (
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="text-gray-400" size={14} />
+                    <div>
+                      <p className="text-[10px] text-gray-500 font-semibold">อัปเดตล่าสุด</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {format(new Date(selectedRepair.updatedAt), "dd MMM yyyy HH:mm", { locale: th })}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {selectedRepair.completedAt && (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="text-green-500" size={14} />
+                    <div>
+                      <p className="text-[10px] text-gray-500 font-semibold">เสร็จสิ้นเมื่อ</p>
+                      <p className="text-sm font-medium text-green-600">
+                        {format(new Date(selectedRepair.completedAt), "dd MMM yyyy HH:mm", { locale: th })}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes */}
+              {selectedRepair.notes && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <p className="text-[10px] uppercase tracking-wider text-yellow-700 font-semibold mb-2">หมายเหตุ</p>
+                  <p className="text-sm text-yellow-800 whitespace-pre-wrap">{selectedRepair.notes}</p>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -532,22 +700,24 @@ export default function ITRepairsPage() {
                 <button
                   onClick={() => handleAcceptRepair(selectedRepair.id)}
                   disabled={submitting}
-                  className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-all font-medium text-sm disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold text-sm disabled:opacity-50 shadow-md"
                 >
+                  <CheckCircle size={16} />
                   {submitting ? "กำลังบันทึก..." : "รับเรื่อง"}
                 </button>
               )}
-              {selectedRepair.status !== "COMPLETED" && (
+              {selectedRepair.status !== "COMPLETED" && selectedRepair.status !== "CANCELLED" && (
                 <button
                   onClick={handleOpenEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-all font-medium text-sm"
+                  className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-all font-semibold text-sm"
                 >
+                  <Settings2 size={16} />
                   แก้ไข
                 </button>
               )}
               <button
                 onClick={() => setSelectedRepair(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
+                className="ml-auto px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-all font-semibold text-sm"
               >
                 ปิด
               </button>
