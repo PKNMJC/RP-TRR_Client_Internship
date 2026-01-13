@@ -17,7 +17,7 @@ import {
   MessageCircle,
   Mail,
   Phone,
-  User,
+  User as UserIcon,
   Users
 } from "lucide-react";
 import UserModal from "@/components/UserModal";
@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
       default:
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <User size={12} />
+            <UserIcon size={12} />
             ผู้ใช้งานทั่วไป
           </span>
         );
@@ -283,7 +283,7 @@ export default function AdminUsersPage() {
                   <tr>
                     <td colSpan={5} className="px-6 py-20 text-center">
                       <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <User className="text-slate-300" size={40} />
+                        <UserIcon className="text-slate-300" size={40} />
                       </div>
                       <h3 className="text-slate-900 font-medium text-lg">ไม่พบข้อมูลผู้ใช้งาน</h3>
                       <p className="text-slate-500 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
