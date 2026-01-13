@@ -8,6 +8,9 @@ export interface User {
   department?: string;
   phoneNumber?: string;
   lineId?: string;
+  lineUserId?: string; // from LineOALink
+  displayName?: string; // from LineOALink
+  pictureUrl?: string; // from LineOALink
   password?: string;
   createdAt: string;
   updatedAt: string;

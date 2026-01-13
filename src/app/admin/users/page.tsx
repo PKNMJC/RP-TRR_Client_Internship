@@ -80,7 +80,8 @@ export default function AdminUsersPage() {
       const matchesSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.lineId && user.lineId.toLowerCase().includes(searchQuery.toLowerCase()));
+        (user.lineUserId && user.lineUserId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (user.displayName && user.displayName.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesRole = roleFilter === "all" || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
@@ -301,19 +302,20 @@ export default function AdminUsersPage() {
                             ${user.role === 'ADMIN' ? 'bg-rose-100 text-rose-600' : 
                               user.role === 'IT' ? 'bg-indigo-100 text-indigo-600' : 
                               'bg-emerald-100 text-emerald-600'}`}>
-                            {user.name.charAt(0).toUpperCase()}
+                            {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-900">{user.name}</div>
+                            <div className="font-semibold text-slate-900">{user.displayName || user.name}</div>
+                            {user.displayName && user.name !== user.displayName && <div className="text-xs text-slate-400">({user.name})</div>}
                             <div className="text-xs text-slate-500 font-medium">Department: {user.department || "-"}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {user.lineId ? (
+                        {user.lineUserId ? (
                            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#06C755]/10 text-[#06C755] rounded-lg w-fit">
                              <MessageCircle size={16} />
-                             <span className="font-semibold text-sm">{user.lineId}</span>
+                             <span className="font-semibold text-sm">{user.lineUserId}</span>
                            </div>
                         ) : (
                           <span className="text-slate-400 text-sm italic">ยังไม่ระบุ</span>
