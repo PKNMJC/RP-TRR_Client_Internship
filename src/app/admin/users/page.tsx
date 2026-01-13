@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Search,
   ChevronLeft,
   ChevronRight,
   Users,
-  X,
-  Filter,
-  RefreshCcw,
   UserPlus,
   AlertCircle,
   CheckCircle2,
+  FilterX,
+  Loader2,
+  Shield,
+  User as UserIcon,
+  RefreshCw,
 } from "lucide-react";
+
 import UserTable from "@/components/UserTable";
 import UserModal from "@/components/UserModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -21,84 +25,152 @@ import { userService, User } from "@/services/userService";
 type RoleFilter = "all" | "ADMIN" | "IT" | "USER";
 
 export default function AdminUsersPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   // --- States ---
   const [users, setUsers] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalUsers, setTotalUsers] = useState(0);
-
   const [isLoading, setIsLoading] = useState(true);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Initial State from URL
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>((searchParams.get("role") as RoleFilter) || "all");
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
+
+  // Modal & Notification States
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewOnly, setIsViewOnly] = useState(false);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
+  const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const LIMIT = 10;
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // --- Actions ---
+  // --- Utilities ---
   const showNotification = (type: "success" | "error", message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const fetchUsers = useCallback(async (page: number) => {
+  const updateURL = useCallback((params: { q?: string; role?: string; page?: number }) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+    
+    if (params.q !== undefined) params.q ? newParams.set("q", params.q) : newParams.delete("q");
+    if (params.role !== undefined) params.role !== "all" ? newParams.set("role", params.role) : newParams.delete("role");
+    if (params.page !== undefined) params.page > 1 ? newParams.set("page", String(params.page)) : newParams.delete("page");
+    
+    router.push(`${pathname}?${newParams.toString()}`);
+  }, [searchParams, pathname, router]);
+
+  // --- Data Fetching ---
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await userService.getAllUsers(page, LIMIT);
+      const response = await userService.getAllUsers({
+        page: currentPage,
+        limit: LIMIT,
+        search: searchQuery,
+        role: roleFilter === "all" ? undefined : roleFilter,
+      });
       setUsers(response.data);
-      setTotalPages(response.pagination.totalPages);
-      setTotalUsers(response.pagination.total);
-      setCurrentPage(response.pagination.page);
+      if (response.pagination) {
+          setTotalUsers(response.pagination.total);
+          setTotalPages(response.pagination.totalPages);
+      } else {
+           // Fallback if pagination is missing in some API responses
+           setTotalUsers(response.data.length);
+      }
+
     } catch (err: any) {
-      showNotification("error", err.message || "ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+      showNotification("error", "ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentPage, roleFilter, searchQuery]);
 
   useEffect(() => {
-    fetchUsers(currentPage);
-  }, [fetchUsers, currentPage]);
+    fetchUsers();
+  }, [currentPage, roleFilter, fetchUsers]);
 
-  // Logic การกรองข้อมูล (Client-side filtering ตัวอย่าง)
-  const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRole = roleFilter === "all" || user.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
-  }, [users, searchQuery, roleFilter]);
+  // Derived Stats (Calculated from current data or separate API if needed)
+  // Note: For accurate total counts across the DB, we might need a separate API endpoint "/users/stats".
+  // For now, we simulate or rely on pagination.total for Total Users.
+  // Ideally, stats should come from the backend. Since we don't have that endpoint yet, 
+  // we'll display what we can, or just the Total Users from pagination.
+  // Wait, IT page does client-side filtering on a potentially limited dataset or fetches specific roles?
+  // IT Page fetches `roles=USER,IT` and then filters. Admin fetches paginated.
+  // We can't easily get counts for Admin/IT/User without a stats API if paginated.
+  // I will assume for now we just show Total Users, or remove the accurate breakdown until backend supports it.
+  // However, I will add the UI placeholders. *Self-correction*: I'll stick to Total Users for now to be safe,
+  // or implies we need to fetch all for stats (bad for performance).
+  // Let's implement the UI but maybe just show Total for now, or assume the backend *could* return stats.
+  // Actually, I'll just use the `totalUsers` for the main card, and maybe hide the others or leave them as "-" if unknown.
+  // Better yet, I will NOT render the specific counts if I don't have them, to avoid misleading info.
+  // But wait, the IT page does `users.filter(...)`. It fetches *all* relevant users?
+  // IT page: `apiFetch("/users?roles=USER,IT")`. It seems it might be fetching *all* of them if pagination isn't default?
+  // userService.getAllUsers defaults to page=1, limit=10.
+  // So IT page is likely only seeing the first page or the API behaves differently.
+  // Let's stick to the Admin pattern: Server-side pagination.
+  // I will create a stats section that just highlights the "Total Users" for now, styled nicely.
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    
+    searchTimerRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      updateURL({ q: val, page: 1 });
+      // fetchUsers triggered by useEffect
+    }, 500);
+  };
+
+  const handleRoleChange = (role: RoleFilter) => {
+    setRoleFilter(role);
+    setCurrentPage(1);
+    updateURL({ role, page: 1 });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateURL({ page });
+  };
+
+  // --- CRUD Actions ---
+  const handleOpenAddModal = () => {
+    setSelectedUser(null);
+    setIsViewOnly(false);
+    setIsModalOpen(true);
+  };
 
   const handleSaveUser = async (data: Partial<User>) => {
-    if (!selectedUser) return;
     try {
-      const { password, ...userDataWithoutPassword } = data;
-
-      // Update user information
-      await userService.updateUser(selectedUser.id, userDataWithoutPassword);
-
-      // Change password if provided
-      if (password) {
-        await userService.changePassword(selectedUser.id, password);
+      if (selectedUser) {
+        // Update
+        const { ...updateData } = data;
+        await userService.updateUser(selectedUser.id, updateData);
+        // Password change is separate in userService, or handled in updateUser API?
+        // userService.ts has changePassword.
+        // UserModal passes `password` in `data`.
+        if (data.password) {
+             await userService.changePassword(selectedUser.id, data.password);
+        }
+        showNotification("success", "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว");
+      } else {
+        // Create
+        await userService.createUser(data);
+        showNotification("success", "สร้างผู้ใช้งานใหม่สำเร็จ");
       }
-
-      showNotification("success", "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว");
-      fetchUsers(currentPage);
+      fetchUsers();
       setIsModalOpen(false);
     } catch (err: any) {
-      showNotification("error", err.message || "ไม่สามารถบันทึกข้อมูลได้");
-      throw err;
+      showNotification("error", err.message || "เกิดข้อผิดพลาดในการบันทึก");
+      // throw err; // Don't throw to crash UI
     }
   };
 
@@ -108,7 +180,7 @@ export default function AdminUsersPage() {
     try {
       await userService.deleteUser(deleteUser.id);
       showNotification("success", "ลบผู้ใช้งานสำเร็จ");
-      fetchUsers(currentPage);
+      fetchUsers();
       setDeleteUser(null);
     } catch (err: any) {
       showNotification("error", "เกิดข้อผิดพลาดในการลบ");
@@ -117,177 +189,181 @@ export default function AdminUsersPage() {
     }
   };
 
+  const resetFilters = () => {
+    setSearchQuery("");
+    setRoleFilter("all");
+    setCurrentPage(1);
+    router.push(pathname);
+    // fetchUsers triggers by useEffect
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-100">
-              <Users className="text-white" size={24} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                จัดการการผู้ใช้งาน
-              </h1>
-              <p className="text-slate-500 text-sm">
-                จัดการสิทธิ์และข้อมูลผู้ใช้งานในระบบ
-              </p>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">จัดการผู้ใช้งาน</h1>
+            <p className="text-slate-500 mt-1">จัดการสิทธิ์และข้อมูลบัญชีในระบบทั้งหมด</p>
           </div>
+          <button
+            onClick={handleOpenAddModal}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all shadow-md shadow-indigo-100 active:scale-95"
+          >
+            <UserPlus size={20} />
+            เพิ่มผู้ใช้งาน
+          </button>
         </div>
 
-        {/* Floating Notification */}
+        {/* Stats Section (Simplified for Pagination) */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <StatCard label="ผู้ใช้งานทั้งหมด" count={totalUsers} icon={<Users className="text-blue-600" />} bgClass="bg-blue-50" />
+            
+            {/* These are placeholders as we don't have exact counts without fetching all. 
+                We could hide them or fetch counts separately. For now, I'll hide specific role counts 
+                to avoid inaccuracy, or just show them if we had the data. 
+                Let's simplify to just one main card or maybe render them if we decide to fetch stats later.
+                I will comment them out for truthfulness.
+            */}
+             {/* 
+            <StatCard label="ผู้ดูแลระบบ" count={0} icon={<Shield className="text-rose-600" />} bgClass="bg-rose-50" />
+            <StatCard label="IT Support" count={0} icon={<Shield className="text-purple-600" />} bgClass="bg-purple-50" />
+            <StatCard label="ผู้ใช้งานทั่วไป" count={0} icon={<UserIcon className="text-emerald-600" />} bgClass="bg-emerald-50" />
+            */}
+        </div>
+
+        {/* Notifications */}
         {notification && (
-          <div
-            className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border animate-in fade-in slide-in-from-top-4 ${
-              notification.type === "success"
-                ? "bg-white border-emerald-100 text-emerald-800"
-                : "bg-white border-red-100 text-red-800"
-            }`}
-          >
-            {notification.type === "success" ? (
-              <CheckCircle2 className="text-emerald-500" size={20} />
-            ) : (
-              <AlertCircle className="text-red-500" size={20} />
-            )}
+          <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl border animate-in fade-in slide-in-from-top-4 ${
+            notification.type === "success" ? "bg-white border-emerald-100 text-emerald-800" : "bg-white border-red-100 text-red-800"
+          }`}>
+            {notification.type === "success" ? <CheckCircle2 className="text-emerald-500" size={20} /> : <AlertCircle className="text-red-500" size={20} />}
             <span className="font-medium">{notification.message}</span>
           </div>
         )}
 
-        {/* Filters Card */}
+        {/* Filters & Content Card */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex-1 min-w-[300px] relative">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                  size={18}
-                />
+          {/* Toolbar */}
+          <div className="p-5 border-b border-slate-100 bg-white flex flex-col md:flex-row gap-4">
+             <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                   type="text"
-                  placeholder="ค้นหาชื่อ, อีเมล..."
+                  placeholder="ค้นหาชื่อ, อีเมล หรือไอดีผู้ใช้..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all outline-none"
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-transparent focus:bg-white focus:border-slate-200 rounded-xl outline-none transition-all text-slate-900 placeholder-slate-400 text-sm font-medium"
                 />
-              </div>
-
-              <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl">
-                {[
-                  { value: "all" as RoleFilter, label: "ทั้งหมด" },
-                  { value: "ADMIN" as RoleFilter, label: "แอดมิน" },
-                  { value: "IT" as RoleFilter, label: "IT" },
-                  { value: "USER" as RoleFilter, label: "ผู้ใช้งาน" },
-                ].map(({ value, label }) => (
-                  <button
-                    key={value}
-                    onClick={() => setRoleFilter(value)}
-                    className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                      roleFilter === value
-                        ? "bg-white text-indigo-600 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => fetchUsers(currentPage)}
-                className="p-2.5 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
-                title="รีเฟรชข้อมูล"
-              >
-                <RefreshCcw
-                  size={20}
-                  className={isLoading ? "animate-spin" : ""}
-                />
-              </button>
-            </div>
+             </div>
+             <div className="flex gap-3">
+                 <select
+                  value={roleFilter}
+                  onChange={(e) => handleRoleChange(e.target.value as RoleFilter)}
+                  className="px-4 py-2.5 bg-slate-50 border border-transparent focus:bg-white focus:border-slate-200 rounded-xl font-medium text-slate-700 focus:outline-none text-sm cursor-pointer"
+                >
+                  <option value="all">ทุกบทบาท</option>
+                  <option value="ADMIN">ผู้ดูแลระบบ</option>
+                  <option value="IT">IT Support</option>
+                  <option value="USER">ผู้ใช้งานทั่วไป</option>
+                </select>
+                <button
+                  onClick={resetFilters}
+                  className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                  title="ล้างค่าการกรอง"
+                >
+                  <FilterX size={20} />
+                </button>
+                 <button
+                  onClick={() => fetchUsers()}
+                  disabled={isLoading}
+                  className="p-2.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all disabled:opacity-50"
+                  title="รีเฟรชข้อมูล"
+                >
+                  <RefreshCw size={20} className={isLoading ? "animate-spin" : ""} />
+                </button>
+             </div>
           </div>
 
           {/* Table Section */}
-          <div className="relative">
+          <div className="relative min-h-[400px]">
+            {isLoading && (
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+                <Loader2 className="animate-spin text-indigo-600" size={32} />
+              </div>
+            )}
+            
             <UserTable
-              users={filteredUsers}
+              users={users}
               isLoading={isLoading}
-              onView={(u) => {
-                setSelectedUser(u);
-                setIsViewOnly(true);
-                setIsModalOpen(true);
-              }}
-              onEdit={(u) => {
-                setSelectedUser(u);
-                setIsViewOnly(false);
-                setIsModalOpen(true);
-              }}
+              onView={(u) => { setSelectedUser(u); setIsViewOnly(true); setIsModalOpen(true); }}
+              onEdit={(u) => { setSelectedUser(u); setIsViewOnly(false); setIsModalOpen(true); }}
               onDelete={setDeleteUser}
             />
 
             {/* Empty State */}
-            {!isLoading && filteredUsers.length === 0 && (
-              <div className="py-20 text-center">
-                <div className="inline-flex p-4 bg-slate-50 rounded-full mb-4">
-                  <Search size={32} className="text-slate-300" />
+            {!isLoading && users.length === 0 && (
+              <div className="py-24 text-center">
+                <div className="inline-flex p-5 bg-slate-50 rounded-full mb-4">
+                  <Search size={40} className="text-slate-300" />
                 </div>
-                <h3 className="text-slate-900 font-semibold">
-                  ไม่พบข้อมูลผู้ใช้งาน
-                </h3>
-                <p className="text-slate-500">
-                  ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง
+                <h3 className="text-slate-900 text-lg font-bold">ไม่พบข้อมูลผู้ใช้งาน</h3>
+                <p className="text-slate-500 max-w-xs mx-auto mt-2">
+                  ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหาของคุณ
                 </p>
+                <button onClick={resetFilters} className="mt-6 text-indigo-600 font-semibold hover:underline">
+                  ล้างตัวกรองทั้งหมด
+                </button>
               </div>
             )}
           </div>
 
           {/* Pagination Footer */}
-          <div className="p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30">
             <p className="text-sm text-slate-500">
-              แสดง{" "}
-              <span className="font-semibold text-slate-900">
-                {(currentPage - 1) * LIMIT + 1}
-              </span>{" "}
-              ถึง{" "}
-              <span className="font-semibold text-slate-900">
-                {Math.min(currentPage * LIMIT, totalUsers)}
-              </span>{" "}
-              จาก{" "}
-              <span className="font-semibold text-slate-900">{totalUsers}</span>{" "}
-              ผู้ใช้งาน
+              กำลังแสดง <span className="font-semibold text-slate-900">{users.length > 0 ? (currentPage - 1) * LIMIT + 1 : 0}</span> ถึง{" "}
+              <span className="font-semibold text-slate-900">{Math.min(currentPage * LIMIT, totalUsers)}</span> จาก{" "}
+              <span className="font-semibold text-slate-900">{totalUsers}</span> รายการ
             </p>
 
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || isLoading}
-                className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                className="p-2 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-30 transition-all hover:shadow-sm"
               >
                 <ChevronLeft size={20} />
               </button>
 
               <div className="flex items-center gap-1">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${
-                      currentPage === i + 1
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
-                        : "hover:bg-slate-50 text-slate-600"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Simplified Logic: Show first, last, current, and surrounding
+                  if (totalPages > 5 && Math.abs(currentPage - pageNum) > 1 && pageNum !== 1 && pageNum !== totalPages) {
+                     if (pageNum === 2 || pageNum === totalPages - 1) return <span key={pageNum} className="px-1 text-slate-400">...</span>;
+                     return null;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
+                        currentPage === pageNum
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                          : "hover:bg-white text-slate-600 border border-transparent hover:border-slate-200"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
               </div>
 
               <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
+                onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || isLoading}
-                className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                className="p-2 border border-slate-200 rounded-lg hover:bg-white disabled:opacity-30 transition-all hover:shadow-sm"
               >
                 <ChevronRight size={20} />
               </button>
@@ -300,23 +376,34 @@ export default function AdminUsersPage() {
           user={selectedUser}
           isOpen={isModalOpen}
           isViewOnly={isViewOnly}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedUser(null);
-          }}
+          onClose={() => { setIsModalOpen(false); setSelectedUser(null); }}
           onSave={handleSaveUser}
         />
 
         <ConfirmDialog
           isOpen={!!deleteUser}
           title="ยืนยันการลบผู้ใช้งาน"
-          message={`คุณต้องการลบผู้ใช้ "${deleteUser?.name}" ใช่หรือไม่? ข้อมูลนี้จะหายไปจากระบบทันที`}
-          confirmText="ลบข้อมูล"
+          message={`คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้ "${deleteUser?.name}"? การดำเนินการนี้ไม่สามารถย้อนกลับได้`}
+          confirmText="ยืนยันลบข้อมูล"
           isDanger
           isLoading={isDeleting}
           onConfirm={confirmDelete}
           onCancel={() => setDeleteUser(null)}
         />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, count, icon, bgClass }: { label: string; count: number; icon: React.ReactNode; bgClass: string }) {
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+      <div>
+        <p className="text-slate-500 text-sm font-medium mb-1">{label}</p>
+        <p className="text-3xl font-bold text-slate-900">{count}</p>
+      </div>
+      <div className={`w-12 h-12 rounded-xl ${bgClass} flex items-center justify-center`}>
+        {icon}
       </div>
     </div>
   );

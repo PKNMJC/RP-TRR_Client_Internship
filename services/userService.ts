@@ -28,12 +28,25 @@ export interface UsersResponse {
 }
 
 export const userService = {
-  async getAllUsers(page: number = 1, limit: number = 10): Promise<UsersResponse> {
-    return apiFetch(`/users?page=${page}&limit=${limit}`);
+  async getAllUsers(params: { page?: number; limit?: number; search?: string; role?: string } = {}): Promise<UsersResponse> {
+    const { page = 1, limit = 10, search, role } = params;
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (search) query.append('search', search);
+    if (role && role !== 'all') query.append('role', role);
+
+    return apiFetch(`/users?${query.toString()}`);
   },
 
   async getUserById(id: number): Promise<User> {
     return apiFetch(`/users/${id}`);
+  },
+
+  async createUser(data: Partial<User>): Promise<User> {
+    return apiFetch('/users', 'POST', data);
   },
 
   async updateUser(id: number, data: Partial<User>): Promise<User> {
