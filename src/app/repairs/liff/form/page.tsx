@@ -48,6 +48,7 @@ function RepairLiffFormContent() {
   const searchParams = useSearchParams();
   const [lineUserId, setLineUserId] = useState<string>("");
   const [linePictureUrl, setLinePictureUrl] = useState<string>("");
+  const [deviceOS, setDeviceOS] = useState<string>("");
   const [formData, setFormData] = useState<FormData>({
     reporterName: "",
     reporterDepartment: "",
@@ -81,9 +82,18 @@ function RepairLiffFormContent() {
           return;
         }
 
-        await liff.init({ liffId });
+        // Initialize LIFF with iOS-compatible options
+        await liff.init({ 
+          liffId,
+          withLoginOnExternalBrowser: true // Fix for iOS Safari external browser
+        });
+
+        // Detect OS for better error messaging
+        const os = liff.getOS() || "unknown";
+        setDeviceOS(os);
 
         if (!liff.isLoggedIn()) {
+          // Use liff.login() which now works properly with withLoginOnExternalBrowser
           liff.login();
           return;
         }
@@ -104,12 +114,18 @@ function RepairLiffFormContent() {
           reporterName: lineDisplayName || "",
         }));
       } catch (error) {
-        // Extract useful error message
+        // Extract useful error message with iOS-specific handling
         let errMsg = "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE";
         const err = error as { code?: string; message?: string };
+        const currentOS = liff.getOS?.() || "unknown";
+        setDeviceOS(currentOS);
         
         if (err.code === "403") {
             errMsg = "คุณไม่มีสิทธิ์เข้าถึง (Permission Denied) - ระบบจะบันทึกเป็น Guest";
+        } else if (err.code === "INIT_FAILED" && currentOS === "ios") {
+            errMsg = "iOS: ไม่สามารถเชื่อมต่อ LINE ได้ - กรุณาเปิดจากแอป LINE โดยตรง หรือระบบจะบันทึกเป็น Guest";
+        } else if (err.message?.includes("cookie") || err.message?.includes("storage")) {
+            errMsg = "Safari บล็อก Cookies - กรุณาเปิดจากแอป LINE หรือปรับตั้งค่า Safari";
         } else if (err.message) {
             errMsg = `LIFF Error: ${err.message} - ระบบจะบันทึกเป็น Guest`;
         }
@@ -309,15 +325,27 @@ function RepairLiffFormContent() {
       </div>
 
       <div className="max-w-md mx-auto p-4">
-        {/* Guest Mode Warning */}
+        {/* Guest Mode Warning - with iOS-specific message */}
         {(!formData.reporterLineId || liffError) && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex gap-3">
               <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div>
-                  <p className="text-sm text-yellow-800 font-medium">Guest Mode</p>
+                  <p className="text-sm text-yellow-800 font-medium">
+                    {deviceOS === "ios" ? "⚠️ iOS Guest Mode" : "Guest Mode"}
+                  </p>
                   <p className="text-xs text-yellow-700 mt-0.5">
-                      ระบบไม่สามารถระบุตัวตน LINE ได้ (คุณอาจไม่มีสิทธิ์หรือระบบขัดข้อง) 
-                      <br/>การแจ้งซ่อมจะถูกบันทึกในชื่อ <b>Guest</b>
+                      {deviceOS === "ios" ? (
+                        <>
+                          Safari บน iOS อาจบล็อก cookies ทำให้ไม่สามารถยืนยันตัวตนได้
+                          <br/><b>✅ วิธีแก้:</b> เปิด link นี้จากแอป LINE โดยตรง
+                          <br/>หรือระบบจะบันทึกเป็น <b>Guest</b>
+                        </>
+                      ) : (
+                        <>
+                          ระบบไม่สามารถระบุตัวตน LINE ได้ (คุณอาจไม่มีสิทธิ์หรือระบบขัดข้อง) 
+                          <br/>การแจ้งซ่อมจะถูกบันทึกในชื่อ <b>Guest</b>
+                        </>
+                      )}
                   </p>
               </div>
             </div>
