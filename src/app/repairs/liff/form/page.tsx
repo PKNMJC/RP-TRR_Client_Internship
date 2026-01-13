@@ -47,6 +47,7 @@ function RepairLiffFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [lineUserId, setLineUserId] = useState<string>("");
+  const [linePictureUrl, setLinePictureUrl] = useState<string>("");
   const [formData, setFormData] = useState<FormData>({
     reporterName: "",
     reporterDepartment: "",
@@ -96,6 +97,7 @@ function RepairLiffFormContent() {
         }
 
         setLineUserId(lineUserId);
+        setLinePictureUrl(profile.pictureUrl || "");
         setFormData((prev) => ({
           ...prev,
           reporterLineId: lineUserId,
@@ -212,6 +214,14 @@ function RepairLiffFormContent() {
       Object.entries(formData).forEach(([key, value]) => {
         if (value) formPayload.append(key, value);
       });
+
+      // Send LINE profile data for user upsert in backend
+      if (formData.reporterName) {
+        formPayload.append("displayName", formData.reporterName);
+      }
+      if (linePictureUrl) {
+        formPayload.append("pictureUrl", linePictureUrl);
+      }
 
       files.forEach((file) => {
         formPayload.append("files", file);
