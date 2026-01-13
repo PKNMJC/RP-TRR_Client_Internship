@@ -55,6 +55,18 @@ export default function UserModal({
         lineId: user.lineId,
       });
     }
+    if (user && isOpen) {
+      setFormData({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        phoneNumber: user.phoneNumber,
+        lineId: user.lineId,
+				displayName: user.displayName, // Hydrate extra fields for display
+				lineUserId: user.lineUserId,
+      });
+    }
   }, [user, isOpen]);
 
   const validatePassword = (): boolean => {
@@ -176,6 +188,49 @@ export default function UserModal({
               </div>
             </div>
           </div>
+          
+          {/* Section 1.5: LINE Info (Read Only) */}
+          {(formData.displayName || formData.lineUserId) && (
+             <div className="space-y-4">
+               <h3 className="text-[11px] font-bold text-[#06C755] uppercase tracking-widest flex items-center gap-2">
+                 <div className="w-1.5 h-1.5 bg-[#06C755] rounded-full" />{" "}
+                 ข้อมูลจาก LINE
+               </h3>
+               <div className="grid grid-cols-2 gap-4">
+                  {formData.displayName && (
+                    <div className="flex flex-col">
+                      <label className={labelClasses}>ชื่อไลน์ (Display Name)</label>
+                      <div className="relative">
+                        <MessageCircle
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#06C755]"
+                          size={18}
+                        />
+                        <input
+                          type="text"
+                          readOnly
+                          className={`${inputClasses} bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed`}
+                          value={formData.displayName}
+                        />
+                      </div>
+                    </div>
+                  )}
+                   {formData.lineUserId && (
+                    <div className="flex flex-col">
+                      <label className={labelClasses}>LINE User ID</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#06C755] font-mono text-xs font-bold">ID</span>
+                        <input
+                          type="text"
+                          readOnly
+                          className={`${inputClasses} bg-slate-50 text-slate-500 border-slate-200 cursor-not-allowed font-mono text-xs`}
+                          value={formData.lineUserId}
+                        />
+                      </div>
+                    </div>
+                  )}
+               </div>
+             </div>
+          )}
 
           {/* Section 2: Role & Department */}
           <div className="space-y-4">

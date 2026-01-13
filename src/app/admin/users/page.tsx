@@ -302,12 +302,17 @@ export default function AdminUsersPage() {
                             ${user.role === 'ADMIN' ? 'bg-rose-100 text-rose-600' : 
                               user.role === 'IT' ? 'bg-indigo-100 text-indigo-600' : 
                               'bg-emerald-100 text-emerald-600'}`}>
-                            {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                            {(user.name || user.displayName || "?").charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-900">{user.displayName || user.name}</div>
-                            {user.displayName && user.name !== user.displayName && <div className="text-xs text-slate-400">({user.name})</div>}
-                            <div className="text-xs text-slate-500 font-medium">Department: {user.department || "-"}</div>
+                            <div className="font-semibold text-slate-900">{user.name}</div>
+                            {user.displayName && user.name !== user.displayName && (
+                                <div className="text-xs text-slate-400 flex items-center gap-1">
+                                    <span className="opacity-70">Line:</span>
+                                    <span>{user.displayName}</span>
+                                </div>
+                            )}
+                            <div className="text-xs text-slate-500 font-medium mt-0.5">Department: {user.department || "-"}</div>
                           </div>
                         </div>
                       </td>
