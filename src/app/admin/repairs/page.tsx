@@ -489,15 +489,21 @@ export default function AdminRepairsPage() {
             )}
         </div>
 
-        {/* Pagination */}
+        {/* Pagination - Responsive */}
         {filteredRepairs.length > 0 && (
-          <div className="flex items-center justify-between mt-6">
-            <p className="text-sm text-zinc-500">
-              แสดง <b>{(currentPage - 1) * itemsPerPage + 1}</b> ถึง{" "}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 bg-white border border-zinc-200 rounded-lg p-4">
+            <p className="text-sm text-zinc-500 text-center sm:text-left">
+              <span className="hidden sm:inline">แสดง </span>
+              <b>{(currentPage - 1) * itemsPerPage + 1}</b>
+              <span className="hidden sm:inline"> ถึง </span>
+              <span className="sm:hidden">-</span>
               <b>
                 {Math.min(currentPage * itemsPerPage, filteredRepairs.length)}
-              </b>{" "}
-              จาก <b>{filteredRepairs.length}</b> รายการ
+              </b>
+              <span className="hidden sm:inline"> จาก </span>
+              <span className="sm:hidden"> / </span>
+              <b>{filteredRepairs.length}</b>
+              <span className="hidden sm:inline"> รายการ</span>
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -507,9 +513,8 @@ export default function AdminRepairsPage() {
               >
                 <ChevronLeft size={16} className="text-zinc-600" />
               </button>
-              <span className="text-sm font-medium text-zinc-600 px-3">
-                หน้า {currentPage} /{" "}
-                {Math.ceil(filteredRepairs.length / itemsPerPage)}
+              <span className="text-sm font-medium text-zinc-600 px-2 sm:px-3 whitespace-nowrap">
+                <span className="hidden sm:inline">หน้า </span>{currentPage} / {Math.ceil(filteredRepairs.length / itemsPerPage)}
               </span>
               <button
                 disabled={
