@@ -101,8 +101,10 @@ export default function ITRepairsPage() {
   const router = useRouter();
   const [repairs, setRepairs] = useState<RepairTicket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'available' | 'my-tasks' | 'completed'>('available');
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
   const [selectedRepair, setSelectedRepair] = useState<RepairTicket | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -255,19 +257,41 @@ export default function ITRepairsPage() {
   };
 
   const filteredRepairs = repairs.filter((repair) => {
+    // 1. Tab Based Filter (Logical Ownership)
+    const isUnassigned = !repair.assignee;
+    const isAssignedToMe = repair.assignee?.id === currentUser?.id;
+    const isCompleted = repair.status === "COMPLETED";
+
+    let matchesTab = false;
+    if (activeTab === 'available') {
+      matchesTab = isUnassigned && !isCompleted && repair.status !== "CANCELLED";
+    } else if (activeTab === 'my-tasks') {
+      matchesTab = isAssignedToMe && !isCompleted && repair.status !== "CANCELLED";
+    } else if (activeTab === 'completed') {
+      matchesTab = isCompleted;
+    }
+
+    if (!matchesTab) return false;
+
+    // 2. Search & Sub-filters
     const matchesSearch =
       repair.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       repair.ticketCode.toLowerCase().includes(searchTerm.toLowerCase());
+    
     const matchesStatus =
       filterStatus === "all" || repair.status === filterStatus;
-    return matchesSearch && matchesStatus;
+      
+    const matchesPriority =
+      filterPriority === "all" || repair.urgency === filterPriority;
+
+    return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const stats = {
-    total: repairs.length,
-    pending: repairs.filter((r) => r.status === "PENDING").length,
-    inProgress: repairs.filter((r) => r.status === "IN_PROGRESS").length,
-    completed: repairs.filter((r) => r.status === "COMPLETED").length,
+  const allStats = {
+    available: repairs.filter(r => !r.assignee && r.status !== "COMPLETED" && r.status !== "CANCELLED").length,
+    myTasks: repairs.filter(r => r.assignee?.id === currentUser?.id && r.status !== "COMPLETED" && r.status !== "CANCELLED").length,
+    completed: repairs.filter(r => r.status === "COMPLETED").length,
+    urgent: repairs.filter(r => r.urgency === "CRITICAL" || r.urgency === "URGENT").length
   };
 
   if (loading) return <LoadingState />;
@@ -299,57 +323,93 @@ export default function ITRepairsPage() {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Stats Grid - Contextual */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard
-              label="งานทั้งหมด"
-              count={stats.total}
-              icon={<Wrench />}
+              label={activeTab === 'available' ? "งานรอรับสิทธิ์" : activeTab === 'my-tasks' ? "งานที่กำลังทำ" : "จบงานแล้ว"}
+              count={activeTab === 'available' ? allStats.available : activeTab === 'my-tasks' ? allStats.myTasks : allStats.completed}
+              icon={<Wrench className="text-black" size={24} />}
             />
             <StatCard
-              label="รอรับเรื่อง"
-              count={stats.pending}
-              icon={<Clock />}
+              label="งานเร่งด่วน"
+              count={allStats.urgent}
+              icon={<AlertCircle className="text-red-500" size={24} />}
             />
             <StatCard
-              label="กำลังดำเนินการ"
-              count={stats.inProgress}
-              icon={<Settings2 />}
+              label="งานของฉัน"
+              count={allStats.myTasks}
+              icon={<User className="text-blue-500" size={24} />}
             />
             <StatCard
-              label="เสร็จสิ้น"
-              count={stats.completed}
-              icon={<CheckCircle />}
+              label="งานทั้งหมดอาทิตย์นี้"
+              count={repairs.length}
+              icon={<CheckCircle className="text-emerald-500" size={24} />}
             />
           </div>
 
-          {/* Search & Table Card */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
-                  type="text"
-                  placeholder="ค้นหาชื่อเรื่อง, เลขที่ตั๋ว..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm"
-                />
-              </div>
+          {/* Tab Navigation */}
+          <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-2xl w-fit border border-gray-200 shadow-sm mt-4">
+            {[
+              { id: 'available', label: 'งานรอรับ', icon: <Clock size={16} />, count: allStats.available },
+              { id: 'my-tasks', label: 'งานของฉัน', icon: <User size={16} />, count: allStats.myTasks },
+              { id: 'completed', label: 'งานเสร็จสิ้น', icon: <CheckCircle size={16} />, count: allStats.completed },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? 'bg-black text-white shadow-lg scale-105'
+                    : 'text-gray-500 hover:text-black hover:bg-white/50'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Filters & Search */}
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="ค้นหาชื่อผู้แจ้ง, รหัสตั๋ว..."
+                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none transition-all shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 lg:w-96 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
               <select
+                className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none min-w-[140px] shadow-sm font-medium text-sm"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-medium text-black focus:outline-none focus:ring-2 focus:ring-gray-400/20 text-sm"
               >
-                <option value="all">สถานะทั้งหมด</option>
-                <option value="PENDING">รอการแก้ไข</option>
-                <option value="IN_PROGRESS">กำลังแก้ไข</option>
-                <option value="COMPLETED">เสร็จสิ้น</option>
+                <option value="all">ทุกสถานะ</option>
+                <option value="PENDING">รอรับเรื่อง</option>
+                <option value="IN_PROGRESS">กำลังดำเนินการ</option>
+                <option value="WAITING_PARTS">รออะไหล่</option>
+              </select>
+              <select
+                className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none min-w-[140px] shadow-sm font-medium text-sm"
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+              >
+                <option value="all">ทุกความสำคัญ</option>
+                <option value="CRITICAL">ด่วนมาก</option>
+                <option value="URGENT">ด่วน</option>
+                <option value="NORMAL">ปกติ</option>
               </select>
             </div>
+          </div>
 
             {/* Mobile Card View */}
             <div className="lg:hidden">
@@ -389,7 +449,7 @@ export default function ITRepairsPage() {
                   </div>
 
                   <div className="flex items-center justify-end gap-2 bg-gray-50 p-2 rounded-lg">
-                    {repair.status === "PENDING" && (
+                    {activeTab === 'available' ? (
                       <button
                         onClick={() => handleAcceptRepair(repair.id)}
                         disabled={submitting}
@@ -397,13 +457,23 @@ export default function ITRepairsPage() {
                       >
                         รับเรื่อง
                       </button>
+                    ) : (
+                      <>
+                        {/* Placeholder for Transfer button */}
+                        <button
+                          onClick={() => alert('Transfer functionality coming soon!')}
+                          className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all text-xs font-medium"
+                        >
+                          โอนงาน
+                        </button>
+                        <button
+                          onClick={() => setSelectedRepair(repair)}
+                          className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm hover:bg-gray-50 transition-all text-xs font-medium"
+                        >
+                          รายละเอียด
+                        </button>
+                      </>
                     )}
-                    <button
-                      onClick={() => setSelectedRepair(repair)}
-                      className="p-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm"
-                    >
-                      <Eye size={16} />
-                    </button>
                   </div>
                 </div>
               ))}
@@ -427,9 +497,11 @@ export default function ITRepairsPage() {
                     <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
                       สถานะ
                     </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      ผู้รับผิดชอบ
-                    </th>
+                    {activeTab !== 'available' && activeTab !== 'completed' && (
+                      <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+                        ผู้รับผิดชอบ
+                      </th>
+                    )}
                     <th className="px-6 py-3 border-b border-gray-100"></th>
                   </tr>
                 </thead>
@@ -502,7 +574,6 @@ export default function ITRepairsPage() {
               </table>
               {filteredRepairs.length === 0 && <EmptyState />}
             </div>
-          </div>
 
       {/* Detail Modal - Production Grade */}
       {selectedRepair && (
@@ -548,13 +619,13 @@ export default function ITRepairsPage() {
                       <h2 className="text-lg md:text-2xl font-bold text-white tracking-tight">
                         รายละเอียดการแจ้งซ่อม
                       </h2>
-                      <StatusBadge status={selectedRepair.status} />
+                      {selectedRepair && <StatusBadge status={selectedRepair.status} />}
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-[10px] md:text-sm text-gray-300 font-mono bg-white/10 px-2 md:px-3 py-0.5 md:py-1 rounded-full backdrop-blur-sm">
-                        #{selectedRepair.ticketCode}
+                        #{selectedRepair?.ticketCode}
                       </span>
-                      <UrgencyBadge urgency={selectedRepair.urgency} />
+                      {selectedRepair && <UrgencyBadge urgency={selectedRepair.urgency} />}
                     </div>
                   </div>
                 </div>
@@ -575,10 +646,12 @@ export default function ITRepairsPage() {
                   <div 
                     className="h-full bg-black rounded-full transition-all duration-500"
                     style={{ 
-                      width: selectedRepair.status === 'PENDING' ? '0%' : 
-                             selectedRepair.status === 'IN_PROGRESS' ? '33%' : 
-                             selectedRepair.status === 'WAITING_PARTS' ? '50%' : 
-                             selectedRepair.status === 'COMPLETED' ? '100%' : '0%' 
+                      width: `${
+                        selectedRepair?.status === "PENDING" ? "0%" :
+                        selectedRepair?.status === "IN_PROGRESS" ? "33%" :
+                        selectedRepair?.status === "WAITING_PARTS" ? "66%" :
+                        "100%"
+                      }`
                     }}
                   ></div>
                 </div>
@@ -590,9 +663,9 @@ export default function ITRepairsPage() {
                   { key: 'WAITING_PARTS', icon: Clock, label: 'รออะไหล่' },
                   { key: 'COMPLETED', icon: CheckCircle, label: 'เสร็จสิ้น' },
                 ].map((step, index) => {
-                  const isActive = selectedRepair.status === step.key;
-                  const isPassed = ['PENDING', 'IN_PROGRESS', 'WAITING_PARTS', 'COMPLETED'].indexOf(selectedRepair.status) > index;
                   const StepIcon = step.icon;
+                  const isPassed = selectedRepair && ['PENDING', 'IN_PROGRESS', 'WAITING_PARTS', 'COMPLETED'].indexOf(selectedRepair.status) >= index;
+                  const isActive = selectedRepair && selectedRepair.status === step.key;
                   
                   return (
                     <div key={step.key} className="flex flex-col items-center relative z-10">
@@ -688,7 +761,7 @@ export default function ITRepairsPage() {
                       </div>
                       ผู้รับผิดชอบ
                     </h4>
-                    {selectedRepair.assignee?.name ? (
+                    {selectedRepair?.assignee?.name ? (
                       <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
                         <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center shadow-md">
                           <span className="text-white font-bold">{selectedRepair.assignee.name.charAt(0).toUpperCase()}</span>
@@ -820,7 +893,7 @@ export default function ITRepairsPage() {
                   </div>
 
                   {/* Notes */}
-                  {selectedRepair.notes && (
+                  {selectedRepair?.notes && (
                     <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm">
                       <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-800 mb-3">
                         <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
@@ -839,46 +912,60 @@ export default function ITRepairsPage() {
 
             {/* Footer - Action Buttons */}
             <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-100 px-5 md:px-8 py-4 md:py-5">
-              <div className="flex flex-wrap items-center gap-3">
-                {selectedRepair.status === "PENDING" && (
-                  <button
-                    onClick={() => handleAcceptRepair(selectedRepair.id)}
-                    disabled={submitting}
-                    className="flex-1 md:flex-none group relative flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-black text-white rounded-xl font-semibold text-xs md:text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <CheckCircle size={16} className="relative z-10" />
-                    <span className="relative z-10">{submitting ? "..." : "รับเรื่องนี้"}</span>
-                  </button>
-                )}
-                {(selectedRepair.status === "IN_PROGRESS" || selectedRepair.status === "WAITING_PARTS") && (
-                  <button
-                    onClick={() => handleCompleteRepair(selectedRepair.id)}
-                    disabled={submitting}
-                    className="flex-1 md:flex-none group relative flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-emerald-600 text-white rounded-xl font-semibold text-xs md:text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <CheckCircle size={16} className="relative z-10" />
-                    <span className="relative z-10">{submitting ? "..." : "เสร็จสิ้นงาน"}</span>
-                  </button>
-                )}
-                {selectedRepair.status !== "COMPLETED" && selectedRepair.status !== "CANCELLED" && (
-                  <button
-                    onClick={handleOpenEdit}
-                    className="flex-1 md:flex-none group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gray-900 text-white rounded-xl font-semibold text-xs md:text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gray-800"
-                  >
-                    <Settings2 size={16} className="group-hover:rotate-90 transition-transform duration-300" />
-                    แก้ไข
-                  </button>
-                )}
+                {/* Action Buttons - Contextual */}
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                  {/* Case 1: Unassigned - Show Accept Only */}
+                  {selectedRepair && !selectedRepair.assignee && selectedRepair.status === "PENDING" && (
+                    <button
+                      onClick={() => handleAcceptRepair(selectedRepair.id)}
+                      disabled={submitting}
+                      className="flex-1 sm:flex-none group relative flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-bold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <CheckCircle size={18} className="relative z-10" />
+                      <span className="relative z-10">รับเรื่องดูแลงานซ่อมนี้</span>
+                    </button>
+                  )}
+
+                  {/* Case 2: Assigned to ME - Show Complete/Transfer/Edit */}
+                  {selectedRepair && selectedRepair.assignee?.id === currentUser?.id && selectedRepair.status !== "COMPLETED" && (
+                    <>
+                      <button
+                        onClick={() => handleCompleteRepair(selectedRepair.id)}
+                        disabled={submitting}
+                        className="flex-1 sm:flex-none group relative flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <CheckCircle size={18} className="relative z-10" />
+                        <span className="relative z-10">กดจบงาน (Complete)</span>
+                      </button>
+
+                      <button
+                        onClick={handleOpenEdit}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-zinc-200 text-zinc-900 rounded-xl font-bold text-sm hover:bg-zinc-50 transition-all hover:scale-105 active:scale-95 shadow-sm"
+                      >
+                        <Settings2 size={18} />
+                        แก้ไข / ส่งต่องาน
+                      </button>
+                    </>
+                  )}
+
+                  {/* Case 3: Assigned to Others (Viewing only) */}
+                  {selectedRepair?.assignee && selectedRepair.assignee.id !== currentUser?.id && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-xs font-bold shadow-sm">
+                      <User size={14} />
+                      งานนี้อยู่ในความรับผิดชอบของ {selectedRepair.assignee.name || "เจ้าหน้าที่คนอื่น"}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => setSelectedRepair(null)}
-                  className="w-full md:w-auto md:ml-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                  className="w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all duration-200"
                 >
                   <X size={16} />
-                  ปิด
+                  ปิดหน้าต่างนี้
                 </button>
-              </div>
             </div>
           </div>
         </div>
@@ -923,7 +1010,7 @@ export default function ITRepairsPage() {
                       แก้ไขรายละเอียด
                     </h2>
                     <p className="text-sm text-gray-300 font-mono mt-0.5">
-                      #{selectedRepair.ticketCode}
+                      #{selectedRepair?.ticketCode}
                     </p>
                   </div>
                 </div>
@@ -1045,19 +1132,19 @@ export default function ITRepairsPage() {
 
             {/* Premium Footer */}
             <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-100 px-6 md:px-8 py-4 md:py-5">
-              <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
                 <button
                   onClick={handleSaveEdit}
                   disabled={submitting}
-                  className="w-full sm:flex-1 group relative flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                  className="w-full sm:flex-1 group relative flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-bold text-sm shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <CheckCircle size={18} className="relative z-10" />
-                  <span className="relative z-10">{submitting ? "..." : "บันทึกการแก้ไข"}</span>
+                  <span className="relative z-10">บันทึกการแก้ไข</span>
                 </button>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                  className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all duration-200"
                 >
                   <X size={16} />
                   ยกเลิก

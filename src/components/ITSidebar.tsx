@@ -86,7 +86,7 @@ export default function ITSidebar() {
           <Link href="/it/dashboard" className="flex items-center gap-3">
             <div className="flex flex-col">
               <span className="text-md font-bold text-zinc-900 tracking-tight">
-                IT TECH
+                IT
               </span>
               <span className="text-[10px] text-zinc-400 font-medium tracking-wider">
                 SUPPORT
