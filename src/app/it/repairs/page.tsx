@@ -324,48 +324,50 @@ export default function ITRepairsPage() {
           </div>
 
           {/* Stats Grid - Contextual */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
             <StatCard
               label={activeTab === 'available' ? "งานรอรับสิทธิ์" : activeTab === 'my-tasks' ? "งานที่กำลังทำ" : "จบงานแล้ว"}
               count={activeTab === 'available' ? allStats.available : activeTab === 'my-tasks' ? allStats.myTasks : allStats.completed}
-              icon={<Wrench className="text-black" size={24} />}
+              icon={<Wrench className="text-black" size={20} />}
             />
             <StatCard
               label="งานเร่งด่วน"
               count={allStats.urgent}
-              icon={<AlertCircle className="text-red-500" size={24} />}
+              icon={<AlertCircle className="text-red-500" size={20} />}
             />
             <StatCard
               label="งานของฉัน"
               count={allStats.myTasks}
-              icon={<User className="text-blue-500" size={24} />}
+              icon={<User className="text-blue-500" size={20} />}
             />
             <StatCard
               label="งานทั้งหมดอาทิตย์นี้"
               count={repairs.length}
-              icon={<CheckCircle className="text-emerald-500" size={24} />}
+              icon={<CheckCircle className="text-emerald-500" size={20} />}
             />
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-2xl w-fit border border-gray-200 shadow-sm mt-4">
+          <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-2xl w-full md:w-fit border border-gray-200 shadow-sm mt-4">
             {[
-              { id: 'available', label: 'งานรอรับ', icon: <Clock size={16} />, count: allStats.available },
-              { id: 'my-tasks', label: 'งานของฉัน', icon: <User size={16} />, count: allStats.myTasks },
-              { id: 'completed', label: 'งานเสร็จสิ้น', icon: <CheckCircle size={16} />, count: allStats.completed },
+              { id: 'available', label: 'งานรอรับ', icon: <Clock size={14} />, count: allStats.available },
+              { id: 'my-tasks', label: 'งานของฉัน', icon: <User size={14} />, count: allStats.myTasks },
+              { id: 'completed', label: 'งานเสร็จสิ้น', icon: <CheckCircle size={14} />, count: allStats.completed },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
+                className={`flex flex-1 md:flex-none items-center justify-center md:justify-start gap-1.5 md:gap-2 px-2 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-[10px] md:text-sm transition-all duration-300 ${
                   activeTab === tab.id
-                    ? 'bg-black text-white shadow-lg scale-105'
+                    ? 'bg-black text-white shadow-lg scale-[1.02] md:scale-105'
                     : 'text-gray-500 hover:text-black hover:bg-white/50'
                 }`}
               >
-                {tab.icon}
-                {tab.label}
-                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                <div className="flex items-center gap-1">
+                  {tab.icon}
+                  <span className="whitespace-nowrap">{tab.label}</span>
+                </div>
+                <span className={`flex items-center justify-center min-w-4 h-4 px-1 rounded-full text-[8px] md:text-[10px] ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'}`}>
                   {tab.count}
                 </span>
               </button>
@@ -373,23 +375,24 @@ export default function ITRepairsPage() {
           </div>
 
           {/* Filters & Search */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="relative flex-1">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
               />
               <input
                 type="text"
                 placeholder="ค้นหาชื่อผู้แจ้ง, รหัสตั๋ว..."
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none transition-all shadow-sm"
+                className="w-full pl-10 pr-4 py-2.5 md:py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none transition-all shadow-sm text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex gap-2 lg:w-96 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+            <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
               <select
-                className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none min-w-[140px] shadow-sm font-medium text-sm"
+                className="px-3 md:px-4 py-2 md:py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none shadow-sm font-medium text-[11px] md:text-sm appearance-none"
+                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -399,7 +402,8 @@ export default function ITRepairsPage() {
                 <option value="WAITING_PARTS">รออะไหล่</option>
               </select>
               <select
-                className="px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none min-w-[140px] shadow-sm font-medium text-sm"
+                className="px-3 md:px-4 py-2 md:py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-black outline-none shadow-sm font-medium text-[11px] md:text-sm appearance-none"
+                style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
               >
@@ -1164,14 +1168,14 @@ export default function ITRepairsPage() {
 
 function StatCard({ label, count, icon }: any) {
   return (
-    <div className="bg-white border border-gray-200 p-4 md:p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+    <div className="bg-white border border-gray-200 p-3 md:p-6 rounded-xl md:rounded-[1.5rem] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
       <div className="flex flex-col">
-        <span className="text-gray-600 text-[10px] md:text-xs font-semibold uppercase">
+        <span className="text-gray-500 text-[9px] md:text-xs font-bold uppercase tracking-tight md:tracking-widest">
           {label}
         </span>
-        <span className="text-3xl font-bold text-black mt-2">{count}</span>
+        <span className="text-2xl md:text-4xl font-black text-neutral-900 mt-1 md:mt-2 tracking-tighter">{count}</span>
       </div>
-      <div className="absolute -right-2 -bottom-2 opacity-10 scale-[2] pointer-events-none">
+      <div className="absolute -right-1 -bottom-1 opacity-5 md:opacity-10 scale-[1.5] md:scale-[2] pointer-events-none group-hover:scale-[1.8] md:group-hover:scale-[2.2] transition-transform duration-500">
         {icon}
       </div>
     </div>
