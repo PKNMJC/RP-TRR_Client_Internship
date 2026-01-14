@@ -51,17 +51,17 @@ interface Loan {
 const StatusBadge = ({ status }: { status: LoanStatus }) => {
   const configs = {
     BORROWED: {
-      color: "bg-blue-50 text-blue-700 border-blue-200",
+      color: "bg-neutral-800 text-white border-neutral-800",
       label: "กำลังยืม",
       icon: Clock,
     },
     RETURNED: {
-      color: "bg-green-50 text-green-700 border-green-200",
+      color: "bg-black text-white border-black",
       label: "คืนแล้ว",
       icon: CheckCircle2,
     },
     OVERDUE: {
-      color: "bg-red-50 text-red-700 border-red-200",
+      color: "bg-neutral-200 text-neutral-700 border-neutral-300 font-semibold",
       label: "เกินกำหนด",
       icon: AlertCircle,
     },

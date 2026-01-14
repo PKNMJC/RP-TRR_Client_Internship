@@ -287,20 +287,20 @@ export default function ITUsersPage() {
         <StatCard
           label="ผู้ใช้ทั้งหมด"
           count={stats.total}
-          icon={<Users className="text-blue-600" />}
-          bgClass="bg-blue-50"
+          icon={<Users className="text-neutral-600" />}
+          bgClass="bg-neutral-50"
         />
         <StatCard 
           label="ทีม IT" 
           count={stats.its} 
-          icon={<Shield className="text-purple-600" />}
-          bgClass="bg-purple-50"
+          icon={<Shield className="text-neutral-600" />}
+          bgClass="bg-neutral-50"
         />
         <StatCard
           label="ผู้ใช้ทั่วไป"
           count={stats.users}
-          icon={<UserIcon className="text-emerald-600" />}
-          bgClass="bg-emerald-50"
+          icon={<UserIcon className="text-neutral-600" />}
+          bgClass="bg-neutral-50"
         />
       </div>
 
@@ -605,7 +605,7 @@ export default function ITUsersPage() {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">บทบาท</label>
                 <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600 cursor-not-allowed flex items-center justify-between">
                   <span>ผู้ใช้ทั่วไป (General User)</span>
-                  <Shield size={14} className="text-emerald-500"/>
+                  <Shield size={14} className="text-neutral-500"/>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">* IT สามารถจัดการได้เฉพาะผู้ใช้ทั่วไป</p>
               </div>
@@ -656,9 +656,9 @@ function StatCard({ label, count, icon, bgClass }: { label: string; count: numbe
 
 function RoleBadge({ role }: { role: string }) {
   const styles = {
-    ADMIN: "bg-red-50 text-red-700 border-red-100",
-    IT: "bg-purple-50 text-purple-700 border-purple-100",
-    USER: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    ADMIN: "bg-black text-white border-black",
+    IT: "bg-neutral-800 text-white border-neutral-800",
+    USER: "bg-neutral-100 text-neutral-700 border-neutral-300",
   };
   
   const labels = {

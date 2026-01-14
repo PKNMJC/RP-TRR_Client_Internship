@@ -181,7 +181,7 @@ export default function ITSidebar() {
         {/* User Profile Area */}
         <div className="absolute bottom-0 w-full p-4 border-t border-zinc-100 bg-zinc-50/50">
           <div className="flex items-center gap-3 px-2 py-3">
-            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+            <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600">
               <User size={18} />
             </div>
             <div className="flex flex-col min-w-0">

@@ -99,7 +99,7 @@ export default function ITDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       <ITSidebar />
 
       <main className="lg:ml-64 pt-20 lg:pt-8 pb-12">
@@ -116,25 +116,25 @@ export default function ITDashboard() {
             {/* Loans Stats */}
             <StatCard
               title="ระบบยืมของ"
-              icon={<Package className="text-blue-600" size={24} />}
+              icon={<Package className="text-neutral-600" size={24} />}
               stats={[
-                { label: 'รวม', value: stats.totalLoans, color: 'text-blue-600' },
-                { label: 'กำลังยืม', value: stats.activeLoans, color: 'text-amber-600' },
-                { label: 'เกินกำหนด', value: stats.overdueLoans, color: 'text-red-600' },
+                { label: 'รวม', value: stats.totalLoans, color: 'text-neutral-900' },
+                { label: 'กำลังยืม', value: stats.activeLoans, color: 'text-neutral-700' },
+                { label: 'เกินกำหนด', value: stats.overdueLoans, color: 'text-neutral-600' },
               ]}
-              bgColor="bg-blue-50 border-blue-200"
+              bgColor="bg-neutral-50 border-neutral-200"
             />
 
             {/* Repairs Stats */}
             <StatCard
               title="งานซ่อมแซม"
-              icon={<Wrench className="text-green-600" size={24} />}
+              icon={<Wrench className="text-neutral-600" size={24} />}
               stats={[
-                { label: 'รวม', value: stats.totalRepairs, color: 'text-green-600' },
-                { label: 'รอการแก้ไข', value: stats.pendingRepairs, color: 'text-amber-600' },
-                { label: 'เสร็จสิ้น', value: stats.completedRepairs, color: 'text-emerald-600' },
+                { label: 'รวม', value: stats.totalRepairs, color: 'text-neutral-900' },
+                { label: 'รอการแก้ไข', value: stats.pendingRepairs, color: 'text-neutral-700' },
+                { label: 'เสร็จสิ้น', value: stats.completedRepairs, color: 'text-neutral-600' },
               ]}
-              bgColor="bg-green-50 border-green-200"
+              bgColor="bg-neutral-50 border-neutral-200"
             />
 
             {/* Overview */}
@@ -148,9 +148,9 @@ export default function ITDashboard() {
                   <span className="text-xs text-zinc-500">กิจกรรมวันนี้</span>
                   <span className="text-lg font-bold text-zinc-900">{stats.activeLoans + stats.pendingRepairs}</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="w-full bg-neutral-100 rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all"
+                    className="bg-black h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(((stats.activeLoans + stats.pendingRepairs) / 10) * 100, 100)}%` }}
                   ></div>
                 </div>

@@ -10,7 +10,7 @@ export default function ITLayout({
 }>) {
   return (
     <ProtectedRoute requireIT>
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-white">
         <ITSidebar />
         <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
           <div className="p-4 lg:p-8">

@@ -511,27 +511,24 @@ export default function ITRepairsPage() {
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
           >
-            {/* Glassmorphism Header */}
+            {/* Solid Dark Header */}
             <div 
-              className="relative px-8 py-6 overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-              }}
+              className="relative px-8 py-6 overflow-hidden bg-neutral-900"
             >
-              {/* Animated background pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 w-40 h-40 bg-blue-500 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 right-0 w-60 h-60 bg-purple-500 rounded-full blur-3xl"></div>
+              {/* Subtle pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 right-0 w-60 h-60 bg-white rounded-full blur-3xl"></div>
               </div>
               
               <div className="relative flex justify-between items-start">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
+                    <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
                       <Wrench className="text-white" size={26} />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-white shadow-md">
-                      <span className="text-[8px] font-bold text-white">IT</span>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white flex items-center justify-center border-2 border-neutral-900 shadow-md">
+                      <span className="text-[8px] font-bold text-neutral-900">IT</span>
                     </div>
                   </div>
                   <div>
@@ -562,9 +559,9 @@ export default function ITRepairsPage() {
             <div className="px-8 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
               <div className="flex items-center justify-between relative">
                 {/* Progress Line */}
-                <div className="absolute top-5 left-8 right-8 h-0.5 bg-gray-200 rounded-full">
+                <div className="absolute top-5 left-8 right-8 h-0.5 bg-neutral-200 rounded-full">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
+                    className="h-full bg-black rounded-full transition-all duration-500"
                     style={{ 
                       width: selectedRepair.status === 'PENDING' ? '0%' : 
                              selectedRepair.status === 'IN_PROGRESS' ? '33%' : 
@@ -576,10 +573,10 @@ export default function ITRepairsPage() {
                 
                 {/* Steps */}
                 {[
-                  { key: 'PENDING', icon: Clock, label: 'รอรับเรื่อง', color: 'gray' },
-                  { key: 'IN_PROGRESS', icon: Settings2, label: 'กำลังดำเนินการ', color: 'blue' },
-                  { key: 'WAITING_PARTS', icon: Clock, label: 'รออะไหล่', color: 'orange' },
-                  { key: 'COMPLETED', icon: CheckCircle, label: 'เสร็จสิ้น', color: 'green' },
+                  { key: 'PENDING', icon: Clock, label: 'รอรับเรื่อง' },
+                  { key: 'IN_PROGRESS', icon: Settings2, label: 'กำลังดำเนินการ' },
+                  { key: 'WAITING_PARTS', icon: Clock, label: 'รออะไหล่' },
+                  { key: 'COMPLETED', icon: CheckCircle, label: 'เสร็จสิ้น' },
                 ].map((step, index) => {
                   const isActive = selectedRepair.status === step.key;
                   const isPassed = ['PENDING', 'IN_PROGRESS', 'WAITING_PARTS', 'COMPLETED'].indexOf(selectedRepair.status) > index;
@@ -589,15 +586,12 @@ export default function ITRepairsPage() {
                     <div key={step.key} className="flex flex-col items-center relative z-10">
                       <div className={`
                         w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
-                        ${isActive ? `bg-gradient-to-br from-${step.color}-500 to-${step.color}-600 text-white shadow-lg scale-110` : 
-                          isPassed ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white' : 
-                          'bg-white border-2 border-gray-200 text-gray-400'}
+                        ${isActive ? 'bg-black text-white shadow-lg scale-110' : 
+                          isPassed ? 'bg-neutral-800 text-white' : 
+                          'bg-white border-2 border-neutral-200 text-neutral-400'}
                       `}
                       style={isActive ? {
-                        boxShadow: `0 0 0 4px ${step.color === 'gray' ? 'rgba(107, 114, 128, 0.2)' : 
-                                    step.color === 'blue' ? 'rgba(59, 130, 246, 0.2)' : 
-                                    step.color === 'orange' ? 'rgba(249, 115, 22, 0.2)' : 
-                                    'rgba(34, 197, 94, 0.2)'}`
+                        boxShadow: '0 0 0 4px rgba(0, 0, 0, 0.1)'
                       } : {}}
                       >
                         {isPassed && !isActive ? <CheckCircle size={18} /> : <StepIcon size={18} />}
@@ -618,18 +612,18 @@ export default function ITRepairsPage() {
                 {/* Left Column - Reporter Info */}
                 <div className="lg:col-span-2 space-y-4">
                   {/* Reporter Card */}
-                  <div className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 opacity-90"></div>
+                  <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div className="absolute top-0 left-0 right-0 h-20 bg-neutral-900"></div>
                     <div className="relative pt-10 pb-5 px-5">
                       {/* Avatar */}
                       <div className="flex justify-center mb-4">
                         <div className="relative">
-                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white to-gray-50 flex items-center justify-center shadow-xl border-4 border-white">
-                            <span className="text-3xl font-bold bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-xl border-4 border-white">
+                            <span className="text-3xl font-bold text-neutral-800">
                               {(selectedRepair.reporterName || selectedRepair.user?.name || "?").charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-3 border-white shadow-md">
+                          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center border-3 border-white shadow-md">
                             <User className="text-white" size={14} />
                           </div>
                         </div>
@@ -647,26 +641,26 @@ export default function ITRepairsPage() {
                         {selectedRepair.reporterPhone && (
                           <a 
                             href={`tel:${selectedRepair.reporterPhone}`}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 hover:from-green-100 hover:to-emerald-100 transition-colors group"
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors group"
                           >
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
                               <Phone className="text-white" size={18} />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">โทรศัพท์</p>
-                              <p className="text-sm font-semibold text-green-700">{selectedRepair.reporterPhone}</p>
+                              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">โทรศัพท์</p>
+                              <p className="text-sm font-semibold text-neutral-700">{selectedRepair.reporterPhone}</p>
                             </div>
                           </a>
                         )}
                         
                         {selectedRepair.reporterLineId && (
-                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-[#00B900]/5 to-[#00C300]/5 border border-[#00B900]/20">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00B900] to-[#00C300] flex items-center justify-center shadow-md">
+                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-700 flex items-center justify-center shadow-md">
                               <MessageCircle className="text-white" size={18} />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">LINE</p>
-                              <p className="text-sm font-mono font-semibold text-[#00B900]">{selectedRepair.reporterLineId.slice(0, 12)}...</p>
+                              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">LINE</p>
+                              <p className="text-sm font-mono font-semibold text-neutral-700">{selectedRepair.reporterLineId.slice(0, 12)}...</p>
                             </div>
                           </div>
                         )}
@@ -676,15 +670,15 @@ export default function ITRepairsPage() {
 
                   {/* Assignment Card */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <User className="text-indigo-600" size={16} />
+                    <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-900 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
+                        <User className="text-neutral-600" size={16} />
                       </div>
                       ผู้รับผิดชอบ
                     </h4>
                     {selectedRepair.assignee?.name ? (
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
+                        <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center shadow-md">
                           <span className="text-white font-bold">{selectedRepair.assignee.name.charAt(0).toUpperCase()}</span>
                         </div>
                         <div>
@@ -707,9 +701,9 @@ export default function ITRepairsPage() {
                 <div className="lg:col-span-3 space-y-4">
                   {/* Problem Title Card */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                        <AlertCircle className="text-red-600" size={16} />
+                    <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-900 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
+                        <AlertCircle className="text-neutral-600" size={16} />
                       </div>
                       รายละเอียดปัญหา
                     </h4>
@@ -738,20 +732,20 @@ export default function ITRepairsPage() {
                       {/* Category & Location */}
                       <div className="grid grid-cols-2 gap-3">
                         {selectedRepair.problemCategory && (
-                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-50 border border-purple-100">
-                            <FileText className="text-purple-500" size={18} />
+                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
+                            <FileText className="text-neutral-500" size={18} />
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold">ประเภท</p>
-                              <p className="text-sm font-semibold text-purple-700">{selectedRepair.problemCategory}</p>
+                              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">ประเภท</p>
+                              <p className="text-sm font-semibold text-neutral-700">{selectedRepair.problemCategory}</p>
                             </div>
                           </div>
                         )}
                         {selectedRepair.location && (
-                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-100">
-                            <MapPin className="text-amber-500" size={18} />
+                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
+                            <MapPin className="text-neutral-500" size={18} />
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-amber-400 font-semibold">สถานที่</p>
-                              <p className="text-sm font-semibold text-amber-700">{selectedRepair.location}</p>
+                              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">สถานที่</p>
+                              <p className="text-sm font-semibold text-neutral-700">{selectedRepair.location}</p>
                             </div>
                           </div>
                         )}
@@ -761,22 +755,22 @@ export default function ITRepairsPage() {
 
                   {/* Timeline Card */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Calendar className="text-blue-600" size={16} />
+                    <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-900 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
+                        <Calendar className="text-neutral-600" size={16} />
                       </div>
                       ไทม์ไลน์
                     </h4>
                     
                     <div className="relative pl-6 space-y-4">
                       {/* Timeline Line */}
-                      <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-blue-200 via-indigo-200 to-green-200 rounded-full"></div>
+                      <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-neutral-200 rounded-full"></div>
                       
                       {/* Created */}
                       <div className="relative flex items-start gap-4">
-                        <div className="absolute -left-4 w-4 h-4 rounded-full bg-blue-500 border-3 border-white shadow-md"></div>
+                        <div className="absolute -left-4 w-4 h-4 rounded-full bg-neutral-800 border-3 border-white shadow-md"></div>
                         <div className="flex-1 ml-2">
-                          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">แจ้งซ่อม</p>
+                          <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">แจ้งซ่อม</p>
                           <p className="text-sm font-medium text-gray-900">
                             {format(new Date(selectedRepair.createdAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
                           </p>
@@ -786,9 +780,9 @@ export default function ITRepairsPage() {
                       {/* Updated */}
                       {selectedRepair.updatedAt && selectedRepair.updatedAt !== selectedRepair.createdAt && (
                         <div className="relative flex items-start gap-4">
-                          <div className="absolute -left-4 w-4 h-4 rounded-full bg-indigo-500 border-3 border-white shadow-md"></div>
+                          <div className="absolute -left-4 w-4 h-4 rounded-full bg-neutral-600 border-3 border-white shadow-md"></div>
                           <div className="flex-1 ml-2">
-                            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">อัปเดตล่าสุด</p>
+                            <p className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">อัปเดตล่าสุด</p>
                             <p className="text-sm font-medium text-gray-900">
                               {format(new Date(selectedRepair.updatedAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
                             </p>
@@ -799,11 +793,11 @@ export default function ITRepairsPage() {
                       {/* Completed */}
                       {selectedRepair.completedAt && (
                         <div className="relative flex items-start gap-4">
-                          <div className="absolute -left-4 w-4 h-4 rounded-full bg-green-500 border-3 border-white shadow-md">
+                          <div className="absolute -left-4 w-4 h-4 rounded-full bg-black border-3 border-white shadow-md">
                             <CheckCircle className="text-white" size={10} />
                           </div>
                           <div className="flex-1 ml-2">
-                            <p className="text-xs font-semibold text-green-600 uppercase tracking-wider">เสร็จสิ้น</p>
+                            <p className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">เสร็จสิ้น</p>
                             <p className="text-sm font-medium text-gray-900">
                               {format(new Date(selectedRepair.completedAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
                             </p>
@@ -815,14 +809,14 @@ export default function ITRepairsPage() {
 
                   {/* Notes */}
                   {selectedRepair.notes && (
-                    <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 shadow-sm">
-                      <h4 className="flex items-center gap-2 text-sm font-bold text-amber-800 mb-3">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <FileText className="text-amber-600" size={16} />
+                    <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm">
+                      <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-800 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
+                          <FileText className="text-neutral-600" size={16} />
                         </div>
                         หมายเหตุ
                       </h4>
-                      <p className="text-sm text-amber-900 leading-relaxed whitespace-pre-wrap pl-10">
+                      <p className="text-sm text-neutral-700 leading-relaxed whitespace-pre-wrap pl-10">
                         {selectedRepair.notes}
                       </p>
                     </div>
@@ -838,9 +832,9 @@ export default function ITRepairsPage() {
                   <button
                     onClick={() => handleAcceptRepair(selectedRepair.id)}
                     disabled={submitting}
-                    className="group relative flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                    className="group relative flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <CheckCircle size={18} className="relative z-10" />
                     <span className="relative z-10">{submitting ? "กำลังบันทึก..." : "รับเรื่องนี้"}</span>
                   </button>
@@ -886,22 +880,19 @@ export default function ITRepairsPage() {
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
           >
-            {/* Premium Header */}
+            {/* Solid Dark Header */}
             <div 
-              className="relative px-8 py-6 overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
-              }}
+              className="relative px-8 py-6 overflow-hidden bg-neutral-900"
             >
-              {/* Animated background pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
+              {/* Subtle pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full blur-3xl"></div>
               </div>
               
               <div className="relative flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
                     <Settings2 className="text-white" size={22} />
                   </div>
                   <div>
@@ -1035,9 +1026,9 @@ export default function ITRepairsPage() {
                 <button
                   onClick={handleSaveEdit}
                   disabled={submitting}
-                  className="group relative flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                  className="group relative flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-700 via-emerald-700 to-teal-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <CheckCircle size={18} className="relative z-10" />
                   <span className="relative z-10">{submitting ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}</span>
                 </button>
@@ -1077,17 +1068,17 @@ function StatCard({ label, count, icon }: any) {
 
 function UrgencyBadge({ urgency }: { urgency: string }) {
   const config: any = {
-    CRITICAL: { label: "ด่วนมาก", class: "text-red-700 bg-red-50 border-red-200" },
+    CRITICAL: { label: "ด่วนมาก", class: "bg-black text-white border-black font-bold" },
     URGENT: {
       label: "ด่วน",
-      class: "text-amber-700 bg-amber-50 border-amber-200",
+      class: "bg-neutral-700 text-white border-neutral-700 font-semibold",
     },
-    NORMAL: { label: "ปกติ", class: "text-gray-600 bg-gray-100 border-gray-200" },
+    NORMAL: { label: "ปกติ", class: "bg-neutral-100 text-neutral-600 border-neutral-300" },
   };
   const active = config[urgency] || config.NORMAL;
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${active.class}`}
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs border ${active.class}`}
     >
       <AlertTriangle size={11} strokeWidth={2} />
       {active.label}
@@ -1100,27 +1091,27 @@ function StatusBadge({ status }: { status: string }) {
     PENDING: {
       label: "รอรับเรื่อง",
       icon: <Clock size={12} />,
-      class: "bg-gray-600 text-white",
+      class: "bg-neutral-100 text-neutral-700 border border-neutral-300",
     },
     IN_PROGRESS: {
       label: "กำลังซ่อม",
       icon: <Settings2 size={12} />,
-      class: "bg-blue-600 text-white",
+      class: "bg-neutral-800 text-white",
     },
     WAITING_PARTS: {
       label: "รออะไหล่",
       icon: <Clock size={12} />,
-      class: "bg-orange-500 text-white",
+      class: "bg-neutral-200 text-neutral-700",
     },
     COMPLETED: {
       label: "เสร็จสิ้น",
       icon: <CheckCircle size={12} />,
-      class: "bg-green-600 text-white",
+      class: "bg-black text-white",
     },
     CANCELLED: {
       label: "ยกเลิก",
       icon: <AlertCircle size={12} />,
-      class: "bg-red-600 text-white",
+      class: "bg-neutral-100 text-neutral-500 line-through",
     },
   };
   const active = config[status] || config.PENDING;
