@@ -897,7 +897,7 @@ function EmptyState() {
       <Package size={48} className="text-gray-300 mb-4" />
       <h3 className="text-black font-bold text-lg">ไม่พบรายการยืมอุปกรณ์</h3>
       <p className="text-gray-600 font-medium mt-2 text-sm">
-        เริ่มต้นโดยการคลิกปุ่ม 'เพิ่มรายการใหม่'
+        เริ่มต้นโดยการคลิกปุ่ม &apos;เพิ่มรายการใหม่&apos;
       </p>
     </div>
   );

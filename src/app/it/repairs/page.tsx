@@ -57,6 +57,7 @@ import {
   MapPin,
   FileText,
   Calendar,
+  Share2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -88,6 +89,18 @@ interface RepairTicket {
     department?: string;
   };
   notes?: string;
+  logs?: RepairLog[];
+}
+
+interface RepairLog {
+  id: number;
+  status: string;
+  comment?: string;
+  createdAt: string;
+  user: {
+    id: number;
+    name: string;
+  };
 }
 
 interface User {
@@ -119,6 +132,9 @@ export default function ITRepairsPage() {
     description: "",
     assigneeId: "",
   });
+
+  // Transfer State
+  const [selectionForTransfer, setSelectionForTransfer] = useState<RepairTicket | null>(null);
 
   // New states for Assignee & Realtime
   const [itStaff, setItStaff] = useState<User[]>([]);
@@ -256,6 +272,27 @@ export default function ITRepairsPage() {
     }
   };
 
+  const handleTransferRepair = async (id: number, newAssigneeId: number) => {
+    try {
+      setSubmitting(true);
+      await apiFetch(`/api/repairs/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          assignedTo: newAssigneeId,
+        }),
+      });
+      fetchRepairs();
+      setSelectionForTransfer(null);
+      if (selectedRepair?.id === id) {
+        setSelectedRepair(null);
+      }
+    } catch (err) {
+      alert("เกิดข้อผิดพลาดในการโอนงาน");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filteredRepairs = repairs.filter((repair) => {
     // 1. Tab Based Filter (Logical Ownership)
     const isUnassigned = !repair.assignee;
@@ -356,7 +393,7 @@ export default function ITRepairsPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'available' | 'my-tasks' | 'completed')}
                 className={`flex flex-1 md:flex-none items-center justify-center md:justify-start gap-1.5 md:gap-2 px-2 md:px-5 py-2 md:py-2.5 rounded-xl font-bold text-[10px] md:text-sm transition-all duration-300 ${
                   activeTab === tab.id
                     ? 'bg-black text-white shadow-lg scale-[1.02] md:scale-105'
@@ -467,7 +504,7 @@ export default function ITRepairsPage() {
                     ) : (
                       <>
                         <button
-                          onClick={() => alert('Transfer functionality coming soon!')}
+                          onClick={() => setSelectionForTransfer(repair)}
                           className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all text-[11px] font-bold active:scale-[0.98]"
                         >
                           โอนงาน
@@ -563,6 +600,15 @@ export default function ITRepairsPage() {
                               title="รับเรื่อง"
                             >
                               รับเรื่อง
+                            </button>
+                          )}
+                          {repair.status !== "COMPLETED" && (
+                            <button
+                              onClick={() => setSelectionForTransfer(repair)}
+                              className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
+                              title="โอนงาน"
+                            >
+                              <Share2 size={16} strokeWidth={2} />
                             </button>
                           )}
                           <button
@@ -857,43 +903,70 @@ export default function ITRepairsPage() {
                       {/* Timeline Line */}
                       <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-neutral-200 rounded-full"></div>
                       
-                      {/* Created */}
-                      <div className="relative flex items-start gap-4">
-                        <div className="absolute -left-4 w-4 h-4 rounded-full bg-neutral-800 border-3 border-white shadow-md"></div>
-                        <div className="flex-1 ml-2">
-                          <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">แจ้งซ่อม</p>
-                          <p className="text-sm font-medium text-gray-900">
-                            {format(new Date(selectedRepair.createdAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {/* Updated */}
-                      {selectedRepair.updatedAt && selectedRepair.updatedAt !== selectedRepair.createdAt && (
-                        <div className="relative flex items-start gap-4">
-                          <div className="absolute -left-4 w-4 h-4 rounded-full bg-neutral-600 border-3 border-white shadow-md"></div>
-                          <div className="flex-1 ml-2">
-                            <p className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">อัปเดตล่าสุด</p>
-                            <p className="text-sm font-medium text-gray-900">
-                              {format(new Date(selectedRepair.updatedAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
-                            </p>
+                      {/* Logs Timeline */}
+                      {selectedRepair.logs && selectedRepair.logs.length > 0 ? (
+                        selectedRepair.logs.map((log, idx) => (
+                          <div key={log.id} className="relative flex items-start gap-4 animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
+                            {/* Dot */}
+                            <div className={`absolute -left-4 w-4 h-4 rounded-full border-3 border-white shadow-md transition-colors ${
+                              idx === 0 ? 'bg-neutral-900 scale-110' : 'bg-neutral-300'
+                            }`}></div>
+                            
+                            <div className="flex-1 ml-2">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                  idx === 0 ? 'text-neutral-900' : 'text-neutral-500'
+                                }`}>
+                                  {log.status === "PENDING" ? "เปิดตั๋ว" : 
+                                   log.status === "IN_PROGRESS" ? "รับเรื่องดำเนินการ" :
+                                   log.status === "WAITING_PARTS" ? "รออะไหล่" :
+                                   log.status === "COMPLETED" ? "เสร็จสิ้น" :
+                                   log.status === "CANCELLED" ? "ยกเลิก" : log.status}
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-mono">
+                                  {format(new Date(log.createdAt), "dd/MM/yy HH:mm")}
+                                </span>
+                              </div>
+                              <div className="bg-neutral-50/50 rounded-lg p-2.5 border border-neutral-100 group-hover:border-neutral-200 transition-colors">
+                                <p className="text-xs text-gray-700 leading-relaxed font-medium">
+                                  {log.comment || "ไม่มีคำอธิบายเพิ่มเติม"}
+                                </p>
+                                <div className="mt-1.5 flex items-center gap-1.5">
+                                  <div className="w-4 h-4 bg-neutral-200 rounded-full flex items-center justify-center text-[8px] font-bold text-neutral-600">
+                                    {log.user.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="text-[9px] text-gray-400">โดย {log.user.name}</span>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Completed */}
-                      {selectedRepair.completedAt && (
-                        <div className="relative flex items-start gap-4">
-                          <div className="absolute -left-4 w-4 h-4 rounded-full bg-black border-3 border-white shadow-md">
-                            <CheckCircle className="text-white" size={10} />
+                        ))
+                      ) : (
+                        /* Fallback to simple timeline if no logs */
+                        <>
+                          <div className="relative flex items-start gap-4">
+                            <div className="absolute -left-4 w-4 h-4 rounded-full bg-neutral-800 border-3 border-white shadow-md"></div>
+                            <div className="flex-1 ml-2">
+                              <p className="text-xs font-semibold text-neutral-700 uppercase tracking-wider">แจ้งซ่อม</p>
+                              <p className="text-sm font-medium text-gray-900">
+                                {format(new Date(selectedRepair.createdAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 ml-2">
-                            <p className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">เสร็จสิ้น</p>
-                            <p className="text-sm font-medium text-gray-900">
-                              {format(new Date(selectedRepair.completedAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
-                            </p>
-                          </div>
-                        </div>
+                          {selectedRepair.completedAt && (
+                            <div className="relative flex items-start gap-4">
+                              <div className="absolute -left-4 w-4 h-4 rounded-full bg-black border-3 border-white shadow-md">
+                                <CheckCircle className="text-white" size={10} />
+                              </div>
+                              <div className="flex-1 ml-2">
+                                <p className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">เสร็จสิ้น</p>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {format(new Date(selectedRepair.completedAt), "dd MMMM yyyy เวลา HH:mm น.", { locale: th })}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -1160,13 +1233,88 @@ export default function ITRepairsPage() {
           </div>
         </div>
       )}
+
+      {/* Transfer Modal */}
+      {selectionForTransfer && (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          onClick={(e) => e.target === e.currentTarget && setSelectionForTransfer(null)}
+        >
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100">
+            <div className="bg-neutral-900 px-6 py-5 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                  <Share2 size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">โอนมอบหมายงาน</h3>
+                  <p className="text-xs text-gray-400 font-mono">#{selectionForTransfer.ticketCode}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectionForTransfer(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start gap-3">
+                <AlertCircle size={18} className="text-blue-500 mt-0.5 shrink-0" />
+                <p className="text-sm text-blue-700 font-medium leading-relaxed">
+                  เลือกเจ้าหน้าที่ IT ที่คุณต้องการโอนงานนี้ให้รับผิดชอบต่อ 
+                  <span className="block mt-1 text-[10px] text-blue-500 font-normal italic">* ระบบจะบันทึกประวัติการโอนงานโดยอัตโนมัติ</span>
+                </p>
+              </div>
+
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
+                {itStaff.filter(staff => staff.id !== currentUser?.id).map((staff) => (
+                  <button
+                    key={staff.id}
+                    onClick={() => handleTransferRepair(selectionForTransfer.id, staff.id)}
+                    disabled={submitting}
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-black hover:text-white rounded-2xl transition-all group active:scale-[0.98] border border-transparent hover:border-black"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-700 group-hover:bg-white/10 group-hover:border-white/20 group-hover:text-white transition-colors">
+                        {staff.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-sm leading-tight">{staff.name}</p>
+                        <p className="text-[10px] opacity-60">{staff.department || "IT Department"}</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+                  </button>
+                ))}
+                {itStaff.filter(staff => staff.id !== currentUser?.id).length === 0 && (
+                  <div className="text-center py-8">
+                    <User size={32} className="mx-auto text-gray-200 mb-2" />
+                    <p className="text-sm text-gray-400 font-medium italic">ไม่พบเจ้าหน้าที่คนอื่นในระบบ</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-100">
+              <button
+                onClick={() => setSelectionForTransfer(null)}
+                className="w-full py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // --- Internal UI Components ---
 
-function StatCard({ label, count, icon }: any) {
+function StatCard({ label, count, icon }: { label: string; count: number; icon: React.ReactNode }) {
   return (
     <div className="bg-white border border-gray-200 p-3 md:p-6 rounded-xl md:rounded-[1.5rem] shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
       <div className="flex flex-col">
@@ -1203,7 +1351,7 @@ function UrgencyBadge({ urgency }: { urgency: string }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: any = {
+  const config: Record<string, { label: string; icon: React.ReactNode; class: string }> = {
     PENDING: {
       label: "รอรับเรื่อง",
       icon: <Clock size={12} />,

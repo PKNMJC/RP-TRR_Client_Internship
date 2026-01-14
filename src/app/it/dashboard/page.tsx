@@ -12,7 +12,11 @@ import {
   Users,
   CheckCircle2,
   Clock,
+  ArrowRight,
+  ChevronRight,
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { th } from 'date-fns/locale';
 
 interface DashboardStats {
   totalLoans: number;
@@ -21,6 +25,8 @@ interface DashboardStats {
   totalRepairs: number;
   pendingRepairs: number;
   completedRepairs: number;
+  recentLoans: any[]; // Still any for now, but I'll define a base type if possible
+  recentRepairs: any[];
 }
 
 export default function ITDashboard() {
@@ -32,6 +38,8 @@ export default function ITDashboard() {
     totalRepairs: 0,
     pendingRepairs: 0,
     completedRepairs: 0,
+    recentLoans: [],
+    recentRepairs: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -46,20 +54,6 @@ export default function ITDashboard() {
           return;
         }
 
-        // Fetch loans data
-        try {
-          const loansData = await apiFetch('/api/loans');
-          const loans = Array.isArray(loansData) ? loansData : [];
-          setStats((prev) => ({
-            ...prev,
-            totalLoans: loans.length,
-            activeLoans: loans.filter((l) => l.status === 'BORROWED').length,
-            overdueLoans: loans.filter((l) => l.status === 'OVERDUE').length,
-          }));
-        } catch (err) {
-          console.error('Failed to fetch loans:', err);
-        }
-
         // Fetch repairs data
         try {
           const repairsData = await apiFetch('/api/repairs');
@@ -69,9 +63,25 @@ export default function ITDashboard() {
             totalRepairs: repairs.length,
             pendingRepairs: repairs.filter((r) => r.status === 'PENDING').length,
             completedRepairs: repairs.filter((r) => r.status === 'COMPLETED').length,
+            recentRepairs: repairs.slice(0, 5),
           }));
         } catch (err) {
           console.error('Failed to fetch repairs:', err);
+        }
+
+        // Fetch loans data (move after repairs or keep here)
+        try {
+          const loansData = await apiFetch('/api/loans');
+          const loans = Array.isArray(loansData) ? loansData : [];
+          setStats((prev) => ({
+            ...prev,
+            totalLoans: loans.length,
+            activeLoans: loans.filter((l) => l.status === 'BORROWED').length,
+            overdueLoans: loans.filter((l) => l.status === 'OVERDUE').length,
+            recentLoans: loans.slice(0, 5),
+          }));
+        } catch (err) {
+          console.error('Failed to fetch loans:', err);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -205,9 +215,21 @@ export default function ITDashboard() {
           {/* Activity Feed - Right Column */}
           <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Recent Loans */}
-            <ActivityCard icon={<Package size={18} />} title="Recent Loans" />
+            <ActivityCard 
+              icon={<Package size={18} />} 
+              title="Recent Loans" 
+              items={stats.recentLoans}
+              type="loan"
+              href="/it/loans"
+            />
             {/* Recent Repairs */}
-            <ActivityCard icon={<Wrench size={18} />} title="Recent Repairs" />
+            <ActivityCard 
+              icon={<Wrench size={18} />} 
+              title="Recent Repairs" 
+              items={stats.recentRepairs}
+              type="repair"
+              href="/it/repairs"
+            />
           </div>
         </div>
       </div>
@@ -264,9 +286,30 @@ function StatCard({
   );
 }
 
-function ActivityCard({ icon, title }: { icon: React.ReactNode; title: string }) {
+function ActivityCard({ 
+  icon, 
+  title, 
+  items, 
+  type,
+  href 
+}: { 
+  icon: React.ReactNode; 
+  title: string;
+  items: Array<{
+    id: number;
+    itemName?: string;
+    problemTitle?: string;
+    borrowerName?: string;
+    borrowAt?: string;
+    ticketCode?: string;
+    createdAt?: string;
+    status: string;
+  }>;
+  type: 'loan' | 'repair';
+  href: string;
+}) {
   return (
-    <div className="bg-white border border-neutral-100 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 group">
+    <div className="bg-white border border-neutral-100 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-8 shadow-sm hover:shadow-xl transition-all duration-500 group flex flex-col h-full">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2.5 md:p-3 bg-neutral-50 rounded-xl md:rounded-2xl text-neutral-400 group-hover:bg-black group-hover:text-white transition-all duration-300">
@@ -274,15 +317,73 @@ function ActivityCard({ icon, title }: { icon: React.ReactNode; title: string })
           </div>
           <h2 className="font-black text-neutral-900 text-sm md:text-base tracking-tight">{title}</h2>
         </div>
+        <a 
+          href={href}
+          className="p-2 rounded-full hover:bg-neutral-50 text-neutral-400 hover:text-black transition-colors"
+          title="See all"
+        >
+          <ArrowRight size={18} />
+        </a>
       </div>
-      <div className="flex flex-col items-center justify-center py-8 md:py-16 bg-neutral-50/50 rounded-xl md:rounded-2xl border border-dashed border-neutral-200">
-        <div className="w-10 h-10 md:w-12 md:h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-3 md:mb-4">
-          <Clock className="text-neutral-300" size={24} />
-        </div>
-        <p className="text-[10px] md:text-sm text-neutral-400 font-bold uppercase tracking-widest italic">
-          Coming Soon
-        </p>
+      
+      <div className="flex-1 space-y-3">
+        {items.length > 0 ? (
+          items.map((item, idx) => (
+            <div 
+              key={item.id} 
+              className="group/item flex items-center justify-between p-3 rounded-xl border border-transparent hover:border-neutral-100 hover:bg-neutral-50/50 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  type === 'loan' ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'
+                }`}>
+                  {type === 'loan' ? <Package size={14} /> : <Wrench size={14} />}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-neutral-900 truncate">
+                    {type === 'loan' ? item.itemName : item.problemTitle}
+                  </p>
+                  <p className="text-[10px] text-neutral-400 font-medium truncate">
+                    {type === 'loan' 
+                      ? `${item.borrowerName || 'Unknown'} • ${format(new Date(item.borrowAt!), 'dd/MM/yy', { locale: th })}`
+                      : `#${item.ticketCode} • ${format(new Date(item.createdAt!), 'dd/MM/yy', { locale: th })}`
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider ${
+                (item.status === 'COMPLETED' || item.status === 'RETURNED')
+                  ? 'bg-emerald-50 text-emerald-600'
+                  : (item.status === 'PENDING' || item.status === 'OVERDUE' || item.status === 'URGENT')
+                  ? 'bg-rose-50 text-rose-600'
+                  : 'bg-neutral-100 text-neutral-500'
+              }`}>
+                {item.status}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 md:py-12 bg-neutral-50/50 rounded-xl md:rounded-2xl border border-dashed border-neutral-200">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-3 md:mb-4">
+              <Clock className="text-neutral-300" size={24} />
+            </div>
+            <p className="text-[10px] md:text-sm text-neutral-400 font-bold uppercase tracking-widest italic text-center px-4">
+              No recent activity
+            </p>
+          </div>
+        )}
       </div>
+      
+      {items.length > 0 && (
+        <a 
+          href={href}
+          className="mt-4 text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-black transition-colors flex items-center justify-center gap-2 group/link"
+        >
+          View All {title}
+          <ChevronRight size={12} className="group-hover/link:translate-x-1 transition-transform" />
+        </a>
+      )}
     </div>
   );
 }
