@@ -219,14 +219,14 @@ export default function ITLoansPage() {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
-              <h1 className="text-3xl font-bold text-black">
+              <h1 className="text-2xl md:text-3xl font-bold text-black">
                 Loan Management (IT)
               </h1>
-              <p className="text-gray-600 font-medium mt-2">
+              <p className="text-sm md:text-base text-gray-600 font-medium mt-1 md:mt-2">
                 จัดการการยืม-คืนอุปกรณ์ทั้งหมดในระบบ (IT Officer)
               </p>
             </div>
@@ -481,7 +481,7 @@ export default function ITLoansPage() {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
+            <div className="p-4 md:p-6 overflow-y-auto max-h-[75vh]">
               <div className="space-y-5">
                 {/* ข้อมูลอุปกรณ์ */}
                 <div className="border-b border-gray-200 pb-5">
@@ -652,7 +652,7 @@ export default function ITLoansPage() {
               </button>
             </div>
 
-            <div className="p-8 overflow-y-auto max-h-[70vh]">
+            <div className="p-6 md:p-8 overflow-y-auto max-h-[80vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left Side: Item Info */}
                 <div className="space-y-4">

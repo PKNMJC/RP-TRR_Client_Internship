@@ -255,13 +255,13 @@ export default function ITRepairsPage() {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-black">แจ้งซ่อมทั้งหมด</h1>
-              <div className="flex items-center gap-3 mt-2">
-                <p className="text-gray-600 font-medium">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold text-black">แจ้งซ่อมทั้งหมด</h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 md:mt-2">
+                <p className="text-sm md:text-base text-gray-600 font-medium">
                   จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
                 </p>
                 <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
@@ -282,7 +282,7 @@ export default function ITRepairsPage() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               label="งานทั้งหมด"
               count={stats.total}
@@ -499,7 +499,7 @@ export default function ITRepairsPage() {
           onClick={(e) => e.target === e.currentTarget && setSelectedRepair(null)}
         >
           <div 
-            className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-white/20"
+            className="bg-white/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-white/20"
             style={{
               animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
@@ -542,16 +542,16 @@ export default function ITRepairsPage() {
                 </div>
                 <button
                   onClick={() => setSelectedRepair(null)}
-                  className="group w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200 hover:scale-105"
+                  className="group w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all duration-200 hover:scale-105"
                 >
-                  <X size={20} className="group-hover:rotate-90 transition-transform duration-200" />
+                  <X size={18} className="group-hover:rotate-90 transition-transform duration-200" />
                 </button>
               </div>
             </div>
 
             {/* Status Workflow Stepper */}
-            <div className="px-8 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-              <div className="flex items-center justify-between relative">
+            <div className="px-5 md:px-8 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 overflow-x-auto no-scrollbar">
+              <div className="flex items-center justify-between relative min-w-[500px] md:min-w-0">
                 {/* Progress Line */}
                 <div className="absolute top-5 left-8 right-8 h-0.5 bg-neutral-200 rounded-full">
                   <div 
@@ -600,11 +600,11 @@ export default function ITRepairsPage() {
             </div>
 
             {/* Main Content */}
-            <div className="p-8 overflow-y-auto max-h-[55vh] space-y-6 bg-gradient-to-b from-white to-gray-50/50">
+            <div className="p-5 md:p-8 overflow-y-auto max-h-[60vh] md:max-h-[55vh] space-y-6 bg-gradient-to-b from-white to-gray-50/50">
               {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 {/* Left Column - Reporter Info */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="md:col-span-2 space-y-4">
                   {/* Reporter Card */}
                   <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div className="absolute top-0 left-0 right-0 h-20 bg-neutral-900"></div>
@@ -692,7 +692,7 @@ export default function ITRepairsPage() {
                 </div>
 
                 {/* Right Column - Problem Details */}
-                <div className="lg:col-span-3 space-y-4">
+                <div className="md:col-span-3 space-y-4">
                   {/* Problem Title Card */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                     <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-900 mb-4">
@@ -820,31 +820,31 @@ export default function ITRepairsPage() {
             </div>
 
             {/* Footer - Action Buttons */}
-            <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-100 px-8 py-5">
-              <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-100 px-5 md:px-8 py-4 md:py-5">
+              <div className="flex flex-wrap items-center gap-3">
                 {selectedRepair.status === "PENDING" && (
                   <button
                     onClick={() => handleAcceptRepair(selectedRepair.id)}
                     disabled={submitting}
-                    className="group relative flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                    className="flex-1 md:flex-none group relative flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <CheckCircle size={18} className="relative z-10" />
-                    <span className="relative z-10">{submitting ? "กำลังบันทึก..." : "รับเรื่องนี้"}</span>
+                    <span className="relative z-10">{submitting ? "..." : "รับเรื่องนี้"}</span>
                   </button>
                 )}
                 {selectedRepair.status !== "COMPLETED" && selectedRepair.status !== "CANCELLED" && (
                   <button
                     onClick={handleOpenEdit}
-                    className="group flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gray-800"
+                    className="flex-1 md:flex-none group flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gray-800"
                   >
                     <Settings2 size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-                    แก้ไขข้อมูล
+                    แก้ไข
                   </button>
                 )}
                 <button
                   onClick={() => setSelectedRepair(null)}
-                  className="ml-auto flex items-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                  className="w-full md:w-auto md:ml-auto flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
                 >
                   <X size={16} />
                   ปิด
@@ -908,7 +908,7 @@ export default function ITRepairsPage() {
             </div>
 
             {/* Form Content */}
-            <div className="p-8 space-y-6 bg-gradient-to-b from-white to-gray-50/50 max-h-[60vh] overflow-y-auto">
+            <div className="p-6 md:p-8 space-y-5 md:space-y-6 bg-gradient-to-b from-white to-gray-50/50 max-h-[70vh] md:max-h-[60vh] overflow-y-auto">
               {/* Problem Title Field */}
               <div className="group">
                 <label className="flex items-center gap-2 text-sm font-bold text-gray-900 mb-3">
@@ -938,7 +938,7 @@ export default function ITRepairsPage() {
                   </div>
                   ความเร่งด่วน
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     { value: 'NORMAL', label: 'ปกติ', color: 'gray', bg: 'from-gray-100 to-gray-200', active: 'from-gray-600 to-gray-700' },
                     { value: 'URGENT', label: 'ด่วน', color: 'amber', bg: 'from-amber-100 to-orange-100', active: 'from-amber-500 to-orange-500' },
@@ -1015,20 +1015,20 @@ export default function ITRepairsPage() {
             </div>
 
             {/* Premium Footer */}
-            <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-100 px-8 py-5">
-              <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-gray-50 to-white border-t border-gray-100 px-6 md:px-8 py-4 md:py-5">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={handleSaveEdit}
                   disabled={submitting}
-                  className="group relative flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                  className="w-full sm:flex-1 group relative flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <CheckCircle size={18} className="relative z-10" />
-                  <span className="relative z-10">{submitting ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}</span>
+                  <span className="relative z-10">{submitting ? "..." : "บันทึกการแก้ไข"}</span>
                 </button>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex items-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+                  className="w-full sm:flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl font-semibold text-sm hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
                 >
                   <X size={16} />
                   ยกเลิก
@@ -1046,9 +1046,9 @@ export default function ITRepairsPage() {
 
 function StatCard({ label, count, icon }: any) {
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white border border-gray-200 p-4 md:p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
       <div className="flex flex-col">
-        <span className="text-gray-600 text-xs font-semibold uppercase">
+        <span className="text-gray-600 text-[10px] md:text-xs font-semibold uppercase">
           {label}
         </span>
         <span className="text-3xl font-bold text-black mt-2">{count}</span>

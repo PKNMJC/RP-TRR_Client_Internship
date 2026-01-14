@@ -98,15 +98,15 @@ export default function ITDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-zinc-900">IT Dashboard</h1>
-            <p className="text-zinc-500 mt-2">ภาพรวมการทำงาน IT Support</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">IT Dashboard</h1>
+            <p className="text-sm md:text-base text-zinc-500 mt-1 md:mt-2">ภาพรวมการทำงาน IT Support</p>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 md:mb-8">
             {/* Loans Stats */}
             <StatCard
               title="ระบบยืมของ"
@@ -154,9 +154,9 @@ export default function ITDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white border border-zinc-200 rounded-lg p-6 mb-8">
+          <div className="bg-white border border-zinc-200 rounded-lg p-4 md:p-6 mb-6 md:mb-8">
             <h2 className="font-bold text-zinc-900 mb-4">ปุ่มลัด</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <QuickActionButton href="/it/loans" icon={<Package size={20} />} label="ยืมของ" />
               <QuickActionButton href="/it/repairs" icon={<Wrench size={20} />} label="ซ่อมแซม" />
               <QuickActionButton href="/it/settings/profile" icon={<Users size={20} />} label="โปรไฟล์" />
@@ -206,10 +206,10 @@ function StatCard({
   bgColor: string;
 }) {
   return (
-    <div className={`bg-white border border-zinc-200 p-6 rounded-lg ${bgColor}`}>
+    <div className={`bg-white border border-zinc-200 p-4 md:p-6 rounded-lg ${bgColor}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-zinc-900">{title}</h3>
-        {icon}
+        <h3 className="font-semibold text-zinc-900 text-sm md:text-base">{title}</h3>
+        <div className="scale-90 md:scale-100">{icon}</div>
       </div>
       <div className="space-y-2">
         {stats.map((stat, idx) => (
@@ -235,7 +235,7 @@ function QuickActionButton({
   return (
     <a
       href={href}
-      className="flex flex-col items-center justify-center gap-2 p-4 border border-zinc-200 rounded-lg hover:bg-slate-50 hover:border-zinc-300 transition-all text-zinc-600 hover:text-zinc-900"
+      className="flex flex-col items-center justify-center gap-2 p-3 md:p-4 border border-zinc-200 rounded-lg hover:bg-slate-50 hover:border-zinc-300 transition-all text-zinc-600 hover:text-zinc-900 active:scale-95"
     >
       {icon}
       <span className="text-xs font-medium text-center">{label}</span>
