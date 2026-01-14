@@ -39,6 +39,10 @@ export const userService = {
     return apiFetch(`/users/${id}`);
   },
 
+  async createUser(data: Partial<User>): Promise<User> {
+    return apiFetch('/users', 'POST', data);
+  },
+
   async updateUser(id: number, data: Partial<User>): Promise<User> {
     return apiFetch(`/users/${id}`, 'PUT', data);
   },

@@ -33,9 +33,11 @@ export function useAuth() {
 export function ProtectedRoute({
   children,
   requireAdmin,
+  requireIT,
 }: {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireIT?: boolean;
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -55,11 +57,16 @@ export function ProtectedRoute({
         return;
       }
 
+      if (requireIT && userRole !== 'IT' && userRole !== 'ADMIN') {
+        router.push('/tickets');
+        return;
+      }
+
       setIsLoading(false);
     };
 
     checkAuth();
-  }, [router, requireAdmin]);
+  }, [router, requireAdmin, requireIT]);
 
   if (isLoading) {
     return (

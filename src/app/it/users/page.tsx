@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import ITSidebar from "@/components/ITSidebar";
 import { apiFetch } from "@/services/api";
 import {
   Search,
@@ -56,7 +55,7 @@ export default function ITUsersPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "USER" as "USER" | "IT",
+    role: "USER" as "USER", // IT can only create/edit USER
     department: "",
     phoneNumber: "",
     lineId: "",
@@ -157,7 +156,7 @@ export default function ITUsersPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          role: formData.role,
+          role: "USER", // Enforce USER role
           department: formData.department,
           phoneNumber: formData.phoneNumber,
           lineId: formData.lineId,
@@ -200,7 +199,7 @@ export default function ITUsersPage() {
       const updateData: any = {
         name: formData.name,
         email: formData.email,
-        role: formData.role,
+        role: "USER", // Enforce USER role on edit too
         department: formData.department,
         phoneNumber: formData.phoneNumber,
         lineId: formData.lineId,
@@ -246,7 +245,7 @@ export default function ITUsersPage() {
       email: user.email,
       password: "",
       confirmPassword: "",
-      role: user.role as "USER" | "IT",
+      role: "USER", // Always default/force to USER for IT
       department: user.department,
       phoneNumber: user.phoneNumber,
       lineId: user.lineId,
@@ -256,265 +255,261 @@ export default function ITUsersPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <ITSidebar />
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="animate-spin text-black" size={40} />
-      </div>
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 className="animate-spin text-black" size={40} />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <ITSidebar />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">จัดการผู้ใช้</h1>
+          <p className="text-gray-500 mt-1">
+            ดูแลและจัดการรายชื่อพนักงาน (ระดับ User เท่านั้น)
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
+          className="bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+        >
+          <Plus size={20} />
+          เพิ่มพนักงานใหม่
+        </button>
+      </div>
 
-      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">จัดการผู้ใช้</h1>
-              <p className="text-gray-500 mt-1">
-                ดูแลและจัดการรายชื่อผู้ใช้และสิทธิ์การใช้งาน
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                resetForm();
-                setShowModal(true);
-              }}
-              className="bg-black hover:bg-gray-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard
+          label="ผู้ใช้ทั้งหมด"
+          count={stats.total}
+          icon={<Users className="text-blue-600" />}
+          bgClass="bg-blue-50"
+        />
+        <StatCard 
+          label="ทีม IT" 
+          count={stats.its} 
+          icon={<Shield className="text-purple-600" />}
+          bgClass="bg-purple-50"
+        />
+        <StatCard
+          label="ผู้ใช้ทั่วไป"
+          count={stats.users}
+          icon={<UserIcon className="text-emerald-600" />}
+          bgClass="bg-emerald-50"
+        />
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Toolbar */}
+        <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row gap-4 bg-white">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="ค้นหาชื่อ, อีเมล, แผนก..."
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-200 rounded-xl outline-none transition-all text-gray-900 placeholder-gray-400 text-sm font-medium"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-3">
+            <select
+              className="px-4 py-2.5 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-200 rounded-xl font-medium text-gray-700 focus:outline-none text-sm cursor-pointer"
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
             >
-              <Plus size={20} />
-              เพิ่มผู้ใช้ใหม่
+              <option value="all">ทุกบทบาท</option>
+              <option value="IT">IT Support</option>
+              <option value="USER">General User</option>
+            </select>
+            <button
+              onClick={fetchUsers}
+              className="p-2.5 text-gray-500 hover:text-black hover:bg-gray-100 rounded-xl transition-all"
+              title="รีเฟรชข้อมูล"
+            >
+              <RefreshCw size={20} />
             </button>
           </div>
+        </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard
-              label="ผู้ใช้ทั้งหมด"
-              count={stats.total}
-              icon={<Users className="text-blue-600" />}
-              bgClass="bg-blue-50"
-            />
-            <StatCard 
-              label="ทีม IT" 
-              count={stats.its} 
-              icon={<Shield className="text-purple-600" />}
-              bgClass="bg-purple-50"
-            />
-            <StatCard
-              label="ผู้ใช้ทั่วไป"
-              count={stats.users}
-              icon={<UserIcon className="text-emerald-600" />}
-              bgClass="bg-emerald-50"
-            />
-          </div>
+        {/* Table */}
+        {/* Mobile Card View */}
+        <div className="lg:hidden">
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => (
+              <div
+                key={user.id}
+                className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">{user.name}</div>
+                      <div className="text-xs text-gray-500">{user.department || "ไม่ระบุแผนก"}</div>
+                    </div>
+                  </div>
+                  <RoleBadge role={user.role} />
+                </div>
 
-          {/* Main Content Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Toolbar */}
-            <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row gap-4 bg-white">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
-                  type="text"
-                  placeholder="ค้นหาชื่อ, อีเมล, แผนก..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-200 rounded-xl outline-none transition-all text-gray-900 placeholder-gray-400 text-sm font-medium"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <Mail size={12} className="text-gray-400" />
+                    {user.email}
+                  </div>
+                  {user.phoneNumber && (
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <Phone size={12} className="text-gray-400" />
+                      {user.phoneNumber}
+                    </div>
+                  )}
+                  {user.lineId && (
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <MessageCircle size={12} className="text-gray-400" />
+                      {user.lineId}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Actions Only for USER role or Self (if applicable, but restricted here to USER editing mostly) */}
+                {user.role === 'USER' && (
+                  <div className="flex justify-end gap-2 bg-gray-50 p-2 rounded-lg">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm hover:text-blue-600 text-xs font-medium flex items-center gap-1"
+                    >
+                      <Edit2 size={14} /> แก้ไข
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="px-3 py-1.5 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm hover:bg-red-50 text-xs font-medium flex items-center gap-1"
+                    >
+                      <Trash2 size={14} /> ลบ
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-3">
-                <select
-                  className="px-4 py-2.5 bg-gray-50 border border-transparent focus:bg-white focus:border-gray-200 rounded-xl font-medium text-gray-700 focus:outline-none text-sm cursor-pointer"
-                  value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
-                >
-                  <option value="all">ทุกบทบาท</option>
-                  <option value="IT">IT Support</option>
-                  <option value="USER">General User</option>
-                </select>
-                <button
-                  onClick={fetchUsers}
-                  className="p-2.5 text-gray-500 hover:text-black hover:bg-gray-100 rounded-xl transition-all"
-                  title="รีเฟรชข้อมูล"
-                >
-                  <RefreshCw size={20} />
-                </button>
+            ))
+          ) : (
+            <div className="py-12 text-center text-gray-400">
+              <div className="flex flex-col items-center justify-center gap-3">
+                <UserCog size={48} className="text-gray-200" />
+                <p>ไม่พบข้อมูลผู้ใช้</p>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Table */}
-            {/* Mobile Card View */}
-            <div className="lg:hidden">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">ชื่อ-นามสกุล</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">ข้อมูลติดต่อ</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">สถานะ</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">แผนก</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
-                  <div
+                  <tr
                     key={user.id}
-                    className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50/80 transition-colors group"
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-semibold text-gray-900">{user.name}</div>
-                          <div className="text-xs text-gray-500">{user.department || "ไม่ระบุแผนก"}</div>
+                          <div className="text-xs text-gray-500">สมัครเมื่อ {new Date(user.createdAt).toLocaleDateString('th-TH')}</div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Mail size={14} className="text-gray-400" />
+                          {user.email}
+                        </div>
+                        {user.phoneNumber && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Phone size={12} className="text-gray-400" />
+                            {user.phoneNumber}
+                          </div>
+                        )}
+                        {user.lineId && (
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <MessageCircle size={12} className="text-gray-400" />
+                            {user.lineId}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <RoleBadge role={user.role} />
-                    </div>
-
-                    <div className="space-y-1.5 mb-3">
-                      <div className="flex items-center gap-2 text-xs text-gray-600">
-                        <Mail size={12} className="text-gray-400" />
-                        {user.email}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Building2 size={14} className="text-gray-400" />
+                        {user.department || "-"}
                       </div>
-                      {user.phoneNumber && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <Phone size={12} className="text-gray-400" />
-                          {user.phoneNumber}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {user.role === 'USER' && (
+                        <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="p-2 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
+                            title="แก้ไข"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                            title="ลบ"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       )}
-                      {user.lineId && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                          <MessageCircle size={12} className="text-gray-400" />
-                          {user.lineId}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex justify-end gap-2 bg-gray-50 p-2 rounded-lg">
-                      <button
-                        onClick={() => openEditModal(user)}
-                        className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm hover:text-blue-600 text-xs font-medium flex items-center gap-1"
-                      >
-                        <Edit2 size={14} /> แก้ไข
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="px-3 py-1.5 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm hover:bg-red-50 text-xs font-medium flex items-center gap-1"
-                      >
-                        <Trash2 size={14} /> ลบ
-                      </button>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 ))
               ) : (
-                <div className="py-12 text-center text-gray-400">
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <UserCog size={48} className="text-gray-200" />
-                    <p>ไม่พบข้อมูลผู้ใช้</p>
-                  </div>
-                </div>
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-gray-400">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <UserCog size={48} className="text-gray-200" />
+                      <p>ไม่พบข้อมูลผู้ใช้</p>
+                    </div>
+                  </td>
+                </tr>
               )}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50/50 border-b border-gray-100">
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">ชื่อ-นามสกุล</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">ข้อมูลติดต่อ</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">สถานะ</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">แผนก</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {filteredUsers.length > 0 ? (
-                    filteredUsers.map((user) => (
-                      <tr
-                        key={user.id}
-                        className="hover:bg-gray-50/80 transition-colors group"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold text-sm">
-                              {user.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="text-sm font-semibold text-gray-900">{user.name}</div>
-                              <div className="text-xs text-gray-500">สมัครเมื่อ {new Date(user.createdAt).toLocaleDateString('th-TH')}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Mail size={14} className="text-gray-400" />
-                              {user.email}
-                            </div>
-                            {user.phoneNumber && (
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <Phone size={12} className="text-gray-400" />
-                                {user.phoneNumber}
-                              </div>
-                            )}
-                            {user.lineId && (
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <MessageCircle size={12} className="text-gray-400" />
-                                {user.lineId}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <RoleBadge role={user.role} />
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Building2 size={14} className="text-gray-400" />
-                            {user.department || "-"}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className="p-2 text-gray-500 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
-                              title="แก้ไข"
-                            >
-                              <Edit2 size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                              title="ลบ"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="py-12 text-center text-gray-400">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <UserCog size={48} className="text-gray-200" />
-                          <p>ไม่พบข้อมูลผู้ใช้</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
-      </main>
+      </div>
 
       {/* Add/Edit Modal */}
       {(showModal || (showDetailModal && selectedUser)) && (
         <UserModal
-          title={showModal ? "เพิ่มผู้ใช้ใหม่" : "แก้ไขข้อมูลผู้ใช้"}
+          title={showModal ? "เพิ่มพนักงานใหม่" : "แก้ไขข้อมูลพนักงาน"}
           onClose={() => {
             setShowModal(false);
             setShowDetailModal(false);
@@ -608,14 +603,11 @@ export default function ITUsersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">บทบาท</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all text-sm text-gray-900"
-                >
-                  <option value="USER">ผู้ใช้ทั่วไป (General User)</option>
-                  <option value="IT">เจ้าหน้าที่ IT (IT Support)</option>
-                </select>
+                <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600 cursor-not-allowed flex items-center justify-between">
+                  <span>ผู้ใช้ทั่วไป (General User)</span>
+                  <Shield size={14} className="text-emerald-500"/>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">* IT สามารถจัดการได้เฉพาะผู้ใช้ทั่วไป</p>
               </div>
               <FormInput
                 label="แผนก"

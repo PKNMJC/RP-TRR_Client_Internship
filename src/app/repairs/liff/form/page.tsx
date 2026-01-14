@@ -14,9 +14,9 @@ const PROBLEM_CATEGORIES = [
   { value: "HARDWARE", label: "💻 Hardware (คอมพิวเตอร์, อุปกรณ์)" },
   { value: "SOFTWARE", label: "📱 Software (โปรแกรม, ระบบ)" },
   { value: "NETWORK", label: "🌐 Network (อินเทอร์เน็ต, Wi-Fi)" },
-  { value: "PERIPHERAL", label: "🖥️ Peripheral (เมาส์, คีย์บอร์ด, จอภาพ)" },
-  { value: "EMAIL_OFFICE365", label: "📧 Email/Office 365" },
-  { value: "ACCOUNT_PASSWORD", label: "🔐 Account/Password" },
+  { value: "PERIPHERAL", label: "Peripheral (เมาส์, คีย์บอร์ด, จอภาพ)" },
+  { value: "EMAIL_OFFICE365", label: "Email/Office 365" },
+  { value: "ACCOUNT_PASSWORD", label: "Account/Password" },
   { value: "OTHER", label: "🔧 อื่นๆ" },
 ];
 
@@ -75,9 +75,11 @@ function RepairLiffFormContent() {
     const initLiff = async () => {
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
+        // Log for debugging
+        console.log("Initializing LIFF", { liffId, currentUrl: window.location.href });
 
         if (!liffId) {
-          setLiffError("System Error: LIFF ID missing");
+          setLiffError("System Error: LIFF ID missing (Check .env)");
           setIsLiffInitializing(false);
           return;
         }
@@ -93,10 +95,27 @@ function RepairLiffFormContent() {
         setDeviceOS(os);
 
         if (!liff.isLoggedIn()) {
-          // Use liff.login() which now works properly with withLoginOnExternalBrowser
+          // Check for redirect loop
+          const loginAttempted = sessionStorage.getItem("liff_login_attempted");
+          
+          if (loginAttempted) {
+              console.warn("LIFF Login loop detected.");
+              setLiffError("การเข้าสู่ระบบ LINE ขัดข้อง (Login Loop) - กรุณาลองใหม่อีกครั้ง");
+              setDeviceOS(os); 
+              setIsLiffInitializing(false);
+              return;
+          }
+
+          // Mark attempt before redirecting
+          sessionStorage.setItem("liff_login_attempted", "true");
+          
+          console.log("Redirecting to LINE Login...");
           liff.login();
           return;
         }
+
+        // Login successful, clear flag
+        sessionStorage.removeItem("liff_login_attempted");
 
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
@@ -121,13 +140,13 @@ function RepairLiffFormContent() {
         setDeviceOS(currentOS);
         
         if (err.code === "403") {
-            errMsg = "คุณไม่มีสิทธิ์เข้าถึง (Permission Denied) - ระบบจะบันทึกเป็น Guest";
+            errMsg = "คุณปฏิเสธการเข้าถึง (Permission Denied)";
         } else if (err.code === "INIT_FAILED" && currentOS === "ios") {
-            errMsg = "iOS: ไม่สามารถเชื่อมต่อ LINE ได้ - กรุณาเปิดจากแอป LINE โดยตรง หรือระบบจะบันทึกเป็น Guest";
+            errMsg = "iOS: เชื่อมต่อ LINE ไม่ได้ - กรุณาเปิดจากแอป LINE โดยตรง";
         } else if (err.message?.includes("cookie") || err.message?.includes("storage")) {
-            errMsg = "Safari บล็อก Cookies - กรุณาเปิดจากแอป LINE หรือปรับตั้งค่า Safari";
+            errMsg = "Browser บล็อก Cookies - กรุณาเปิดจากแอป LINE";
         } else if (err.message) {
-            errMsg = `LIFF Error: ${err.message} - ระบบจะบันทึกเป็น Guest`;
+            errMsg = `LIFF Error: ${err.message}`;
         }
         setLiffError(errMsg);
       } finally {
@@ -203,10 +222,10 @@ function RepairLiffFormContent() {
     }
     if (!formData.location.trim()) newErrors.location = "ระบุสถานที่";
     
-    // Critical validation removed for Guest Access
-    // if (!formData.reporterLineId) {
-    //    newErrors.authentication = "ไม่พบข้อมูลยืนยันตัวตน LINE (กรุณารีโหลด)";
-    // }
+    // Critical validation: Enforce LINE ID
+    if (!formData.reporterLineId) {
+       newErrors.authentication = "ไม่พบ User ID (กรุณา Login ใหม่)";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -216,10 +235,6 @@ function RepairLiffFormContent() {
     e.preventDefault();
 
     if (!validateForm()) {
-       // Warn if no Line ID but allow proceed (managed by backend guest)
-       if (!formData.reporterLineId) {
-           console.warn("Submitting as Guest (No LINE ID)");
-       }
        return;
     }
 
@@ -308,10 +323,64 @@ function RepairLiffFormContent() {
   }
 
   // Blocking State: LIFF Error (e.g. Permission Denied) - CHANGED TO WARNING ONLY
-  // We now allow users to proceed even if LIFF fails (as Guest)
-  if (liffError) {
-      // Just render the form, but maybe show a banner?
-      // For now, we will just proceed to render the form below.
+  // Blocking State: LIFF Error or No User ID (Strict Mode)
+  if (liffError || !formData.reporterLineId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-sm w-full bg-white rounded-2xl shadow-xl p-6 text-center border border-red-100">
+           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+             <AlertCircle className="w-8 h-8 text-red-600" />
+           </div>
+           
+           <h2 className="text-xl font-bold text-slate-800 mb-2">เข้าสู่ระบบไม่สำเร็จ</h2>
+           
+           <div className="text-sm text-slate-600 space-y-3 mb-6">
+              <p className="font-medium text-red-600 bg-red-50 p-2 rounded-lg">
+                {liffError || "ไม่พบข้อมูลผู้ใช้ LINE"}
+              </p>
+              
+              {deviceOS === "ios" ? (
+                 <div className="text-left text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <p className="font-semibold mb-1">คำแนะนำสำหรับ iOS:</p>
+                    <ul className="list-disc pl-4 space-y-1">
+                       <li>ตรวจสอบว่าไม่ได้เปิดใน Private / Incognito Mode</li>
+                       <li>ลองกดเปิดผ่านแอป LINE โดยตรง</li>
+                       <li>หากปัญหายังเกิด ให้ลอง Clear Cache ของ Safari</li>
+                    </ul>
+                 </div>
+              ) : (
+                 <p>กรุณาอนุญาตให้สิทธิ์การเข้าถึงข้อมูล (Allow Permissions) เพื่อใช้งานระบบแจ้งซ่อม</p>
+              )}
+           </div>
+
+           <div className="flex flex-col gap-2">
+              <button
+                 onClick={() => {
+                    sessionStorage.removeItem("liff_login_attempted");
+                    window.location.reload();
+                 }}
+                 className="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+              >
+                 <span className="text-lg">↻</span> ลองใหม่ / เข้าสู่ระบบ
+              </button>
+              
+              <button
+                 onClick={() => liff.closeWindow()}
+                 className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-all"
+              >
+                 ปิดหน้าต่าง
+              </button>
+           </div>
+
+           <div className="mt-6 pt-4 border-t border-slate-100">
+              <p className="text-[10px] text-slate-400">
+                System ID: {process.env.NEXT_PUBLIC_LIFF_ID?.substring(0,8)}... <br/>
+                OS: {deviceOS}
+              </p>
+           </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -325,32 +394,6 @@ function RepairLiffFormContent() {
       </div>
 
       <div className="max-w-md mx-auto p-4">
-        {/* Guest Mode Warning - with iOS-specific message */}
-        {(!formData.reporterLineId || liffError) && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex gap-3">
-              <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
-                  <p className="text-sm text-yellow-800 font-medium">
-                    {deviceOS === "ios" ? "⚠️ iOS Guest Mode" : "Guest Mode"}
-                  </p>
-                  <p className="text-xs text-yellow-700 mt-0.5">
-                      {deviceOS === "ios" ? (
-                        <>
-                          Safari บน iOS อาจบล็อก cookies ทำให้ไม่สามารถยืนยันตัวตนได้
-                          <br/><b>✅ วิธีแก้:</b> เปิด link นี้จากแอป LINE โดยตรง
-                          <br/>หรือระบบจะบันทึกเป็น <b>Guest</b>
-                        </>
-                      ) : (
-                        <>
-                          ระบบไม่สามารถระบุตัวตน LINE ได้ (คุณอาจไม่มีสิทธิ์หรือระบบขัดข้อง) 
-                          <br/>การแจ้งซ่อมจะถูกบันทึกในชื่อ <b>Guest</b>
-                        </>
-                      )}
-                  </p>
-              </div>
-            </div>
-        )}
-
         {errors.submit && (
           <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />

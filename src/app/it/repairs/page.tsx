@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import ITSidebar from "@/components/ITSidebar";
+
 import { apiFetch } from "@/services/api";
 import {
   Search,
@@ -223,7 +223,7 @@ export default function ITRepairsPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <ITSidebar />
+
 
       <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto space-y-6">

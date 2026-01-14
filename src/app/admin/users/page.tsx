@@ -88,19 +88,27 @@ export default function AdminUsersPage() {
   }, [users, searchQuery, roleFilter]);
 
   const handleSaveUser = async (data: Partial<User>) => {
-    if (!selectedUser) return;
+
     try {
       const { password, ...userDataWithoutPassword } = data;
 
-      // Update user information
-      await userService.updateUser(selectedUser.id, userDataWithoutPassword);
-
-      // Change password if provided
-      if (password) {
-        await userService.changePassword(selectedUser.id, password);
+      if (!selectedUser) {
+        // Create new user
+        if (!password) {
+           showNotification("error", "กรุณาระบุรหัสผ่านสำหรับผู้ใช้ใหม่");
+           return;
+        }
+        await userService.createUser({ ...userDataWithoutPassword, password });
+        showNotification("success", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว");
+      } else {
+        // Update existing user
+        await userService.updateUser(selectedUser.id, userDataWithoutPassword);
+        // Change password if provided
+        if (password) {
+          await userService.changePassword(selectedUser.id, password);
+        }
+        showNotification("success", "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว");
       }
-
-      showNotification("success", "อัปเดตข้อมูลผู้ใช้เรียบร้อยแล้ว");
       fetchUsers(currentPage);
       setIsModalOpen(false);
     } catch (err: any) {
@@ -171,7 +179,17 @@ export default function AdminUsersPage() {
           </div>
           
           <div className="flex gap-3">
-             {/* Future Add User Button can go here if needed, currently reusing logic from IT page or keeping it simple */}
+             <button
+                onClick={() => {
+                  setSelectedUser(null);
+                  setIsViewOnly(false);
+                  setIsModalOpen(true);
+                }}
+                className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95"
+              >
+                <UserPlus size={20} />
+                เพิ่มผู้ใช้งาน
+              </button>
           </div>
         </div>
 
