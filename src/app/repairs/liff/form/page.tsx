@@ -418,11 +418,7 @@ function RepairLiffFormContent() {
            
            <div className="space-y-3">
               <a
-                 href="https://line.me/R/ti/p/@trrnotification" // Replace with actual Line OA ID if available, otherwise rely on external add
-                 onClick={(e) => {
-                     // Try to open friend toggler if possible, or just link
-                     // standard link is usually the best fallback
-                 }}
+                 href="https://line.me/R/ti/p/@631lnnya"
                  target="_blank"
                  rel="noreferrer"
                  className="block w-full py-3 bg-[#06C755] text-white rounded-xl font-bold hover:bg-[#05b64d] transition-all shadow-lg shadow-green-500/30"
