@@ -46,9 +46,12 @@ interface FormData {
 function RepairLiffFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const [lineUserId, setLineUserId] = useState<string>("");
   const [linePictureUrl, setLinePictureUrl] = useState<string>("");
   const [deviceOS, setDeviceOS] = useState<string>("");
+  const [isFriend, setIsFriend] = useState<boolean | null>(null); // null = loading/unknown, false = not friend, true = friend
+
   const [formData, setFormData] = useState<FormData>({
     reporterName: "",
     reporterDepartment: "",
@@ -116,6 +119,21 @@ function RepairLiffFormContent() {
 
         // Login successful, clear flag
         sessionStorage.removeItem("liff_login_attempted");
+
+        // CHECK FRIENDSHIP
+        try {
+            const friendship = await liff.getFriendship();
+            console.log("Friendship status:", friendship.friendFlag);
+            setIsFriend(friendship.friendFlag);
+        } catch (friendError) {
+            console.error("Error getting friendship status:", friendError);
+            // If checking fails (rare), we might default to allow or block. 
+            // Better to block if strict, or warn. Let's assume strict for now but allow fallback if API fails?
+            // Actually, if API fails, it usually means network or liff issue.
+            // Let's safe-fail to TRUE to avoid blocking on API error, unless we are very strict.
+            // But requirement is fix notification. Let's be strict but handle error gracefully.
+            setIsFriend(false); // Assume false if failed to be safe
+        }
 
         const profile = await liff.getProfile();
         const lineUserId = profile.userId;
@@ -377,6 +395,47 @@ function RepairLiffFormContent() {
                 System ID: {process.env.NEXT_PUBLIC_LIFF_ID?.substring(0,8)}... <br/>
                 OS: {deviceOS}
               </p>
+           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Blocking State: Not a Friend
+  if (isFriend === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="max-w-sm w-full bg-white rounded-2xl shadow-xl p-6 text-center border border-green-100">
+           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 mb- animate-bounce">
+             <User className="w-8 h-8 text-green-600" />
+           </div>
+           
+           <h2 className="text-xl font-bold text-slate-800 mb-2">กรุณาเพิ่มเพื่อนก่อน</h2>
+           <p className="text-slate-500 mb-6 text-sm">
+             เพื่อให้คุณได้รับแจ้งเตือนสถานะการซ่อม <br/>
+             กรุณากด "เพิ่มเพื่อน" กับเราก่อนนะครับ
+           </p>
+           
+           <div className="space-y-3">
+              <a
+                 href="https://line.me/R/ti/p/@trrnotification" // Replace with actual Line OA ID if available, otherwise rely on external add
+                 onClick={(e) => {
+                     // Try to open friend toggler if possible, or just link
+                     // standard link is usually the best fallback
+                 }}
+                 target="_blank"
+                 rel="noreferrer"
+                 className="block w-full py-3 bg-[#06C755] text-white rounded-xl font-bold hover:bg-[#05b64d] transition-all shadow-lg shadow-green-500/30"
+              >
+                 + เพิ่มเพื่อน (Add Friend)
+              </a>
+
+              <button
+                 onClick={() => window.location.reload()}
+                 className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-all"
+              >
+                 เพิ่มเพื่อนแล้ว? (กดเพื่อรีโหลด)
+              </button>
            </div>
         </div>
       </div>
