@@ -255,13 +255,9 @@ export default function ITRepairsPage() {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="min-h-screen bg-white flex">
-
-
-      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
               <h1 className="text-3xl font-bold text-black">แจ้งซ่อมทั้งหมด</h1>
               <div className="flex items-center gap-3 mt-2">
@@ -331,9 +327,9 @@ export default function ITRepairsPage() {
                 className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-medium text-black focus:outline-none focus:ring-2 focus:ring-gray-400/20 text-sm"
               >
                 <option value="all">สถานะทั้งหมด</option>
-                <option value="OPEN">รอการแก้ไข</option>
+                <option value="PENDING">รอการแก้ไข</option>
                 <option value="IN_PROGRESS">กำลังแก้ไข</option>
-                <option value="DONE">เสร็จสิ้น</option>
+                <option value="COMPLETED">เสร็จสิ้น</option>
               </select>
             </div>
 
@@ -489,8 +485,6 @@ export default function ITRepairsPage() {
               {filteredRepairs.length === 0 && <EmptyState />}
             </div>
           </div>
-        </div>
-      </main>
 
       {/* Detail Modal - Production Grade */}
       {selectedRepair && (

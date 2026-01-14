@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import ITSidebar from '@/components/ITSidebar';
 import { apiFetch } from '@/services/api';
 import {
   Package,
@@ -99,15 +98,10 @@ export default function ITDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <ITSidebar />
-
-      <main className="lg:ml-64 pt-20 lg:pt-8 pb-12">
-        <div className="px-4 md:px-8 max-w-[1400px] mx-auto">
-
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-zinc-900">IT Dashboard</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-zinc-900">IT Dashboard</h1>
             <p className="text-zinc-500 mt-2">ภาพรวมการทำงาน IT Support</p>
           </div>
 
@@ -194,11 +188,9 @@ export default function ITDashboard() {
                   ไม่มีข้อมูล
                 </p>
               </div>
-            </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }
 

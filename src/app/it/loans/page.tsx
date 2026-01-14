@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import ITSidebar from "@/components/ITSidebar";
 import { apiFetch } from "@/services/api";
 import {
   Search,
@@ -220,13 +219,9 @@ export default function ITLoansPage() {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="min-h-screen bg-white flex">
-      <ITSidebar />
-
-      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
               <h1 className="text-3xl font-bold text-black">
                 Loan Management (IT)
@@ -462,8 +457,6 @@ export default function ITLoansPage() {
               {filteredLoans.length === 0 && <EmptyState />}
             </div>
           </div>
-        </div>
-      </main>
 
       {/* Detail Modal */}
       {showDetailModal && selectedLoan && (
