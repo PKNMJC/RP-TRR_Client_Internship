@@ -299,24 +299,24 @@ export default function ITRepairsPage() {
   return (
     <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-5 md:pb-6">
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-black">แจ้งซ่อมทั้งหมด</h1>
-              <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1 md:mt-2">
-                <p className="text-sm md:text-base text-gray-600 font-medium">
+              <h1 className="text-xl md:text-3xl font-bold text-black tracking-tight">แจ้งซ่อมทั้งหมด</h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1.5 md:mt-2">
+                <p className="text-[10px] md:text-base text-gray-600 font-medium leading-relaxed">
                   จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
                 </p>
-                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
-                  <div className={`w-2 h-2 rounded-full ${isAutoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                  <span className="text-xs text-gray-500 font-mono">
+                <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 md:px-3 md:py-1 rounded-full border border-gray-200">
+                  <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isAutoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                  <span className="text-[8px] md:text-xs text-gray-500 font-mono">
                     Updated: {lastUpdated.toLocaleTimeString('th-TH')}
                   </span>
                   <button
                     onClick={() => fetchRepairs()}
-                    className="p-1 hover:bg-gray-200 rounded-full transition-colors ml-1"
+                    className="p-0.5 hover:bg-gray-200 rounded-full transition-colors"
                     title="Refresh Now"
                   >
-                    <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                    <RefreshCw size={10} className={loading ? "animate-spin" : ""} />
                   </button>
                 </div>
               </div>
@@ -412,63 +412,65 @@ export default function ITRepairsPage() {
           </div>
 
             {/* Mobile Card View */}
-            <div className="lg:hidden">
+            <div className="lg:hidden divide-y divide-gray-100">
               {filteredRepairs.map((repair) => (
                 <div
                   key={repair.id}
-                  className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                  className="p-4 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="max-w-[70%]">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="text-[9px] font-bold font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
                           #{repair.ticketCode}
                         </span>
                         <StatusBadge status={repair.status} />
                       </div>
-                      <h3 className="font-semibold text-black">{repair.problemTitle}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        แจ้งเมื่อ: {format(new Date(repair.createdAt), "dd MMM yy HH:mm", { locale: th })}
-                      </p>
+                      <h3 className="font-bold text-black text-sm md:text-base leading-snug line-clamp-2">{repair.problemTitle}</h3>
+                      <div className="flex items-center gap-1.5 mt-1.5 text-gray-400">
+                        <Clock size={10} />
+                        <span className="text-[10px] md:text-xs">
+                          {format(new Date(repair.createdAt), "dd MMM yy HH:mm", { locale: th })}
+                        </span>
+                      </div>
                     </div>
                     <UrgencyBadge urgency={repair.urgency} />
                   </div>
 
-                  <div className="flex items-center gap-2 mb-3 mt-3">
-                    <span className="text-xs text-gray-400">ผู้รับผิดชอบ:</span>
-                    {repair.assignee?.name ? (
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
-                          {repair.assignee.name.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm text-gray-700">{repair.assignee.name}</span>
+                  <div className="flex items-center justify-between mb-4 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100/50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shadow-sm">
+                        {repair.assignee?.name ? repair.assignee.name.charAt(0).toUpperCase() : <User size={14} className="text-gray-300" />}
                       </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs italic">- ไม่ระบุ -</span>
-                    )}
+                      <div className="flex flex-col">
+                        <span className="text-[11px] font-bold text-gray-700 leading-tight">
+                          {repair.assignee?.name || "รอมอบหมาย"}
+                        </span>
+                        <span className="text-[9px] text-gray-400">ผู้รับผิดชอบ</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 bg-gray-50 p-2 rounded-lg">
+                  <div className="flex items-center gap-2">
                     {activeTab === 'available' ? (
                       <button
                         onClick={() => handleAcceptRepair(repair.id)}
                         disabled={submitting}
-                        className="px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 text-xs font-medium"
+                        className="flex-1 py-2 bg-black text-white rounded-xl hover:bg-gray-900 transition-all disabled:opacity-50 text-[11px] font-bold shadow-lg shadow-black/5 active:scale-[0.98]"
                       >
-                        รับเรื่อง
+                        รับเรื่องดูแล
                       </button>
                     ) : (
                       <>
-                        {/* Placeholder for Transfer button */}
                         <button
                           onClick={() => alert('Transfer functionality coming soon!')}
-                          className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all text-xs font-medium"
+                          className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all text-[11px] font-bold active:scale-[0.98]"
                         >
                           โอนงาน
                         </button>
                         <button
                           onClick={() => setSelectedRepair(repair)}
-                          className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm hover:bg-gray-50 transition-all text-xs font-medium"
+                          className="flex-1 py-2 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-sm hover:bg-gray-50 transition-all text-[11px] font-bold active:scale-[0.98]"
                         >
                           รายละเอียด
                         </button>

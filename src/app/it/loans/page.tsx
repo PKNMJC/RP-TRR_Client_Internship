@@ -20,6 +20,7 @@ import {
   Phone,
   X,
   Loader2,
+  Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -223,18 +224,18 @@ export default function ITLoansPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-black">
+              <h1 className="text-xl md:text-3xl font-bold text-black">
                 Loan Management (IT)
               </h1>
-              <p className="text-sm md:text-base text-gray-600 font-medium mt-1 md:mt-2">
+              <p className="text-[10px] md:text-base text-gray-600 font-medium mt-1 md:mt-2">
                 จัดการการยืม-คืนอุปกรณ์ทั้งหมดในระบบ (IT Officer)
               </p>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="bg-black hover:bg-gray-900 text-white px-6 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
+              className="bg-black hover:bg-gray-900 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-base font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
             >
-              <Plus size={20} strokeWidth={2} />
+              <Plus size={18} strokeWidth={2} />
               เพิ่มรายการใหม่
             </button>
           </div>
@@ -297,16 +298,16 @@ export default function ITLoansPage() {
             </div>
 
             {/* Mobile Card View */}
-            <div className="lg:hidden">
+            <div className="lg:hidden divide-y divide-gray-100">
               {filteredLoans.map((loan) => (
                 <div
                   key={loan.id}
-                  className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                  className="p-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-semibold text-black">{loan.itemName}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                    <div className="max-w-[70%]">
+                      <h3 className="font-bold text-black text-sm md:text-base truncate">{loan.itemName}</h3>
+                      <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 line-clamp-1">
                         {loan.description || "ไม่มีรายละเอียด"}
                       </p>
                     </div>
@@ -314,43 +315,53 @@ export default function ITLoansPage() {
                   </div>
 
                   <div className="flex items-center gap-2 mb-3">
-                    <User size={14} className="text-gray-400" />
-                    <span className="text-sm text-gray-700">
-                      {loan.borrowerName}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      | {loan.borrowerDepartment}
-                    </span>
+                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User size={12} className="text-gray-400" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] md:text-sm font-semibold text-gray-700 leading-tight">
+                        {loan.borrowerName}
+                      </span>
+                      <span className="text-[9px] md:text-xs text-gray-400">
+                        {loan.borrowerDepartment || "ไม่ระบุแผนก"}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between mt-3 bg-gray-50 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500">
-                      <div>คืน: {format(new Date(loan.expectedReturnDate), "dd MMM yy", { locale: th })}</div>
-                      <div className="mt-0.5">ยืม: {format(new Date(loan.borrowDate), "dd/MM/yy")}</div>
+                  <div className="flex items-center justify-between mt-3 bg-gray-50/80 px-3 py-2.5 rounded-xl border border-gray-100">
+                    <div className="text-[9px] md:text-xs text-gray-500 space-y-0.5">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={10} className="text-gray-400" />
+                        <span>คืน: {format(new Date(loan.expectedReturnDate), "dd MMM yy", { locale: th })}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={10} className="text-gray-400" />
+                        <span>ยืม: {format(new Date(loan.borrowDate), "dd/MM/yy")}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       <button
                         onClick={() => {
                           setSelectedLoan(loan);
                           setShowDetailModal(true);
                         }}
-                        className="p-2 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm"
+                        className="p-2 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm active:scale-95 transition-transform"
                       >
-                        <FileText size={16} />
+                        <FileText size={14} />
                       </button>
                       {loan.status !== "RETURNED" && (
                         <button
                           onClick={() => handleReturnItem(loan.id)}
-                          className="p-2 bg-black text-white rounded-lg shadow-sm"
+                          className="p-2 bg-black text-white rounded-lg shadow-sm active:scale-95 transition-transform"
                         >
-                          <Check size={16} />
+                          <Check size={14} />
                         </button>
                       )}
                       <button
                         onClick={() => handleDeleteLoan(loan.id)}
-                        className="p-2 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm"
+                        className="p-2 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm active:scale-95 transition-transform"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
