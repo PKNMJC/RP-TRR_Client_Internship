@@ -190,8 +190,26 @@ export default function ITRepairsPage() {
       if (selectedRepair?.id === id) {
         setSelectedRepair(null);
       }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCompleteRepair = async (id: number) => {
+    if (!confirm("ยืนยันการเสร็จสิ้นงานซ่อมนี้?")) return;
+    try {
+      setSubmitting(true);
+      await apiFetch(`/api/repairs/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: "COMPLETED",
+          completedAt: new Date().toISOString(),
+        }),
+      });
+      fetchRepairs();
+      setSelectedRepair(null);
     } catch (err) {
-      alert("เกิดข้อผิดพลาดในการรับเรื่อง");
+      alert("เกิดข้อผิดพลาดในการบันทึกงานเสร็จสิ้น");
     } finally {
       setSubmitting(false);
     }
@@ -831,6 +849,17 @@ export default function ITRepairsPage() {
                     <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <CheckCircle size={16} className="relative z-10" />
                     <span className="relative z-10">{submitting ? "..." : "รับเรื่องนี้"}</span>
+                  </button>
+                )}
+                {(selectedRepair.status === "IN_PROGRESS" || selectedRepair.status === "WAITING_PARTS") && (
+                  <button
+                    onClick={() => handleCompleteRepair(selectedRepair.id)}
+                    disabled={submitting}
+                    className="flex-1 md:flex-none group relative flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-emerald-600 text-white rounded-xl font-semibold text-xs md:text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CheckCircle size={16} className="relative z-10" />
+                    <span className="relative z-10">{submitting ? "..." : "เสร็จสิ้นงาน"}</span>
                   </button>
                 )}
                 {selectedRepair.status !== "COMPLETED" && selectedRepair.status !== "CANCELLED" && (
