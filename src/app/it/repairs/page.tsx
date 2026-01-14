@@ -519,21 +519,21 @@ export default function ITRepairsPage() {
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10 shadow-lg">
-                      <Wrench className="text-white" size={26} />
+                      <Wrench className="text-white" size={20} />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white flex items-center justify-center border-2 border-neutral-900 shadow-md">
-                      <span className="text-[8px] font-bold text-neutral-900">IT</span>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-white flex items-center justify-center border-2 border-neutral-900 shadow-md">
+                      <span className="text-[6px] font-bold text-neutral-900">IT</span>
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center gap-3 mb-1">
-                      <h2 className="text-2xl font-bold text-white tracking-tight">
+                      <h2 className="text-lg md:text-2xl font-bold text-white tracking-tight">
                         รายละเอียดการแจ้งซ่อม
                       </h2>
                       <StatusBadge status={selectedRepair.status} />
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-300 font-mono bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                      <span className="text-[10px] md:text-sm text-gray-300 font-mono bg-white/10 px-2 md:px-3 py-0.5 md:py-1 rounded-full backdrop-blur-sm">
                         #{selectedRepair.ticketCode}
                       </span>
                       <UrgencyBadge urgency={selectedRepair.urgency} />
@@ -580,17 +580,17 @@ export default function ITRepairsPage() {
                     <div key={step.key} className="flex flex-col items-center relative z-10">
                       <div className={`
                         w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
-                        ${isActive ? 'bg-black text-white shadow-lg scale-110' : 
+                        ${isActive ? 'bg-black text-white shadow-lg scale-100 md:scale-110' : 
                           isPassed ? 'bg-neutral-800 text-white' : 
                           'bg-white border-2 border-neutral-200 text-neutral-400'}
                       `}
                       style={isActive ? {
-                        boxShadow: '0 0 0 4px rgba(0, 0, 0, 0.1)'
+                        boxShadow: '0 0 0 3px rgba(0, 0, 0, 0.1)'
                       } : {}}
                       >
-                        {isPassed && !isActive ? <CheckCircle size={18} /> : <StepIcon size={18} />}
+                        {isPassed && !isActive ? <CheckCircle size={16} /> : <StepIcon size={16} />}
                       </div>
-                      <span className={`text-[10px] mt-2 font-semibold transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                      <span className={`text-[9px] md:text-[10px] mt-1 md:mt-2 font-semibold transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
                         {step.label}
                       </span>
                     </div>
@@ -610,23 +610,23 @@ export default function ITRepairsPage() {
                     <div className="absolute top-0 left-0 right-0 h-20 bg-neutral-900"></div>
                     <div className="relative pt-10 pb-5 px-5">
                       {/* Avatar */}
-                      <div className="flex justify-center mb-4">
+                      <div className="flex justify-center mb-3">
                         <div className="relative">
-                          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-xl border-4 border-white">
-                            <span className="text-3xl font-bold text-neutral-800">
+                          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg border-4 border-white">
+                            <span className="text-2xl font-bold text-neutral-800">
                               {(selectedRepair.reporterName || selectedRepair.user?.name || "?").charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center border-3 border-white shadow-md">
-                            <User className="text-white" size={14} />
+                          <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center border-2 border-white shadow-md">
+                            <User className="text-white" size={12} />
                           </div>
                         </div>
                       </div>
                       
-                      <h3 className="text-center text-lg font-bold text-gray-900 mb-1">
+                      <h3 className="text-center text-base font-bold text-gray-900 mb-0.5">
                         {selectedRepair.reporterName || selectedRepair.user?.name || "ไม่ระบุชื่อ"}
                       </h3>
-                      <p className="text-center text-sm text-gray-500 mb-4">
+                      <p className="text-center text-xs text-gray-500 mb-3">
                         {selectedRepair.reporterDepartment || selectedRepair.user?.department || "ไม่ระบุแผนก"}
                       </p>
                       
@@ -641,8 +641,8 @@ export default function ITRepairsPage() {
                               <Phone className="text-white" size={18} />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">โทรศัพท์</p>
-                              <p className="text-sm font-semibold text-neutral-700">{selectedRepair.reporterPhone}</p>
+                              <p className="text-[9px] uppercase tracking-wider text-neutral-400 font-semibold">โทรศัพท์</p>
+                              <p className="text-xs font-semibold text-neutral-700">{selectedRepair.reporterPhone}</p>
                             </div>
                           </a>
                         )}
@@ -653,8 +653,8 @@ export default function ITRepairsPage() {
                               <MessageCircle className="text-white" size={18} />
                             </div>
                             <div>
-                              <p className="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold">LINE</p>
-                              <p className="text-sm font-mono font-semibold text-neutral-700">{selectedRepair.reporterLineId.slice(0, 12)}...</p>
+                              <p className="text-[9px] uppercase tracking-wider text-neutral-400 font-semibold">LINE</p>
+                              <p className="text-xs font-mono font-semibold text-neutral-700">{selectedRepair.reporterLineId.slice(0, 10)}...</p>
                             </div>
                           </div>
                         )}
@@ -705,8 +705,8 @@ export default function ITRepairsPage() {
                     <div className="space-y-4">
                       <div>
                         <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-2">หัวข้อแจ้งซ่อม</p>
-                        <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100/50 border border-gray-100">
-                          <p className="text-base font-semibold text-gray-900 leading-relaxed">
+                        <div className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100/50 border border-gray-100">
+                          <p className="text-sm font-semibold text-gray-900 leading-relaxed">
                             {selectedRepair.problemTitle}
                           </p>
                         </div>
@@ -826,19 +826,19 @@ export default function ITRepairsPage() {
                   <button
                     onClick={() => handleAcceptRepair(selectedRepair.id)}
                     disabled={submitting}
-                    className="flex-1 md:flex-none group relative flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl font-semibold text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+                    className="flex-1 md:flex-none group relative flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-black text-white rounded-xl font-semibold text-xs md:text-sm disabled:opacity-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-neutral-800 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <CheckCircle size={18} className="relative z-10" />
+                    <CheckCircle size={16} className="relative z-10" />
                     <span className="relative z-10">{submitting ? "..." : "รับเรื่องนี้"}</span>
                   </button>
                 )}
                 {selectedRepair.status !== "COMPLETED" && selectedRepair.status !== "CANCELLED" && (
                   <button
                     onClick={handleOpenEdit}
-                    className="flex-1 md:flex-none group flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gray-800"
+                    className="flex-1 md:flex-none group flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-gray-900 text-white rounded-xl font-semibold text-xs md:text-sm shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-gray-800"
                   >
-                    <Settings2 size={18} className="group-hover:rotate-90 transition-transform duration-300" />
+                    <Settings2 size={16} className="group-hover:rotate-90 transition-transform duration-300" />
                     แก้ไข
                   </button>
                 )}
