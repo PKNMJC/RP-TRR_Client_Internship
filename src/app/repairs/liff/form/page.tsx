@@ -1,36 +1,33 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, Upload, X, MapPin, Phone, User, Building2, Wrench } from "lucide-react";
+import { 
+  AlertCircle, CheckCircle2, Loader2, Upload, X, MapPin, 
+  Phone, User, Building2, Wrench, Camera, Image as ImageIcon,
+  ChevronRight, Info
+} from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
-import Button from "@/components/Button";
-import Card from "@/components/Card";
 
-export const dynamic = "force-dynamic";
-
+// --- Constants ---
 const PROBLEM_CATEGORIES = [
   { value: "HARDWARE", label: "💻 Hardware (คอมพิวเตอร์, อุปกรณ์)" },
   { value: "SOFTWARE", label: "📱 Software (โปรแกรม, ระบบ)" },
   { value: "NETWORK", label: "🌐 Network (อินเทอร์เน็ต, Wi-Fi)" },
-  { value: "PERIPHERAL", label: "Peripheral (เมาส์, คีย์บอร์ด, จอภาพ)" },
-  { value: "EMAIL_OFFICE365", label: "Email/Office 365" },
-  { value: "ACCOUNT_PASSWORD", label: "Account/Password" },
+  { value: "PERIPHERAL", label: "🖱️ Peripheral (เมาส์, จอภาพ)" },
+  { value: "EMAIL_OFFICE365", label: "📧 Email / Office 365" },
+  { value: "ACCOUNT_PASSWORD", label: "🔐 Account / Password" },
   { value: "OTHER", label: "🔧 อื่นๆ" },
 ];
 
 const URGENCY_LEVELS = [
-  { value: "NORMAL", label: "ปกติ (รอได้)", subLabel: "ใช้งานได้ต่อ", color: "bg-green-100 text-green-700 border-green-200" },
-  { value: "URGENT", label: "ด่วน", subLabel: "งานสะดุด", color: "bg-yellow-100 text-yellow-700 border-yellow-200" },
-  { value: "CRITICAL", label: "ด่วนที่สุด", subLabel: "ทำงานไม่ได้", color: "bg-red-100 text-red-700 border-red-200" },
+  { value: "NORMAL", label: "ปกติ", subLabel: "รอได้", color: "peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
+  { value: "URGENT", label: "ด่วน", subLabel: "งานสะดุด", color: "peer-checked:bg-yellow-50 peer-checked:border-yellow-500 peer-checked:text-yellow-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
+  { value: "CRITICAL", label: "ด่วนที่สุด", subLabel: "ทำไม่ได้เลย", color: "peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
 ];
 
-interface SuccessState {
-  show: boolean;
-  ticketCode?: string;
-}
-
+// --- Interfaces ---
 interface FormData {
   reporterName: string;
   reporterDepartment: string;
@@ -45,13 +42,12 @@ interface FormData {
 
 function RepairLiffFormContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  const [lineUserId, setLineUserId] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // States
   const [linePictureUrl, setLinePictureUrl] = useState<string>("");
   const [deviceOS, setDeviceOS] = useState<string>("");
-  const [isFriend, setIsFriend] = useState<boolean | null>(null); // null = loading/unknown, false = not friend, true = friend
-
+  const [isFriend, setIsFriend] = useState<boolean | null>(null);
   const [formData, setFormData] = useState<FormData>({
     reporterName: "",
     reporterDepartment: "",
@@ -67,603 +63,352 @@ function RepairLiffFormContent() {
   const [files, setFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<SuccessState>({ show: false });
+  const [success, setSuccess] = useState<{ show: boolean; ticketCode?: string }>({ show: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const [liffError, setLiffError] = useState<string | null>(null);
   const [isLiffInitializing, setIsLiffInitializing] = useState(true);
 
+  // --- LIFF Initialization ---
   useEffect(() => {
-    // Initialize LIFF
     const initLiff = async () => {
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
-        // Log for debugging
-        console.log("Initializing LIFF", { liffId, currentUrl: window.location.href });
-
         if (!liffId) {
-          setLiffError("System Error: LIFF ID missing (Check .env)");
-          setIsLiffInitializing(false);
+          setLiffError("System Error: LIFF ID missing");
           return;
         }
 
-        // Initialize LIFF with iOS-compatible options
-        await liff.init({ 
-          liffId,
-          withLoginOnExternalBrowser: true // Fix for iOS Safari external browser
-        });
-
-        // Detect OS for better error messaging
-        const os = liff.getOS() || "unknown";
-        setDeviceOS(os);
+        await liff.init({ liffId, withLoginOnExternalBrowser: true });
+        setDeviceOS(liff.getOS() || "unknown");
 
         if (!liff.isLoggedIn()) {
-          // Check for redirect loop
-          const loginAttempted = sessionStorage.getItem("liff_login_attempted");
-          
-          if (loginAttempted) {
-              console.warn("LIFF Login loop detected.");
-              setLiffError("การเข้าสู่ระบบ LINE ขัดข้อง (Login Loop) - กรุณาลองใหม่อีกครั้ง");
-              setDeviceOS(os); 
-              setIsLiffInitializing(false);
-              return;
-          }
-
-          // Mark attempt before redirecting
-          sessionStorage.setItem("liff_login_attempted", "true");
-          
-          console.log("Redirecting to LINE Login...");
           liff.login();
           return;
         }
 
-        // Login successful, clear flag
-        sessionStorage.removeItem("liff_login_attempted");
-
-        // CHECK FRIENDSHIP
-        try {
-            const friendship = await liff.getFriendship();
-            console.log("Friendship status:", friendship.friendFlag);
-            setIsFriend(friendship.friendFlag);
-        } catch (friendError) {
-            console.error("Error getting friendship status:", friendError);
-            // If checking fails (rare), we might default to allow or block. 
-            // Better to block if strict, or warn. Let's assume strict for now but allow fallback if API fails?
-            // Actually, if API fails, it usually means network or liff issue.
-            // Let's safe-fail to TRUE to avoid blocking on API error, unless we are very strict.
-            // But requirement is fix notification. Let's be strict but handle error gracefully.
-            setIsFriend(false); // Assume false if failed to be safe
-        }
+        const friendship = await liff.getFriendship();
+        setIsFriend(friendship.friendFlag);
 
         const profile = await liff.getProfile();
-        const lineUserId = profile.userId;
-        const lineDisplayName = profile.displayName;
-
-        if (!lineUserId) {
-            setLiffError("ไม่สามารถระบุตัวตนได้ (No User ID)");
-        }
-
-        setLineUserId(lineUserId);
         setLinePictureUrl(profile.pictureUrl || "");
         setFormData((prev) => ({
           ...prev,
-          reporterLineId: lineUserId,
-          reporterName: lineDisplayName || "",
+          reporterLineId: profile.userId,
+          reporterName: profile.displayName || "",
         }));
-      } catch (error) {
-        // Extract useful error message with iOS-specific handling
-        let errMsg = "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE";
-        const err = error as { code?: string; message?: string };
-        const currentOS = liff.getOS?.() || "unknown";
-        setDeviceOS(currentOS);
-        
-        if (err.code === "403") {
-            errMsg = "คุณปฏิเสธการเข้าถึง (Permission Denied)";
-        } else if (err.code === "INIT_FAILED" && currentOS === "ios") {
-            errMsg = "iOS: เชื่อมต่อ LINE ไม่ได้ - กรุณาเปิดจากแอป LINE โดยตรง";
-        } else if (err.message?.includes("cookie") || err.message?.includes("storage")) {
-            errMsg = "Browser บล็อก Cookies - กรุณาเปิดจากแอป LINE";
-        } else if (err.message) {
-            errMsg = `LIFF Error: ${err.message}`;
-        }
-        setLiffError(errMsg);
+      } catch (error: any) {
+        setLiffError(error.message || "LIFF Error");
       } finally {
         setIsLiffInitializing(false);
       }
     };
-
     initLiff();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  // --- Handlers ---
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => {
+      const { [name]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (selectedFiles) {
-      const newFiles: File[] = [];
-      const newPreviews: string[] = [];
-
-      for (
-        let i = 0;
-        i < Math.min(selectedFiles.length, 3 - files.length);
-        i++
-      ) {
-        const file = selectedFiles[i];
-        if (file.size <= 5 * 1024 * 1024) {
-          newFiles.push(file);
-
+      const remainingSlots = 3 - files.length;
+      const validFiles: File[] = [];
+      
+      Array.from(selectedFiles).slice(0, remainingSlots).forEach(file => {
+        if (file.size <= 10 * 1024 * 1024) { // 10MB
+          validFiles.push(file);
           const reader = new FileReader();
-          reader.onloadend = () => {
-            newPreviews.push(reader.result as string);
-          };
+          reader.onloadend = () => setFilePreviews(prev => [...prev, reader.result as string]);
           reader.readAsDataURL(file);
         }
-      }
-
-      setFiles((prev) => [...prev, ...newFiles]);
-      setFilePreviews((prev) => [...prev, ...newPreviews]);
+      });
+      setFiles(prev => [...prev, ...validFiles]);
     }
   };
 
   const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setFilePreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.reporterName.trim()) newErrors.reporterName = "ระบุชื่อผู้แจ้ง";
-    if (!formData.reporterDepartment.trim()) newErrors.reporterDepartment = "ระบุแผนก";
-    if (!formData.problemCategory) newErrors.problemCategory = "เลือกประเภทปัญหา";
-    if (!formData.problemTitle.trim()) newErrors.problemTitle = "ระบุหัวข้อปัญหา";
-    if (formData.problemTitle.length > 0 && formData.problemTitle.length < 5) {
-      newErrors.problemTitle = "ระบุอย่างน้อย 5 ตัวอักษร";
-    }
-    if (!formData.location.trim()) newErrors.location = "ระบุสถานที่";
-    
-    // Critical validation: Enforce LINE ID
-    if (!formData.reporterLineId) {
-       newErrors.authentication = "ไม่พบ User ID (กรุณา Login ใหม่)";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-       return;
-    }
-
     setLoading(true);
-
     try {
-      const formPayload = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) formPayload.append(key, value);
-      });
-
-      // Send LINE profile data for user upsert in backend
-      if (formData.reporterName) {
-        formPayload.append("displayName", formData.reporterName);
-      }
-      if (linePictureUrl) {
-        formPayload.append("pictureUrl", linePictureUrl);
-      }
-
-      files.forEach((file) => {
-        formPayload.append("files", file);
-      });
+      const payload = new FormData();
+      Object.entries(formData).forEach(([key, val]) => payload.append(key, val));
+      files.forEach(file => payload.append("files", file));
+      if (linePictureUrl) payload.append("pictureUrl", linePictureUrl);
 
       const data = await apiFetch("/api/repairs/liff/create", {
         method: "POST",
-        headers: {
-          Authorization: "",
-        },
-        body: formPayload,
+        body: payload,
       });
-
       setSuccess({ show: true, ticketCode: data.ticketCode });
-    } catch (err) {
-      setErrors({
-        submit: err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการส่ง",
-      });
+    } catch (err: any) {
+      setErrors({ submit: err.message || "Submission failed" });
     } finally {
       setLoading(false);
     }
   };
 
-  if (success.show) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <Card className="glass text-center p-8 max-w-sm mx-auto">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            บันทึกสำเร็จ!
-          </h2>
-          <p className="text-slate-500 mb-8">
-            เราได้รับเรื่องแจ้งซ่อมของคุณแล้ว
-            <br />เจ้าหน้าที่จะรีบดำเนินการตรวจสอบ
-          </p>
-
-          <div className="bg-slate-50/80 rounded-xl p-4 mb-8 border border-slate-100">
-            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Ticket ID</p>
-            <p className="text-2xl font-mono font-bold text-primary-600 tracking-wider">
-              {success.ticketCode}
-            </p>
-          </div>
-
-          <Button
-            onClick={() => liff.closeWindow()}
-            fullWidth
-            className="bg-slate-900 hover:bg-slate-800 text-white"
-          >
-            ปิดหน้าต่าง
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  // Blocking State: Loading LIFF
-  if (isLiffInitializing) {
-     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50">
-            <div className="text-center">
-                <Loader2 className="w-10 h-10 text-primary-600 animate-spin mx-auto mb-4" />
-                <p className="text-slate-500">กำลังตรวจสอบข้อมูล LINE...</p>
-            </div>
-        </div>
-     );
-  }
-
-  // Blocking State: LIFF Error (e.g. Permission Denied) - CHANGED TO WARNING ONLY
-  // Blocking State: LIFF Error or No User ID (Strict Mode)
-  if (liffError || !formData.reporterLineId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-sm w-full bg-white rounded-2xl shadow-xl p-6 text-center border border-red-100">
-           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-             <AlertCircle className="w-8 h-8 text-red-600" />
-           </div>
-           
-           <h2 className="text-xl font-bold text-slate-800 mb-2">เข้าสู่ระบบไม่สำเร็จ</h2>
-           
-           <div className="text-sm text-slate-600 space-y-3 mb-6">
-              <p className="font-medium text-red-600 bg-red-50 p-2 rounded-lg">
-                {liffError || "ไม่พบข้อมูลผู้ใช้ LINE"}
-              </p>
-              
-              {deviceOS === "ios" ? (
-                 <div className="text-left text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <p className="font-semibold mb-1">คำแนะนำสำหรับ iOS:</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                       <li>ตรวจสอบว่าไม่ได้เปิดใน Private / Incognito Mode</li>
-                       <li>ลองกดเปิดผ่านแอป LINE โดยตรง</li>
-                       <li>หากปัญหายังเกิด ให้ลอง Clear Cache ของ Safari</li>
-                    </ul>
-                 </div>
-              ) : (
-                 <p>กรุณาอนุญาตให้สิทธิ์การเข้าถึงข้อมูล (Allow Permissions) เพื่อใช้งานระบบแจ้งซ่อม</p>
-              )}
-           </div>
-
-           <div className="flex flex-col gap-2">
-              <button
-                 onClick={() => {
-                    sessionStorage.removeItem("liff_login_attempted");
-                    window.location.reload();
-                 }}
-                 className="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-              >
-                 <span className="text-lg">↻</span> ลองใหม่ / เข้าสู่ระบบ
-              </button>
-              
-              <button
-                 onClick={() => liff.closeWindow()}
-                 className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-all"
-              >
-                 ปิดหน้าต่าง
-              </button>
-           </div>
-
-           <div className="mt-6 pt-4 border-t border-slate-100">
-              <p className="text-[10px] text-slate-400">
-                System ID: {process.env.NEXT_PUBLIC_LIFF_ID?.substring(0,8)}... <br/>
-                OS: {deviceOS}
-              </p>
-           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Blocking State: Not a Friend
-  if (isFriend === false) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-sm w-full bg-white rounded-2xl shadow-xl p-6 text-center border border-green-100">
-           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 mb- animate-bounce">
-             <User className="w-8 h-8 text-green-600" />
-           </div>
-           
-           <h2 className="text-xl font-bold text-slate-800 mb-2">กรุณาเพิ่มเพื่อนก่อน</h2>
-           <p className="text-slate-500 mb-6 text-sm">
-             เพื่อให้คุณได้รับแจ้งเตือนสถานะการซ่อม <br/>
-             กรุณากด "เพิ่มเพื่อน" กับเราก่อนนะครับ
-           </p>
-           
-           <div className="space-y-3">
-              <a
-                 href="https://line.me/R/ti/p/@631lnnya"
-                 target="_blank"
-                 rel="noreferrer"
-                 className="block w-full py-3 bg-[#06C755] text-white rounded-xl font-bold hover:bg-[#05b64d] transition-all shadow-lg shadow-green-500/30"
-              >
-                 + เพิ่มเพื่อน (Add Friend)
-              </a>
-
-              <button
-                 onClick={() => window.location.reload()}
-                 className="w-full py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-all"
-              >
-                 เพิ่มเพื่อนแล้ว? (กดเพื่อรีโหลด)
-              </button>
-           </div>
-        </div>
-      </div>
-    );
-  }
+  // --- Views ---
+  if (isLiffInitializing) return <LoadingSpinner />;
+  if (liffError) return <ErrorMessage message={liffError} os={deviceOS} />;
+  if (isFriend === false) return <AddFriendView />;
+  if (success.show) return <SuccessView ticketCode={success.ticketCode} />;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 glass border-b border-slate-200/50 px-4 py-4 backdrop-blur-md">
-        <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-          <Wrench className="w-5 h-5 text-primary-600" />
-          แจ้งซ่อมอุปกรณ์ IT
-        </h1>
-      </div>
-
-      <div className="max-w-md mx-auto p-4">
-        {errors.submit && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 animate-in fade-in slide-in-from-top-2">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-800 font-medium">{errors.submit}</p>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10 transition-colors">
+      {/* Professional Header */}
+      <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-md mx-auto px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Wrench className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">ระบบแจ้งซ่อม IT</h1>
+              <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Ticketing System</p>
+            </div>
           </div>
-        )}
+          {linePictureUrl && (
+            <img src={linePictureUrl} alt="profile" className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+          )}
+        </div>
+      </header>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section: ผู้แจ้ง */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">ข้อมูลผู้แจ้ง</h2>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <div className="relative">
-                  <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    name="reporterName"
-                    value={formData.reporterName}
-                    onChange={handleInputChange}
-                    placeholder="ชื่อ-เล่นของคุณ"
-                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${
-                      errors.reporterName ? "border-red-300 bg-red-50" : "border-slate-200"
-                    }`}
-                  />
-                </div>
-                {errors.reporterName && <p className="text-xs text-red-500 mt-1 ml-1">{errors.reporterName}</p>}
+      <main className="max-w-md mx-auto p-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          
+          {/* Section 1: User Profile */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <User size={14} /> ข้อมูลผู้แจ้ง
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs text-slate-400 mb-1.5 block ml-1">ชื่อ-นามสกุล</label>
+                <input
+                  type="text"
+                  name="reporterName"
+                  value={formData.reporterName}
+                  onChange={handleInputChange}
+                  placeholder="กรอกชื่อของคุณ"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none dark:text-white"
+                  required
+                />
               </div>
-
-              <div className="col-span-2">
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="text-xs text-slate-400 mb-1.5 block ml-1">แผนก / ฝ่าย</label>
                   <select
                     name="reporterDepartment"
                     value={formData.reporterDepartment}
                     onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all appearance-none ${
-                        errors.reporterDepartment ? "border-red-300 bg-red-50" : "border-slate-200"
-                    }`}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white appearance-none"
+                    required
                   >
-                    <option value="">เลือกแผนกของคุณ</option>
-                    <option value="ฝ่ายบัญชี">ฝ่ายบัญชี</option>
-                    <option value="ฝ่ายขาย">ฝ่ายขาย</option>
-                    <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
-                    <option value="ฝ่ายบริหาร">ฝ่ายบริหาร</option>
-                    <option value="ฝ่ายการตลาด">ฝ่ายการตลาด</option>
-                    <option value="ฝ่ายอื่นๆ">ฝ่ายอื่นๆ</option>
+                    <option value="">เลือกแผนก</option>
+                    <option value="ACCOUNTING">ฝ่ายบัญชี</option>
+                    <option value="SALES">ฝ่ายขาย</option>
+                    <option value="PRODUCTION">ฝ่ายผลิต</option>
+                    <option value="IT">ฝ่ายไอที</option>
+                    <option value="OTHER">อื่นๆ</option>
                   </select>
                 </div>
-                {errors.reporterDepartment && <p className="text-xs text-red-500 mt-1 ml-1">{errors.reporterDepartment}</p>}
-              </div>
-
-              <div className="col-span-2">
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <div>
+                  <label className="text-xs text-slate-400 mb-1.5 block ml-1">เบอร์โทรติดต่อ</label>
                   <input
                     type="tel"
                     name="reporterPhone"
                     value={formData.reporterPhone}
                     onChange={handleInputChange}
-                    placeholder="เบอร์โทรติดต่อ (ถ้ามี)"
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all"
+                    placeholder="08X-XXX-XXXX"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none dark:text-white"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="h-px bg-slate-200/60 my-6" />
-
-          {/* Section: ปัญหา */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">รายละเอียดปัญหา</h2>
-
-            <div>
-               <div className="relative">
-                 <Wrench className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <select
-                    name="problemCategory"
-                    value={formData.problemCategory}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all appearance-none"
-                  >
-                    {PROBLEM_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-               </div>
-            </div>
-
-            <div>
+          {/* Section 2: Problem Details */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Info size={14} /> รายละเอียดปัญหา
+            </h2>
+            <div className="space-y-4">
+              <select
+                name="problemCategory"
+                value={formData.problemCategory}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white"
+              >
+                {PROBLEM_CATEGORIES.map(cat => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </select>
               <input
                 type="text"
                 name="problemTitle"
                 value={formData.problemTitle}
                 onChange={handleInputChange}
-                placeholder="ระบุปัญหาที่พบ (สั้นๆ เข้าใจง่าย)"
-                className={`w-full px-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${
-                  errors.problemTitle ? "border-red-300 bg-red-50" : "border-slate-200"
-                }`}
+                placeholder="สรุปปัญหา (เช่น เปิดเครื่องไม่ติด)"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white"
+                required
               />
-              {errors.problemTitle && <p className="text-xs text-red-500 mt-1 ml-1">{errors.problemTitle}</p>}
-            </div>
-
-            <textarea
-              name="problemDescription"
-              value={formData.problemDescription}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)..."
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all resize-none"
-            />
-
-            <div>
-               <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    placeholder="สถานที่แจ้งซ่อม (ตึก/ชั้น/ห้อง)"
-                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all ${
-                      errors.location ? "border-red-300 bg-red-50" : "border-slate-200"
-                    }`}
-                  />
-               </div>
-               {errors.location && <p className="text-xs text-red-500 mt-1 ml-1">{errors.location}</p>}
+              <textarea
+                name="problemDescription"
+                value={formData.problemDescription}
+                onChange={handleInputChange}
+                rows={3}
+                placeholder="ระบุรายละเอียดเพิ่มเติม..."
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white resize-none"
+              />
+              <div className="relative">
+                <MapPin className="absolute left-4 top-3.5 w-4 h-4 text-blue-500" />
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  placeholder="สถานที่ / ชั้น / เลขโต๊ะ"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white"
+                  required
+                />
+              </div>
             </div>
           </div>
 
-           {/* Section: ความเร่งด่วน */}
-           <div className="space-y-3 pt-2">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">ระดับความเร่งด่วน</h2>
-            <div className="grid grid-cols-3 gap-2">
-              {URGENCY_LEVELS.map((level) => (
-                <label
-                  key={level.value}
-                  className={`
-                    relative flex flex-col items-center justify-center p-3 rounded-xl cursor-pointer border-2 transition-all
-                    ${formData.urgency === level.value 
-                      ? `${level.color} border-current ring-1 ring-offset-1 ring-current/20` 
-                      : 'bg-white border-slate-100 text-slate-600 hover:border-slate-200'}
-                  `}
-                >
-                  <input
-                    type="radio"
-                    name="urgency"
-                    value={level.value}
-                    checked={formData.urgency === level.value}
-                    onChange={handleInputChange}
-                    className="sr-only"
-                  />
-                  <span className="text-sm font-bold">{level.label}</span>
-                  <span className="text-[10px] opacity-80">{level.subLabel}</span>
-                </label>
-              ))}
+          {/* Section 3: Photo Upload (Professional Grid) */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                <Camera size={14} /> รูปภาพประกอบ
+              </h2>
+              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">{files.length}/3</span>
             </div>
-           </div>
-
-
-          {/* Section: รูปภาพ */}
-          <div className="space-y-3 pt-2">
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">รูปประกอบ (ถ้ามี)</h2>
             
             <div className="grid grid-cols-3 gap-3">
-              {filePreviews.map((preview, index) => (
-                <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group">
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFile(index)}
-                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
+              {filePreviews.map((src, i) => (
+                <div key={i} className="relative aspect-square rounded-2xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-800">
+                  <img src={src} alt="preview" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => removeFile(i)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg">
                     <X size={12} />
                   </button>
                 </div>
               ))}
-              
               {files.length < 3 && (
-                <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors">
-                  <Upload className="w-6 h-6 text-slate-400 mb-1" />
-                  <span className="text-[10px] text-slate-400">เพิ่มรูป</span>
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </label>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1 text-slate-400 hover:bg-blue-50/50 transition-colors"
+                >
+                  <Camera size={20} />
+                  <span className="text-[10px] font-medium">เพิ่มรูป</span>
+                </button>
               )}
             </div>
+            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
           </div>
 
-          <div className="pt-4 pb-8">
-            <Button
-              type="submit"
-              disabled={loading}
-              isLoading={loading}
-              fullWidth
-              size="lg"
-              className="mt-4 shadow-xl shadow-primary-500/20"
-            >
-              ส่งแจ้งซ่อม
-            </Button>
+          {/* Section 4: Urgency Level */}
+          <div className="grid grid-cols-3 gap-3">
+            {URGENCY_LEVELS.map((level) => (
+              <label key={level.value} className="cursor-pointer group">
+                <input
+                  type="radio"
+                  name="urgency"
+                  value={level.value}
+                  checked={formData.urgency === level.value}
+                  onChange={handleInputChange}
+                  className="sr-only peer"
+                />
+                <div className={`p-3 rounded-2xl border-2 text-center transition-all ${level.color}`}>
+                  <p className="text-sm font-bold">{level.label}</p>
+                  <p className="text-[10px] opacity-60">{level.subLabel}</p>
+                </div>
+              </label>
+            ))}
           </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-2xl font-bold shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+          >
+            {loading ? <Loader2 className="animate-spin" /> : <>ส่งข้อมูลแจ้งซ่อม <ChevronRight size={18} /></>}
+          </button>
         </form>
+      </main>
+    </div>
+  );
+}
+
+// --- Sub-components ---
+
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />
+      <p className="text-slate-500 font-medium animate-pulse text-sm">กำลังโหลดข้อมูลระบบ...</p>
+    </div>
+  );
+}
+
+function SuccessView({ ticketCode }: { ticketCode?: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-xs w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 text-center shadow-2xl border border-slate-100 dark:border-slate-800">
+        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">เรียบร้อย!</h2>
+        <p className="text-slate-500 text-sm mb-8 leading-relaxed">ได้รับเรื่องแล้ว เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด</p>
+        <div className="bg-slate-50 dark:bg-slate-800/50 py-4 rounded-3xl mb-8 border border-slate-100 dark:border-slate-700">
+          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mb-1">Ticket Number</p>
+          <p className="text-2xl font-mono font-black text-blue-600">#{ticketCode}</p>
+        </div>
+        <button onClick={() => liff.closeWindow()} className="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AddFriendView() {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 bg-white dark:bg-slate-950 text-center">
+      <div className="max-w-xs">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <User className="text-green-600" size={32} />
+        </div>
+        <h2 className="text-xl font-bold mb-3 dark:text-white">กรุณาเพิ่มเพื่อน</h2>
+        <p className="text-slate-500 text-sm mb-8">เพื่อรับการแจ้งเตือนสถานะงานซ่อม กรุณาเพิ่มเพื่อนกับเราก่อนใช้งานครับ</p>
+        <a href="https://line.me/R/ti/p/@yourid" className="block w-full py-4 bg-[#06C755] text-white rounded-2xl font-bold mb-3 shadow-lg shadow-green-500/20">
+          เพิ่มเพื่อน (Add Friend)
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function ErrorMessage({ message, os }: { message: string; os: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="text-center">
+        <AlertCircle className="text-red-500 mx-auto mb-4" size={48} />
+        <p className="text-red-600 font-bold mb-2">Error: {message}</p>
+        <p className="text-slate-400 text-xs">OS Detected: {os}</p>
       </div>
     </div>
   );
@@ -671,7 +416,7 @@ function RepairLiffFormContent() {
 
 export default function RepairLiffFormPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400"><Loader2 className="animate-spin w-8 h-8" /></div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       <RepairLiffFormContent />
     </Suspense>
   );
