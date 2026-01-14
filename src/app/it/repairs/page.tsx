@@ -1,34 +1,21 @@
-"use client";
-
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-
-import { apiFetch } from "@/services/api";
-import {
-  Search,
-  Wrench,
+import { useState, useEffect } from "react";
+import { 
+  Search, 
+  Plus, 
+  Clock, 
+  CheckCircle, 
   AlertCircle,
-  CheckCircle,
-  Clock,
-  RefreshCw,
-  Eye,
-  ChevronRight,
-  Filter,
-  Settings2,
-  AlertTriangle,
+  ChevronDown,
   X,
   User,
   Phone,
   Building2,
-  MessageCircle,
-  MapPin,
-  FileText,
   Calendar,
+  FileText,
+  Settings
 } from "lucide-react";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
 
-// --- Types ---
+// Types
 interface RepairTicket {
   id: number;
   ticketCode: string;
@@ -42,19 +29,10 @@ interface RepairTicket {
   updatedAt?: string;
   completedAt?: string;
   assignee?: { id: number; name: string; email?: string };
-  // Reporter information
   reporterName?: string;
   reporterDepartment?: string;
   reporterPhone?: string;
-  reporterLineId?: string;
-  // User relation (owner of ticket)
-  user?: {
-    id: number;
-    name: string;
-    email?: string;
-    department?: string;
-  };
-  notes?: string;
+  user?: { id: number; name: string; department?: string };
 }
 
 interface User {
@@ -64,875 +42,545 @@ interface User {
   email?: string;
 }
 
-export default function ITRepairsPage() {
-  const router = useRouter();
-  const [repairs, setRepairs] = useState<RepairTicket[]>([]);
-  const [loading, setLoading] = useState(true);
+// Mock Data
+const mockTickets: RepairTicket[] = [
+  {
+    id: 1,
+    ticketCode: "TK-2024-001",
+    problemTitle: "คอมพิวเตอร์เปิดไม่ติด",
+    problemDescription: "หน้าจอไม่มีสัญญาณ กดปุ่มเปิดแล้วไม่มีอะไรเกิดขึ้น",
+    problemCategory: "Hardware",
+    location: "อาคาร A ชั้น 3",
+    status: "PENDING",
+    urgency: "URGENT",
+    createdAt: "2024-01-15T09:30:00",
+    reporterName: "สมชาย ใจดี",
+    reporterDepartment: "ฝ่ายบัญชี",
+    reporterPhone: "081-234-5678",
+  },
+  {
+    id: 2,
+    ticketCode: "TK-2024-002",
+    problemTitle: "Printer ไม่สามารถพิมพ์ได้",
+    problemDescription: "เครื่องพิมพ์แสดงข้อความ Paper Jam แต่ไม่มีกระดาษติด",
+    problemCategory: "Printer",
+    location: "อาคาร B ชั้น 2",
+    status: "IN_PROGRESS",
+    urgency: "NORMAL",
+    createdAt: "2024-01-14T14:20:00",
+    assignee: { id: 1, name: "วิทยา เทคโนโลยี" },
+    reporterName: "สมหญิง รักสะอาด",
+    reporterDepartment: "ฝ่ายทรัพยากรบุคคล",
+    reporterPhone: "089-765-4321",
+  },
+  {
+    id: 3,
+    ticketCode: "TK-2024-003",
+    problemTitle: "อินเทอร์เน็ตช้ามาก",
+    problemDescription: "เน็ตช้ามาก ใช้งานไม่ได้เลย",
+    problemCategory: "Network",
+    location: "อาคาร A ชั้น 5",
+    status: "COMPLETED",
+    urgency: "NORMAL",
+    createdAt: "2024-01-13T10:15:00",
+    completedAt: "2024-01-14T16:45:00",
+    assignee: { id: 2, name: "ประสิทธิ์ ช่างซ่อม" },
+    reporterName: "กมล การดี",
+    reporterDepartment: "ฝ่ายการตลาด",
+  },
+];
+
+const mockStaff: User[] = [
+  { id: 1, name: "วิทยา เทคโนโลยี", department: "IT Support", email: "wittaya@company.com" },
+  { id: 2, name: "ประสิทธิ์ ช่างซ่อม", department: "IT Support", email: "prasit@company.com" },
+  { id: 3, name: "สมศักดิ์ แก้ไขได้", department: "IT Support", email: "somsak@company.com" },
+];
+
+export default function RepairManagement() {
+  const [tickets, setTickets] = useState<RepairTicket[]>(mockTickets);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedRepair, setSelectedRepair] = useState<RepairTicket | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [editForm, setEditForm] = useState<{
-    title: string;
-    priority: string;
-    description: string;
-    assigneeId: string;
-  }>({
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedTicket, setSelectedTicket] = useState<RepairTicket | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editForm, setEditForm] = useState({
     title: "",
-    priority: "NORMAL",
     description: "",
+    urgency: "NORMAL",
     assigneeId: "",
+    status: "PENDING",
   });
 
-  // New states for Assignee & Realtime
-  const [itStaff, setItStaff] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [isAutoRefresh, setIsAutoRefresh] = useState(true);
-
-  const fetchRepairs = useCallback(async (isBackground = false) => {
-    try {
-      const token = localStorage.getItem("access_token") || localStorage.getItem("token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
-
-      if (!isBackground) setLoading(true);
-      const data = await apiFetch("/api/repairs");
-      setRepairs(Array.isArray(data) ? data : []);
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error("Failed to fetch repairs:", err);
-    } finally {
-      if (!isBackground) setLoading(false);
-    }
-  }, [router]);
-
-  const fetchSupportingData = async () => {
-    try {
-      // Fetch IT Staff
-      const staff = await apiFetch("/users/it-staff");
-      if (Array.isArray(staff)) setItStaff(staff);
-
-      // Fetch Current User
-      const profile = await apiFetch("/auth/profile");
-      if (profile) setCurrentUser(profile);
-    } catch (err) {
-      console.error("Failed to fetch supporting data:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchRepairs();
-    fetchSupportingData();
-
-    // Polling every 10 seconds
-    const interval = setInterval(() => {
-      if (isAutoRefresh) {
-        fetchRepairs(true);
-      }
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [fetchRepairs, isAutoRefresh]);
-
-  const handleAcceptRepair = async (id: number) => {
-    if (!currentUser) {
-      alert("ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      await apiFetch(`/api/repairs/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          status: "IN_PROGRESS",
-          assignedTo: currentUser.id, // Auto-assign to self
-        }),
-      });
-      fetchRepairs();
-      if (selectedRepair?.id === id) {
-        setSelectedRepair(null);
-      }
-    } catch (err) {
-      alert("เกิดข้อผิดพลาดในการรับเรื่อง");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleOpenEdit = () => {
-    if (selectedRepair) {
-      setEditForm({
-        title: selectedRepair.problemTitle,
-        priority: selectedRepair.urgency,
-        description: selectedRepair.problemDescription || "",
-        assigneeId: selectedRepair.assignee?.id.toString() || "",
-      });
-      setShowEditModal(true);
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!selectedRepair || !editForm.title.trim()) {
-      alert("กรุณากรอกหัวข้อแจ้งซ่อม");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      await apiFetch(`/api/repairs/${selectedRepair.id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          problemTitle: editForm.title,
-          problemDescription: editForm.description,
-          urgency: editForm.priority,
-          assignedTo: editForm.assigneeId ? parseInt(editForm.assigneeId) : null,
-        }),
-      });
-      fetchRepairs();
-      setShowEditModal(false);
-      setSelectedRepair(null);
-    } catch (err) {
-      alert("เกิดข้อผิดพลาดในการแก้ไข");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const filteredRepairs = repairs.filter((repair) => {
-    const matchesSearch =
-      repair.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      repair.ticketCode.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || repair.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
+  // Statistics
   const stats = {
-    total: repairs.length,
-    pending: repairs.filter((r) => r.status === "PENDING").length,
-    inProgress: repairs.filter((r) => r.status === "IN_PROGRESS").length,
-    completed: repairs.filter((r) => r.status === "COMPLETED").length,
+    total: tickets.length,
+    pending: tickets.filter(t => t.status === "PENDING").length,
+    inProgress: tickets.filter(t => t.status === "IN_PROGRESS").length,
+    completed: tickets.filter(t => t.status === "COMPLETED").length,
   };
 
-  if (loading) return <LoadingState />;
+  // Filtered tickets
+  const filteredTickets = tickets.filter(ticket => {
+    const matchSearch = ticket.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       ticket.ticketCode.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = statusFilter === "all" || ticket.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const handleViewTicket = (ticket: RepairTicket) => {
+    setSelectedTicket(ticket);
+    setIsEditMode(false);
+  };
+
+  const handleEditTicket = () => {
+    if (selectedTicket) {
+      setEditForm({
+        title: selectedTicket.problemTitle,
+        description: selectedTicket.problemDescription || "",
+        urgency: selectedTicket.urgency,
+        assigneeId: selectedTicket.assignee?.id.toString() || "",
+        status: selectedTicket.status,
+      });
+      setIsEditMode(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (selectedTicket) {
+      const updatedTickets = tickets.map(t => 
+        t.id === selectedTicket.id 
+          ? { 
+              ...t, 
+              problemTitle: editForm.title,
+              problemDescription: editForm.description,
+              urgency: editForm.urgency as any,
+              status: editForm.status as any,
+              assignee: editForm.assigneeId 
+                ? mockStaff.find(s => s.id.toString() === editForm.assigneeId)
+                : undefined,
+              updatedAt: new Date().toISOString(),
+            }
+          : t
+      );
+      setTickets(updatedTickets);
+      setSelectedTicket(null);
+      setIsEditMode(false);
+    }
+  };
+
+  const handleAcceptTicket = (ticketId: number) => {
+    const updatedTickets = tickets.map(t => 
+      t.id === ticketId 
+        ? { 
+            ...t, 
+            status: "IN_PROGRESS" as const,
+            assignee: mockStaff[0],
+            updatedAt: new Date().toISOString(),
+          }
+        : t
+    );
+    setTickets(updatedTickets);
+    setSelectedTicket(null);
+  };
 
   return (
-    <div className="min-h-screen bg-white flex">
-
-
-      <main className="flex-1 lg:ml-64 pt-20 p-4 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-black">แจ้งซ่อมทั้งหมด</h1>
-              <div className="flex items-center gap-3 mt-2">
-                <p className="text-gray-600 font-medium">
-                  จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
-                </p>
-                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
-                  <div className={`w-2 h-2 rounded-full ${isAutoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                  <span className="text-xs text-gray-500 font-mono">
-                    Updated: {lastUpdated.toLocaleTimeString('th-TH')}
-                  </span>
-                  <button
-                    onClick={() => fetchRepairs()}
-                    className="p-1 hover:bg-gray-200 rounded-full transition-colors ml-1"
-                    title="Refresh Now"
-                  >
-                    <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
-                  </button>
-                </div>
-              </div>
+              <h1 className="text-2xl font-semibold text-gray-900">ระบบจัดการแจ้งซ่อม</h1>
+              <p className="mt-1 text-sm text-gray-500">จัดการคำขอซ่อมบำรุงทั้งหมด</p>
             </div>
+            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-gray-900 hover:bg-gray-800">
+              <Plus size={16} className="mr-2" />
+              สร้างรายการใหม่
+            </button>
           </div>
+        </div>
+      </header>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              label="งานทั้งหมด"
-              count={stats.total}
-              icon={<Wrench />}
-            />
-            <StatCard
-              label="รอรับเรื่อง"
-              count={stats.pending}
-              icon={<Clock />}
-            />
-            <StatCard
-              label="กำลังดำเนินการ"
-              count={stats.inProgress}
-              icon={<Settings2 />}
-            />
-            <StatCard
-              label="เสร็จสิ้น"
-              count={stats.completed}
-              icon={<CheckCircle />}
-            />
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <StatCard label="ทั้งหมด" value={stats.total} icon={FileText} />
+          <StatCard label="รอดำเนินการ" value={stats.pending} icon={Clock} />
+          <StatCard label="กำลังดำเนินการ" value={stats.inProgress} icon={Settings} />
+          <StatCard label="เสร็จสิ้น" value={stats.completed} icon={CheckCircle} />
+        </div>
 
-          {/* Search & Table Card */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
+        {/* Search and Filter */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder="ค้นหาชื่อเรื่อง, เลขที่ตั๋ว..."
+                  placeholder="ค้นหาด้วยหัวข้อหรือเลขที่ตั๋ว..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 />
               </div>
               <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-medium text-black focus:outline-none focus:ring-2 focus:ring-gray-400/20 text-sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               >
                 <option value="all">สถานะทั้งหมด</option>
-                <option value="OPEN">รอการแก้ไข</option>
-                <option value="IN_PROGRESS">กำลังแก้ไข</option>
-                <option value="DONE">เสร็จสิ้น</option>
+                <option value="PENDING">รอดำเนินการ</option>
+                <option value="IN_PROGRESS">กำลังดำเนินการ</option>
+                <option value="COMPLETED">เสร็จสิ้น</option>
               </select>
             </div>
+          </div>
 
-            {/* Mobile Card View */}
-            <div className="lg:hidden">
-              {filteredRepairs.map((repair) => (
-                <div
-                  key={repair.id}
-                  className="p-4 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                          #{repair.ticketCode}
-                        </span>
-                        <StatusBadge status={repair.status} />
-                      </div>
-                      <h3 className="font-semibold text-black">{repair.problemTitle}</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        แจ้งเมื่อ: {format(new Date(repair.createdAt), "dd MMM yy HH:mm", { locale: th })}
-                      </p>
-                    </div>
-                    <UrgencyBadge urgency={repair.urgency} />
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-3 mt-3">
-                    <span className="text-xs text-gray-400">ผู้รับผิดชอบ:</span>
-                    {repair.assignee?.name ? (
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">
-                          {repair.assignee.name.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm text-gray-700">{repair.assignee.name}</span>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400 text-xs italic">- ไม่ระบุ -</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 bg-gray-50 p-2 rounded-lg">
-                    {repair.status === "PENDING" && (
-                      <button
-                        onClick={() => handleAcceptRepair(repair.id)}
-                        disabled={submitting}
-                        className="px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 text-xs font-medium"
-                      >
-                        รับเรื่อง
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setSelectedRepair(repair)}
-                      className="p-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm"
-                    >
-                      <Eye size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {filteredRepairs.length === 0 && <EmptyState />}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      ตั๋วเลขที่
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      หัวข้อแจ้งซ่อม
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      ความสำคัญ
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      สถานะ
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      ผู้รับผิดชอบ
-                    </th>
-                    <th className="px-6 py-3 border-b border-gray-100"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredRepairs.map((repair) => (
-                    <tr
-                      key={repair.id}
-                      className="hover:bg-gray-50/50 transition-colors group"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="text-xs font-semibold font-mono text-gray-600 bg-gray-100 px-2.5 py-1 rounded">
-                          #{repair.ticketCode}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-semibold text-black">
-                          {repair.problemTitle}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          แจ้งเมื่อ:{" "}
-                          {format(new Date(repair.createdAt), "dd/MM/yy HH:mm")}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <UrgencyBadge urgency={repair.urgency} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={repair.status} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-black">
-                          {repair.assignee?.name ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
-                                {repair.assignee.name.charAt(0).toUpperCase()}
-                              </div>
-                              <span className="truncate max-w-[100px]">{repair.assignee.name}</span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 text-xs italic">
-                              - ไม่ระบุ -
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เลขที่ตั๋ว</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">หัวข้อ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้แจ้ง</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ความเร่งด่วน</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผู้รับผิดชอบ</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">การดำเนินการ</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTickets.map((ticket) => (
+                  <tr key={ticket.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-medium text-gray-900">{ticket.ticketCode}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{ticket.problemTitle}</div>
+                      <div className="text-sm text-gray-500">{ticket.problemCategory}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{ticket.reporterName}</div>
+                      <div className="text-sm text-gray-500">{ticket.reporterDepartment}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge status={ticket.status} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <UrgencyBadge urgency={ticket.urgency} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {ticket.assignee ? (
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {ticket.assignee.name.charAt(0)}
                             </span>
-                          )}
+                          </div>
+                          <div className="ml-3">
+                            <div className="text-sm font-medium text-gray-900">{ticket.assignee.name}</div>
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {repair.status === "PENDING" && (
-                            <button
-                              onClick={() => handleAcceptRepair(repair.id)}
-                              disabled={submitting}
-                              className="bg-black text-white p-2 rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 text-xs font-medium"
-                              title="รับเรื่อง"
-                            >
-                              รับเรื่อง
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setSelectedRepair(repair)}
-                            className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-                            title="ดูรายละเอียด"
-                          >
-                            <Eye size={16} strokeWidth={2} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredRepairs.length === 0 && <EmptyState />}
-            </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">ยังไม่ระบุ</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleViewTicket(ticket)}
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        ดูรายละเอียด
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </main>
 
       {/* Detail Modal */}
-      {selectedRepair && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-5 flex justify-between items-center">
-              <div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/10 rounded-lg">
-                    <Wrench className="text-white" size={20} />
-                  </div>
+      {selectedTicket && !isEditMode && (
+        <Modal onClose={() => setSelectedTicket(null)} title="รายละเอียดการแจ้งซ่อม">
+          <div className="space-y-6">
+            {/* Ticket Info */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-500">เลขที่ตั๋ว</span>
+                <span className="text-sm font-semibold text-gray-900">{selectedTicket.ticketCode}</span>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">หัวข้อ</label>
+                  <p className="mt-1 text-sm text-gray-900">{selectedTicket.problemTitle}</p>
+                </div>
+                {selectedTicket.problemDescription && (
                   <div>
-                    <h2 className="text-xl font-bold text-white">
-                      รายละเอียดการแจ้งซ่อม
-                    </h2>
-                    <p className="text-sm text-gray-300 mt-0.5 font-mono">
-                      #{selectedRepair.ticketCode}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedRepair(null)}
-                className="text-gray-300 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-all"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[65vh] space-y-6">
-              {/* Reporter Info Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-1.5 bg-blue-100 rounded-lg">
-                    <User className="text-blue-600" size={16} />
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-900">
-                    ข้อมูลผู้แจ้ง
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* ชื่อผู้แจ้ง */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                      <span className="text-white font-bold text-sm">
-                        {(selectedRepair.reporterName || selectedRepair.user?.name || "?").charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">ชื่อผู้แจ้ง</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {selectedRepair.reporterName || selectedRepair.user?.name || <span className="text-gray-400 italic">ไม่ระบุ</span>}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* แผนก */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                      <Building2 className="text-white" size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">แผนก/หน่วยงาน</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {selectedRepair.reporterDepartment || selectedRepair.user?.department || <span className="text-gray-400 italic">ไม่ระบุ</span>}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* เบอร์โทร */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                      <Phone className="text-white" size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">เบอร์โทรศัพท์</p>
-                      {selectedRepair.reporterPhone ? (
-                        <a href={`tel:${selectedRepair.reporterPhone}`} className="text-sm font-semibold text-green-600 hover:text-green-700 transition-colors">
-                          {selectedRepair.reporterPhone}
-                        </a>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">ไม่ระบุ</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* LINE ID */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#00B900] to-[#00C300] flex items-center justify-center flex-shrink-0 shadow-md">
-                      <MessageCircle className="text-white" size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">LINE</p>
-                      <p className="text-sm font-semibold text-gray-900 truncate font-mono">
-                        {selectedRepair.reporterLineId ? (
-                          <span className="text-[#00B900]">{selectedRepair.reporterLineId.slice(0, 10)}...</span>
-                        ) : (
-                          <span className="text-gray-400 italic font-sans">ไม่ระบุ</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Problem Info */}
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-1.5 bg-red-100 rounded-lg">
-                    <AlertCircle className="text-red-600" size={16} />
-                  </div>
-                  <h3 className="text-sm font-bold text-gray-900">
-                    รายละเอียดปัญหา
-                  </h3>
-                </div>
-
-                <div className="space-y-4">
-                  {/* หัวข้อแจ้งซ่อม */}
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5">หัวข้อแจ้งซ่อม</p>
-                    <p className="text-sm font-semibold text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                      {selectedRepair.problemTitle}
-                    </p>
-                  </div>
-
-                  {/* รายละเอียด */}
-                  {selectedRepair.problemDescription && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5">รายละเอียดเพิ่มเติม</p>
-                      <p className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg whitespace-pre-wrap">
-                        {selectedRepair.problemDescription}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Category & Location */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {selectedRepair.problemCategory && (
-                      <div className="flex items-center gap-2">
-                        <FileText className="text-gray-400" size={14} />
-                        <div>
-                          <p className="text-[10px] text-gray-500 font-semibold">ประเภท</p>
-                          <p className="text-sm font-medium text-gray-900">{selectedRepair.problemCategory}</p>
-                        </div>
-                      </div>
-                    )}
-                    {selectedRepair.location && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="text-gray-400" size={14} />
-                        <div>
-                          <p className="text-[10px] text-gray-500 font-semibold">สถานที่</p>
-                          <p className="text-sm font-medium text-gray-900">{selectedRepair.location}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Status & Assignment Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* สถานะ */}
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">สถานะ</p>
-                  <StatusBadge status={selectedRepair.status} />
-                </div>
-
-                {/* ความเร่งด่วน */}
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">ความเร่งด่วน</p>
-                  <UrgencyBadge urgency={selectedRepair.urgency} />
-                </div>
-
-                {/* ผู้รับผิดชอบ */}
-                <div className="bg-white rounded-xl border border-gray-200 p-4">
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold mb-2">ผู้รับผิดชอบ</p>
-                  {selectedRepair.assignee?.name ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
-                        {selectedRepair.assignee.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">{selectedRepair.assignee.name}</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-400 italic">ยังไม่ระบุ</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Date Info */}
-              <div className="bg-gray-50 rounded-xl p-4 flex flex-wrap gap-6">
-                <div className="flex items-center gap-2">
-                  <Calendar className="text-gray-400" size={14} />
-                  <div>
-                    <p className="text-[10px] text-gray-500 font-semibold">วันที่แจ้ง</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {format(new Date(selectedRepair.createdAt), "dd MMM yyyy HH:mm", { locale: th })}
-                    </p>
-                  </div>
-                </div>
-                {selectedRepair.updatedAt && selectedRepair.updatedAt !== selectedRepair.createdAt && (
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="text-gray-400" size={14} />
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-semibold">อัปเดตล่าสุด</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {format(new Date(selectedRepair.updatedAt), "dd MMM yyyy HH:mm", { locale: th })}
-                      </p>
-                    </div>
+                    <label className="text-sm font-medium text-gray-500">รายละเอียด</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedTicket.problemDescription}</p>
                   </div>
                 )}
-                {selectedRepair.completedAt && (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="text-green-500" size={14} />
-                    <div>
-                      <p className="text-[10px] text-gray-500 font-semibold">เสร็จสิ้นเมื่อ</p>
-                      <p className="text-sm font-medium text-green-600">
-                        {format(new Date(selectedRepair.completedAt), "dd MMM yyyy HH:mm", { locale: th })}
-                      </p>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">ประเภท</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedTicket.problemCategory}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">สถานที่</label>
+                    <p className="mt-1 text-sm text-gray-900">{selectedTicket.location}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Reporter Info */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">ข้อมูลผู้แจ้ง</h4>
+              <div className="space-y-2">
+                <div className="flex items-center text-sm">
+                  <User size={16} className="text-gray-400 mr-2" />
+                  <span className="text-gray-900">{selectedTicket.reporterName}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Building2 size={16} className="text-gray-400 mr-2" />
+                  <span className="text-gray-900">{selectedTicket.reporterDepartment}</span>
+                </div>
+                {selectedTicket.reporterPhone && (
+                  <div className="flex items-center text-sm">
+                    <Phone size={16} className="text-gray-400 mr-2" />
+                    <span className="text-gray-900">{selectedTicket.reporterPhone}</span>
                   </div>
                 )}
               </div>
-
-              {/* Notes */}
-              {selectedRepair.notes && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                  <p className="text-[10px] uppercase tracking-wider text-yellow-700 font-semibold mb-2">หมายเหตุ</p>
-                  <p className="text-sm text-yellow-800 whitespace-pre-wrap">{selectedRepair.notes}</p>
-                </div>
-              )}
             </div>
 
-            {/* Footer */}
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
-              {selectedRepair.status === "PENDING" && (
-                <button
-                  onClick={() => handleAcceptRepair(selectedRepair.id)}
-                  disabled={submitting}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold text-sm disabled:opacity-50 shadow-md"
-                >
-                  <CheckCircle size={16} />
-                  {submitting ? "กำลังบันทึก..." : "รับเรื่อง"}
-                </button>
+            {/* Status Grid */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <label className="text-xs font-medium text-gray-500 uppercase">สถานะ</label>
+                <div className="mt-2">
+                  <StatusBadge status={selectedTicket.status} />
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <label className="text-xs font-medium text-gray-500 uppercase">ความเร่งด่วน</label>
+                <div className="mt-2">
+                  <UrgencyBadge urgency={selectedTicket.urgency} />
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <label className="text-xs font-medium text-gray-500 uppercase">ผู้รับผิดชอบ</label>
+                <p className="mt-2 text-sm font-medium text-gray-900">
+                  {selectedTicket.assignee?.name || "ยังไม่ระบุ"}
+                </p>
+              </div>
+            </div>
+
+            {/* Date Info */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center text-sm">
+                <Calendar size={16} className="text-gray-400 mr-2" />
+                <span className="text-gray-500">วันที่แจ้ง:</span>
+                <span className="ml-2 text-gray-900">
+                  {new Date(selectedTicket.createdAt).toLocaleString('th-TH')}
+                </span>
+              </div>
+              {selectedTicket.completedAt && (
+                <div className="flex items-center text-sm mt-2">
+                  <CheckCircle size={16} className="text-gray-400 mr-2" />
+                  <span className="text-gray-500">เสร็จสิ้นเมื่อ:</span>
+                  <span className="ml-2 text-gray-900">
+                    {new Date(selectedTicket.completedAt).toLocaleString('th-TH')}
+                  </span>
+                </div>
               )}
-              {selectedRepair.status !== "COMPLETED" && selectedRepair.status !== "CANCELLED" && (
-                <button
-                  onClick={handleOpenEdit}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition-all font-semibold text-sm"
-                >
-                  <Settings2 size={16} />
-                  แก้ไข
-                </button>
-              )}
-              <button
-                onClick={() => setSelectedRepair(null)}
-                className="ml-auto px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-all font-semibold text-sm"
-              >
-                ปิด
-              </button>
             </div>
           </div>
-        </div>
+
+          <div className="mt-6 flex gap-3">
+            {selectedTicket.status === "PENDING" && (
+              <button
+                onClick={() => handleAcceptTicket(selectedTicket.id)}
+                className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+              >
+                รับเรื่อง
+              </button>
+            )}
+            <button
+              onClick={handleEditTicket}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              แก้ไข
+            </button>
+            <button
+              onClick={() => setSelectedTicket(null)}
+              className="ml-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              ปิด
+            </button>
+          </div>
+        </Modal>
       )}
 
       {/* Edit Modal */}
-      {showEditModal && selectedRepair && (
-        <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-hidden">
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-black">
-                แก้ไขรายละเอียด
-              </h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-lg transition-all"
-              >
-                <X size={20} />
-              </button>
+      {selectedTicket && isEditMode && (
+        <Modal onClose={() => setIsEditMode(false)} title="แก้ไขรายละเอียด">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">หัวข้อ</label>
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
             </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">รายละเอียด</label>
+              <textarea
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  หัวข้อแจ้งซ่อม
-                </label>
-                <textarea
-                  value={editForm.title}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, title: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm resize-none"
-                  rows={3}
-                  placeholder="ระบุหัวข้อแจ้งซ่อม"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  ความสำคัญ
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">ความเร่งด่วน</label>
                 <select
-                  value={editForm.priority}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, priority: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium text-sm"
+                  value={editForm.urgency}
+                  onChange={(e) => setEditForm({ ...editForm, urgency: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
-                  <option value="LOW">ต่ำ</option>
-                  <option value="MEDIUM">ปกติ</option>
+                  <option value="NORMAL">ปกติ</option>
                   <option value="URGENT">ด่วน</option>
                   <option value="CRITICAL">ด่วนมาก</option>
                 </select>
               </div>
-
               <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  รายละเอียดเพิ่มเติม
-                </label>
-                <textarea
-                  value={editForm.description}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, description: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm resize-none"
-                  rows={3}
-                  placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-black mb-2">
-                  ผู้รับผิดชอบ
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">สถานะ</label>
                 <select
-                  value={editForm.assigneeId}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, assigneeId: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium text-sm"
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
-                  <option value="">-- ยังไม่ระบุ --</option>
-                  {itStaff.map((staff) => (
-                    <option key={staff.id} value={staff.id}>
-                      {staff.name} {staff.id === currentUser?.id ? "(คุณ)" : ""}
-                    </option>
-                  ))}
+                  <option value="PENDING">รอดำเนินการ</option>
+                  <option value="IN_PROGRESS">กำลังดำเนินการ</option>
+                  <option value="WAITING_PARTS">รออะไหล่</option>
+                  <option value="COMPLETED">เสร็จสิ้น</option>
+                  <option value="CANCELLED">ยกเลิก</option>
                 </select>
               </div>
             </div>
-
-            {/* Footer */}
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3">
-              <button
-                onClick={handleSaveEdit}
-                disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 transition-all font-medium text-sm disabled:opacity-50"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">ผู้รับผิดชอบ</label>
+              <select
+                value={editForm.assigneeId}
+                onChange={(e) => setEditForm({ ...editForm, assigneeId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               >
-                {submitting ? "กำลังบันทึก..." : "บันทึก"}
-              </button>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium text-sm"
-              >
-                ยกเลิก
-              </button>
+                <option value="">ยังไม่ระบุ</option>
+                {mockStaff.map(staff => (
+                  <option key={staff.id} value={staff.id}>{staff.name}</option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={handleSaveEdit}
+              className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+            >
+              บันทึก
+            </button>
+            <button
+              onClick={() => setIsEditMode(false)}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
 }
 
-// --- Internal UI Components ---
-
-function StatCard({ label, count, icon }: any) {
+// Components
+function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: any }) {
   return (
-    <div className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex flex-col">
-        <span className="text-gray-600 text-xs font-semibold uppercase">
-          {label}
-        </span>
-        <span className="text-3xl font-bold text-black mt-2">{count}</span>
-      </div>
-      <div className="absolute -right-2 -bottom-2 opacity-10 scale-[2] pointer-events-none">
-        {icon}
+    <div className="bg-white overflow-hidden shadow rounded-lg">
+      <div className="p-5">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <Icon className="h-6 w-6 text-gray-400" />
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dl>
+              <dt className="text-sm font-medium text-gray-500 truncate">{label}</dt>
+              <dd className="text-3xl font-semibold text-gray-900">{value}</dd>
+            </dl>
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
-
-function UrgencyBadge({ urgency }: { urgency: string }) {
-  const config: any = {
-    CRITICAL: { label: "ด่วนมาก", class: "text-red-700 bg-red-50 border-red-200" },
-    URGENT: {
-      label: "ด่วน",
-      class: "text-amber-700 bg-amber-50 border-amber-200",
-    },
-    NORMAL: { label: "ปกติ", class: "text-gray-600 bg-gray-100 border-gray-200" },
-  };
-  const active = config[urgency] || config.NORMAL;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${active.class}`}
-    >
-      <AlertTriangle size={11} strokeWidth={2} />
-      {active.label}
-    </span>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: any = {
-    PENDING: {
-      label: "รอรับเรื่อง",
-      icon: <Clock size={12} />,
-      class: "bg-gray-600 text-white",
-    },
-    IN_PROGRESS: {
-      label: "กำลังซ่อม",
-      icon: <Settings2 size={12} />,
-      class: "bg-blue-600 text-white",
-    },
-    WAITING_PARTS: {
-      label: "รออะไหล่",
-      icon: <Clock size={12} />,
-      class: "bg-orange-500 text-white",
-    },
-    COMPLETED: {
-      label: "เสร็จสิ้น",
-      icon: <CheckCircle size={12} />,
-      class: "bg-green-600 text-white",
-    },
-    CANCELLED: {
-      label: "ยกเลิก",
-      icon: <AlertCircle size={12} />,
-      class: "bg-red-600 text-white",
-    },
+  const config: Record<string, { label: string; className: string }> = {
+    PENDING: { label: "รอดำเนินการ", className: "bg-gray-100 text-gray-800" },
+    IN_PROGRESS: { label: "กำลังดำเนินการ", className: "bg-blue-100 text-blue-800" },
+    WAITING_PARTS: { label: "รออะไหล่", className: "bg-yellow-100 text-yellow-800" },
+    COMPLETED: { label: "เสร็จสิ้น", className: "bg-green-100 text-green-800" },
+    CANCELLED: { label: "ยกเลิก", className: "bg-red-100 text-red-800" },
   };
-  const active = config[status] || config.PENDING;
+  const { label, className } = config[status] || config.PENDING;
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold ${active.class}`}
-    >
-      {active.icon}
-      {active.label}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}>
+      {label}
     </span>
   );
 }
 
-function LoadingState() {
+function UrgencyBadge({ urgency }: { urgency: string }) {
+  const config: Record<string, { label: string; className: string }> = {
+    NORMAL: { label: "ปกติ", className: "bg-gray-100 text-gray-800" },
+    URGENT: { label: "ด่วน", className: "bg-orange-100 text-orange-800" },
+    CRITICAL: { label: "ด่วนมาก", className: "bg-red-100 text-red-800" },
+  };
+  const { label, className } = config[urgency] || config.NORMAL;
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">
-      <div className="w-10 h-10 border-3 border-gray-200 border-t-black rounded-full animate-spin"></div>
-      <p className="font-semibold text-black text-sm uppercase">
-        Loading Records...
-      </p>
-    </div>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}>
+      {label}
+    </span>
   );
 }
 
-function EmptyState() {
+function Modal({ onClose, title, children }: { onClose: () => void; title: string; children: React.ReactNode }) {
   return (
-    <div className="py-16 flex flex-col items-center justify-center text-center">
-      <Wrench size={48} className="text-gray-300 mb-4" />
-      <h3 className="text-black font-bold text-lg">ไม่พบรายการแจ้งซ่อม</h3>
-      <p className="text-gray-600 font-medium mt-2 text-sm">
-        ลองเปลี่ยนตัวกรองหรือค้นหาด้วยคำอื่น
-      </p>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-500"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="px-6 py-4">
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
