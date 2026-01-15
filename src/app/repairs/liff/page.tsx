@@ -10,7 +10,9 @@ export const dynamic = "force-dynamic";
 function RepairLiffContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const action = searchParams.get("action") || "create";
+  const actionFromParam = searchParams.get("action");
+  const ticketIdFromParam = searchParams.get("id");
+  const action = actionFromParam || (ticketIdFromParam ? "history" : "create");
   const [lineUserId, setLineUserId] = useState<string>("");
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
