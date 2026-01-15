@@ -1206,7 +1206,7 @@ export default function ITRepairsPage() {
                   <div>
                     <h3 className="text-xl font-black text-white tracking-tight">โอนมอบหมายงาน</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-mono text-gray-400">#TICKET-{selectionForTransfer.ticketCode}</span>
+                      <span className="text-[10px] font-mono text-gray-400">#เลขรหัสอ้างอิง-{selectionForTransfer.ticketCode}</span>
                     </div>
                   </div>
                 </div>
@@ -1221,7 +1221,7 @@ export default function ITRepairsPage() {
 
             <div className="p-8 space-y-6 flex-1 overflow-y-auto">
               {/* Restriction Message */}
-              <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex items-start gap-4">
+              {/* <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex items-start gap-4">
                 <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                   <AlertCircle size={20} className="text-amber-600" />
                 </div>
@@ -1231,15 +1231,15 @@ export default function ITRepairsPage() {
                     คุณสามารถส่งมอบงานนี้ให้เจ้าหน้าที่ IT คนอื่นดูแลต่อได้ โดยระบบจะบันทึกประวัติการส่งมอบงานโดยอัตโนมัติ
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Staff List Header */}
-              <div className="flex items-center justify-between px-1">
+              {/* <div className="flex items-center justify-between px-1">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">เลือกเจ้าหน้าที่ IT ผู้รับงาน</h4>
                 <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">
                   {itStaff.filter(staff => staff.id !== currentUser?.id).length} ท่านว่างอยู่
                 </span>
-              </div>
+              </div> */}
 
               {/* Staff Cards - High Clarity */}
               <div className="grid grid-cols-1 gap-3">
