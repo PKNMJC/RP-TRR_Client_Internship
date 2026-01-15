@@ -5,23 +5,9 @@ const getBaseUrl = () => {
   }
   
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // Check if running on localhost or local network IP (IPv4)
-    // 192.168.x.x is common for home/office networks
-    // 10.x.x.x and 172.16-31.x.x are also private ranges
-    const isLocalNetwork = 
-      hostname === 'localhost' || 
-      hostname === '127.0.0.1' || 
-      hostname.startsWith('192.168.') || 
-      hostname.startsWith('10.') || 
-      (hostname.startsWith('172.') && parseInt(hostname.split('.')[1], 10) >= 16 && parseInt(hostname.split('.')[1], 10) <= 31);
-
-    if (isLocalNetwork) {
-      // Use the same hostname but port 3001 (Backend)
-      // Note: Backend default is usually 3000, but frontend was hardcoded to 3001. 
-      // If connection fails, check if backend is running on 3000 or 3001.
-      return `http://${hostname}:3001`;
-    }
+    // In the browser, use relative path to let Next.js rewrites handle the proxying
+    // This avoids CORS and Mixed Content issues on mobile/ngrok
+    return "";
   }
 
   // Fallback to production
@@ -112,8 +98,10 @@ export async function apiFetch(url: string, options?: string | FetchOptions | "G
     return text ? JSON.parse(text) : null;
   } catch (error) {
     // Handle network errors (Failed to fetch)
+    // Handle network errors (Failed to fetch)
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
-      throw new Error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+      const targetUrl = API_URL + url;
+      throw new Error(`ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (${targetUrl}) กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต`);
     }
     throw error;
   }
