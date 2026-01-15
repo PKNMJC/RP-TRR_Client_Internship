@@ -27,8 +27,11 @@ function RepairLiffContent() {
   const router = useRouter();
   const actionFromParam = searchParams.get("action");
   const ticketIdFromParam = searchParams.get("id");
-  // Default to null if no explicit action or id is provided, which will trigger the Choice Portal
-  const action = actionFromParam || (ticketIdFromParam ? "history" : null);
+  
+  // CHANGED: Default to "status" if no explicit action or id is provided
+  // This makes the "Repair History" the default home screen
+  const action = actionFromParam || (ticketIdFromParam ? "history" : "status");
+
   const [lineUserId, setLineUserId] = useState<string>(searchParams.get("lineUserId") || "");
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,21 +191,19 @@ function RepairLiffContent() {
     );
   }
 
-  // Action: Check Status (Integrated View)
+  // Action: Check Status (Default Home View)
   if (action === "status") {
     return (
       <div className="min-h-screen bg-slate-50 pb-20 font-sans">
         {/* Header Section */}
         <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
           <div className="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
-            <button 
-              onClick={() => router.push(`/repairs/liff?lineUserId=${lineUserId}`)}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-            >
-              <ArrowLeft className="w-6 h-6 text-slate-700" />
-            </button>
-            <h1 className="text-xl font-bold text-slate-800">ติดตามสถานะงานซ่อม</h1>
-            <div className="w-10"></div> {/* Spacer for symmetry */}
+            {/* Removed Back Button as this is now the home screen */}
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+               <Wrench className="w-5 h-5 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-800">รายการแจ้งซ่อมของฉัน</h1>
+            <div className="w-8"></div> {/* Spacer for symmetry */}
           </div>
         </div>
 
@@ -242,7 +243,9 @@ function RepairLiffContent() {
                   </div>
                 </div>
 
-                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">ประวัติรายการ</h2>
+                <div className="flex justify-between items-end px-1 mb-2">
+                   <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">ประวัติรายการ</h2>
+                </div>
                 
                 <div className="space-y-4">
                   {tickets.map((ticket) => (
@@ -298,8 +301,10 @@ function RepairLiffContent() {
               onClick={() => router.push(`/repairs/liff/form?lineUserId=${lineUserId}`)}
               className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-2xl flex items-center justify-center gap-2 active:scale-95 transition-all text-sm"
           >
-            <Wrench className="w-5 h-5 text-blue-400" />
-            <span>แจ้งซ่อมเพิ่มเติม</span>
+            <div className="bg-blue-500 rounded-full p-1">
+              <FilePlus className="w-4 h-4 text-white" />
+            </div>
+            <span>แจ้งซ่อมรายการใหม่</span>
           </button>
         </div>
       </div>
@@ -479,6 +484,7 @@ function RepairLiffContent() {
               {/* Header */}
               <div className="flex items-center gap-4 mb-4">
                   <button 
+                  // Clicking back goes to the "home" status view
                   onClick={() => router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`)}
                   className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition"
                   >
@@ -606,52 +612,9 @@ function RepairLiffContent() {
     );
   }
 
-  // Action: Portal (Choice Menu)
-  if (!action) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 space-y-6">
-        <div className="max-w-xs w-full text-center space-y-2 mb-4">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20 mb-4">
-            <Wrench className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-black text-slate-800">ระบบแจ้งซ่อม IT</h1>
-          <p className="text-slate-500 text-sm">กรุณาเลือกรายการที่คุณต้องการ</p>
-        </div>
+  // Remove the redundant choice portal rendering
 
-        <div className="w-full max-w-xs grid grid-cols-1 gap-4">
-          <button 
-            onClick={() => router.push(`/repairs/liff/form?lineUserId=${lineUserId}`)}
-            className="group bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-blue-500 transition-all flex flex-col items-center text-center space-y-3"
-          >
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-              <FilePlus className="w-6 h-6 text-blue-600 group-hover:text-white" />
-            </div>
-            <div>
-              <p className="text-lg font-bold text-slate-800">แจ้งซ่อมใหม่</p>
-              <p className="text-xs text-slate-400">ส่งเรื่องแจ้งปัญหาไอที</p>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`)}
-            className="group bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-blue-500 transition-all flex flex-col items-center text-center space-y-3"
-          >
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
-              <Search className="w-6 h-6 text-indigo-600 group-hover:text-white" />
-            </div>
-            <div>
-              <p className="text-lg font-bold text-slate-800">ติดตามสถานะ</p>
-              <p className="text-xs text-slate-400">ตรวจสอบความคืบหน้า</p>
-            </div>
-          </button>
-        </div>
-
-        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ticketing Portal v2.0</p>
-      </div>
-    );
-  }
-
-  // Default fallback
+  // Default fallback (should not reach here ideally due to default action)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 px-4 py-8">
       <div className="max-w-2xl mx-auto">
