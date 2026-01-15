@@ -2,8 +2,9 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
-import { AlertCircle, CheckCircle2, Phone, Mail, Clock } from "lucide-react";
+import { AlertCircle, CheckCircle2, Phone, Mail, Clock, ArrowLeft } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import liff from "@line/liff";
 
 export const dynamic = "force-dynamic";
 
@@ -13,35 +14,71 @@ function RepairLiffContent() {
   const actionFromParam = searchParams.get("action");
   const ticketIdFromParam = searchParams.get("id");
   const action = actionFromParam || (ticketIdFromParam ? "history" : "create");
-  const [lineUserId, setLineUserId] = useState<string>("");
+  const [lineUserId, setLineUserId] = useState<string>(searchParams.get("lineUserId") || "");
   const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(!searchParams.get("lineUserId"));
+
+  // LIFF Initialization
+  useEffect(() => {
+    const initLiff = async () => {
+      if (lineUserId) {
+        setIsInitializing(false);
+        return;
+      }
+
+      try {
+        const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
+        if (!liffId) {
+          console.error("LIFF ID missing");
+          return;
+        }
+
+        await liff.init({ liffId, withLoginOnExternalBrowser: true });
+        
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        setLineUserId(profile.userId);
+      } catch (err) {
+        console.error("LIFF Init Error:", err);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initLiff();
+  }, []);
 
   useEffect(() => {
-    const id = searchParams.get("lineUserId") || "";
-    setLineUserId(id);
+    const idFromParam = searchParams.get("lineUserId");
+    if (idFromParam) {
+      setLineUserId(idFromParam);
+    }
+  }, [searchParams]);
 
+  useEffect(() => {
+    if (!lineUserId || isInitializing) return;
 
-    // โหลดข้อมูลเมื่อ action เป็น status หรือ history
     if (action === "status") {
-      router.push(`/repairs/liff/tracking?lineUserId=${lineUserId || searchParams.get("lineUserId")}`);
+      router.push(`/repairs/liff/tracking?lineUserId=${lineUserId}`);
     } else if (action === "history") {
       const ticketId = searchParams.get("id");
       if (ticketId) {
         fetchTicketDetail(ticketId);
       }
     }
-  }, [action, searchParams]);
+  }, [action, lineUserId, isInitializing, searchParams, router]);
 
   const [ticketDetail, setTicketDetail] = useState<any>(null);
 
   const fetchTicketDetail = async (code: string) => {
+    if (!lineUserId) return;
     setLoading(true);
-    const lineId = searchParams.get("lineUserId");
-    if (!lineId) {
-      setLoading(false);
-      return;
-    }
+    const lineId = lineUserId;
 
     try {
       const data = await apiFetch(`/api/repairs/liff/ticket/${code}?lineUserId=${lineId}`);
@@ -58,7 +95,7 @@ function RepairLiffContent() {
     try {
       let data;
       // Get lineUserId directly from params to avoid state race conditions
-      const currentLineUserId = searchParams.get("lineUserId");
+      const currentLineUserId = lineUserId;
       
       // If we have a lineUserId, use the public LIFF endpoint
       if (currentLineUserId) {
@@ -81,7 +118,18 @@ function RepairLiffContent() {
     if (action === "create") {
       router.push(`/repairs/liff/form?lineUserId=${lineUserId}`);
     }
-  }, [action, lineUserId, router]);
+  }, [action, lineUserId, router, isInitializing]);
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">กำลังยืนยันตัวตน...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (action === "create") {
     return (

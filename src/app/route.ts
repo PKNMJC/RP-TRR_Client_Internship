@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     liffClientId: !!liffClientId,
   });
 
-  if (code || liffClientId) {
+  if (code) {
     // Build callback URL with all parameters
     const baseUrl = request.nextUrl.origin;
     const callbackUrl = new URL('/callback', baseUrl);

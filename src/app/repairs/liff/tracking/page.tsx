@@ -16,24 +16,62 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import liff from "@line/liff";
 
 function TrackingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const lineUserId = searchParams.get("lineUserId") || "";
+  const [lineUserId, setLineUserId] = useState<string>(searchParams.get("lineUserId") || "");
+  const [isInitializing, setIsInitializing] = useState(!searchParams.get("lineUserId"));
   
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // LIFF Initialization
+  useEffect(() => {
+    const initLiff = async () => {
+      // If we already have lineUserId from URL, no need to init for ID (but good for consistency)
+      if (lineUserId) {
+        setIsInitializing(false);
+        return;
+      }
+
+      try {
+        const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
+        if (!liffId) {
+          setError("System Error: LIFF ID missing");
+          return;
+        }
+
+        await liff.init({ liffId, withLoginOnExternalBrowser: true });
+        
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        setLineUserId(profile.userId);
+      } catch (err: any) {
+        console.error("LIFF Init Error:", err);
+        setError("ไม่สามารถยืนยันตัวตนกับ LINE ได้");
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initLiff();
+  }, []);
+
   useEffect(() => {
     if (lineUserId) {
       fetchTickets();
-    } else {
+    } else if (!isInitializing) {
       setLoading(false);
       setError("ไม่พบรหัสผู้ใช้ LINE กรุณาเข้าใช้งานผ่านช่องทางที่กำหนด");
     }
-  }, [lineUserId]);
+  }, [lineUserId, isInitializing]);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -79,12 +117,14 @@ function TrackingContent() {
     }
   };
 
-  if (loading) {
+  if (isInitializing || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-slate-600 font-medium animate-pulse">กำลังโหลดข้อมูลการแจ้งซ่อม...</p>
+          <p className="mt-4 text-slate-600 font-medium animate-pulse">
+            {isInitializing ? "กำลังยืนยันตัวตน..." : "กำลังโหลดข้อมูลการแจ้งซ่อม..."}
+          </p>
         </div>
       </div>
     );
