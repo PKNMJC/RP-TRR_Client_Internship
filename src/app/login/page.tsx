@@ -25,7 +25,7 @@ export default function LoginPage() {
       } else if (role === "IT") {
         router.push("/it/dashboard");
       } else {
-        router.push("/repairs/liff/form");
+        router.push("/repairs/liff");
       }
     }
   }, [router]);
@@ -60,7 +60,7 @@ export default function LoginPage() {
          } else if (role === "IT") {
            router.push("/it/dashboard");
          } else {
-           router.push("/repairs/liff/form");
+           router.push("/repairs/liff");
          }
       }
     } catch (error: any) {

@@ -22,9 +22,14 @@ export async function GET(request: NextRequest) {
     const liffState = searchParams.get('liff.state');
     let targetPath = '/repairs/liff';
     
-    if (liffState && liffState.startsWith('/')) {
-      targetPath = liffState;
-      console.log('LIFF deep link detected in liff.state:', targetPath);
+    if (liffState) {
+      // Ensure the path starts with a slash
+      const normalizedPath = liffState.startsWith('/') ? liffState : `/${liffState}`;
+      // Basic validation to ensure it's a relative path in our app
+      if (normalizedPath.startsWith('/repairs')) {
+        targetPath = normalizedPath;
+        console.log('LIFF deep link detected and normalized:', targetPath);
+      }
     }
     
     const targetUrl = new URL(targetPath, request.nextUrl.origin);

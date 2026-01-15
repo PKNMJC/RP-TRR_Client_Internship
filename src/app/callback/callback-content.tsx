@@ -61,7 +61,7 @@ export default function CallbackContent() {
           } else if (userRole === "IT") {
             router.replace("/it/dashboard");
           } else {
-            router.replace("/repairs/liff/form");
+            router.replace("/repairs/liff");
           }
         } else {
           throw new Error("ไม่ได้รับ Token จากระบบ");
