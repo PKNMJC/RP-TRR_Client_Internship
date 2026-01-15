@@ -1185,75 +1185,109 @@ export default function ITRepairsPage() {
         </div>
       )}
 
-      {/* Transfer Modal */}
+      {/* Transfer Modal - Redesigned for High Clarity (IT Internal Only) */}
       {selectionForTransfer && (
         <div 
-          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl transition-all duration-300"
           onClick={(e) => e.target === e.currentTarget && setSelectionForTransfer(null)}
         >
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-slideUp border border-gray-100">
-            <div className="bg-neutral-900 px-6 py-5 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                  <Share2 size={20} className="text-white" />
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-slideUp border border-gray-100 flex flex-col">
+            
+            {/* Dark Header for Contrast */}
+            <div className="bg-neutral-900 px-8 py-7 relative overflow-hidden">
+              {/* Subtle background decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+              
+              <div className="relative flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                    <Share2 size={24} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-white tracking-tight">โอนมอบหมายงาน</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-mono text-gray-400">#TICKET-{selectionForTransfer.ticketCode}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">โอนมอบหมายงาน</h3>
-                  <p className="text-xs text-gray-400 font-mono">#{selectionForTransfer.ticketCode}</p>
-                </div>
+                <button 
+                  onClick={() => setSelectionForTransfer(null)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white text-gray-400 hover:text-black transition-all"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button 
-                onClick={() => setSelectionForTransfer(null)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <X size={20} />
-              </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl flex items-start gap-3">
-                <AlertCircle size={18} className="text-blue-500 mt-0.5 shrink-0" />
-                <p className="text-sm text-blue-700 font-medium leading-relaxed">
-                  เลือกเจ้าหน้าที่ IT ที่คุณต้องการโอนงานนี้ให้รับผิดชอบต่อ 
-                  <span className="block mt-1 text-[10px] text-blue-500 font-normal italic">* ระบบจะบันทึกประวัติการโอนงานโดยอัตโนมัติ</span>
-                </p>
+            <div className="p-8 space-y-6 flex-1 overflow-y-auto">
+              {/* Restriction Message */}
+              <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex items-start gap-4">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                  <AlertCircle size={20} className="text-amber-600" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-black text-amber-900 leading-tight">โอนงานภายในแผนก IT เท่านั้น</p>
+                  <p className="text-xs text-amber-700/80 leading-relaxed">
+                    คุณสามารถส่งมอบงานนี้ให้เจ้าหน้าที่ IT คนอื่นดูแลต่อได้ โดยระบบจะบันทึกประวัติการส่งมอบงานโดยอัตโนมัติ
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
+              {/* Staff List Header */}
+              <div className="flex items-center justify-between px-1">
+                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">เลือกเจ้าหน้าที่ IT ผู้รับงาน</h4>
+                <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">
+                  {itStaff.filter(staff => staff.id !== currentUser?.id).length} ท่านว่างอยู่
+                </span>
+              </div>
+
+              {/* Staff Cards - High Clarity */}
+              <div className="grid grid-cols-1 gap-3">
                 {itStaff.filter(staff => staff.id !== currentUser?.id).map((staff) => (
                   <button
                     key={staff.id}
                     onClick={() => handleTransferRepair(selectionForTransfer.id, staff.id)}
                     disabled={submitting}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-black hover:text-white rounded-2xl transition-all group active:scale-[0.98] border border-transparent hover:border-black"
+                    className="group relative w-full flex items-center gap-4 p-5 bg-white hover:bg-neutral-50 rounded-2xl transition-all duration-300 border-2 border-gray-100 hover:border-black active:scale-[0.98] text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-700 group-hover:bg-white/10 group-hover:border-white/20 group-hover:text-white transition-colors">
+                    <div className="relative">
+                      <div className="w-14 h-14 rounded-2xl bg-neutral-100 border border-gray-200 flex items-center justify-center text-lg font-black text-neutral-800 group-hover:bg-black group-hover:text-white transition-all duration-300">
                         {staff.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="text-left">
-                        <p className="font-bold text-sm leading-tight">{staff.name}</p>
-                        <p className="text-[10px] opacity-60">{staff.department || "IT Department"}</p>
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white ring-2 ring-emerald-500/20"></div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <p className="font-bold text-black text-sm group-hover:translate-x-1 transition-transform">{staff.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{staff.department || "IT SUPPORT"}</span>
+                        <span className="w-1 h-1 rounded-full bg-gray-200"></span>
+                        <span className="text-[9px] font-bold text-emerald-600">พร้อมรับงาน</span>
                       </div>
                     </div>
-                    <ChevronRight size={16} className="opacity-40 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:bg-black group-hover:text-white">
+                      <ChevronRight size={18} />
+                    </div>
                   </button>
                 ))}
+
                 {itStaff.filter(staff => staff.id !== currentUser?.id).length === 0 && (
-                  <div className="text-center py-8">
-                    <User size={32} className="mx-auto text-gray-200 mb-2" />
-                    <p className="text-sm text-gray-400 font-medium italic">ไม่พบเจ้าหน้าที่คนอื่นในระบบ</p>
+                  <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                    <User size={40} className="mx-auto text-gray-200 mb-3" />
+                    <p className="text-sm font-bold text-gray-400">ไม่พบเจ้าหน้าที่ IT คนอื่นในระบบขณะนี้</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100">
+            {/* Footer with a large Cancel button */}
+            <div className="p-6 bg-gray-50/50 border-t border-gray-100">
               <button
                 onClick={() => setSelectionForTransfer(null)}
-                className="w-full py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                className="w-full py-4 bg-white border border-gray-200 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white hover:text-black hover:border-black transition-all active:scale-[0.98] shadow-sm"
               >
-                ยกเลิก
+                ยกเลิกการเลือก
               </button>
             </div>
           </div>
