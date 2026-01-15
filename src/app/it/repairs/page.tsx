@@ -56,6 +56,13 @@ import { th } from "date-fns/locale";
 import { safeFormat } from "@/lib/date-utils";
 
 // --- Types ---
+interface RepairAttachment {
+  id: number;
+  fileUrl: string;
+  filename: string;
+  mimeType: string;
+}
+
 interface RepairTicket {
   id: number;
   ticketCode: string;
@@ -83,6 +90,7 @@ interface RepairTicket {
   };
   notes?: string;
   logs?: RepairLog[];
+  attachments?: RepairAttachment[];
 }
 
 interface RepairLog {
@@ -889,6 +897,49 @@ export default function ITRepairsPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* --- Images Section --- */}
+                      {selectedRepair.attachments && selectedRepair.attachments.length > 0 && (
+                        <div className="mt-6 pt-6 border-t border-gray-100">
+                          <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
+                            <div className="w-5 h-5 rounded bg-blue-50 flex items-center justify-center">
+                              <FileText size={10} className="text-blue-500" />
+                            </div>
+                            รูปภาพที่แนบมา ({selectedRepair.attachments.length})
+                          </h5>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {selectedRepair.attachments.map((file, idx) => (
+                              <a 
+                                key={file.id || idx}
+                                href={file.fileUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="group relative aspect-square rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-zoom-in"
+                              >
+                                {file.mimeType && file.mimeType.startsWith('image/') ? (
+                                  <>
+                                    <img 
+                                      src={file.fileUrl} 
+                                      alt={file.filename} 
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                      <div className="w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-lg flex items-center justify-center">
+                                        <Eye size={16} className="text-gray-900" />
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 group-hover:text-blue-500 transition-colors p-2 text-center">
+                                    <FileText size={24} className="mb-2" />
+                                    <span className="text-[10px] font-medium truncate w-full px-2">{file.filename}</span>
+                                  </div>
+                                )}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
