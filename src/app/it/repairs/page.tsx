@@ -859,7 +859,7 @@ export default function ITRepairsPage() {
                               <img 
                                 src={file.fileUrl} 
                                 alt={file.filename} 
-                                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all"></div>
                             </>
