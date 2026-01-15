@@ -5,32 +5,23 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { 
   AlertCircle, CheckCircle2, Loader2, Upload, X, MapPin, 
   Phone, User, Building2, Wrench, Camera, Image as ImageIcon,
-  ChevronRight, Info
+  ChevronRight, Info, Plus, LayoutGrid
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
 
 // --- Constants ---
-const PROBLEM_CATEGORIES = [
-  { value: "HARDWARE", label: "💻 Hardware (คอมพิวเตอร์, อุปกรณ์)" },
-  { value: "SOFTWARE", label: "📱 Software (โปรแกรม, ระบบ)" },
-  { value: "NETWORK", label: "🌐 Network (อินเทอร์เน็ต, Wi-Fi)" },
-  { value: "PERIPHERAL", label: "🖱️ Peripheral (เมาส์, จอภาพ)" },
-  { value: "EMAIL_OFFICE365", label: "📧 Email / Office 365" },
-  { value: "ACCOUNT_PASSWORD", label: "🔐 Account / Password" },
-  { value: "OTHER", label: "🔧 อื่นๆ" },
-];
-
 const URGENCY_LEVELS = [
-  { value: "NORMAL", label: "ปกติ", subLabel: "รอได้", color: "peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
-  { value: "URGENT", label: "ด่วน", subLabel: "งานสะดุด", color: "peer-checked:bg-yellow-50 peer-checked:border-yellow-500 peer-checked:text-yellow-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
-  { value: "CRITICAL", label: "ด่วนที่สุด", subLabel: "ทำไม่ได้เลย", color: "peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
+  { value: "NORMAL", label: "ทั่วไป", subLabel: "ความเร่งด่วนปกติ", color: "peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
+  { value: "URGENT", label: "ด่วน", subLabel: "จำเป็นต้องใช้งาน", color: "peer-checked:bg-orange-50 peer-checked:border-orange-500 peer-checked:text-orange-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
+  { value: "CRITICAL", label: "ด่วนที่สุด", subLabel: "งานหยุดชะงัก", color: "peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
 ];
 
 // --- Interfaces ---
 interface FormData {
   reporterName: string;
   reporterDepartment: string;
+  otherDepartment?: string;
   reporterPhone: string;
   reporterLineId?: string;
   problemCategory: string;
@@ -40,9 +31,19 @@ interface FormData {
   urgency: string;
 }
 
+const IMAGE_CATEGORIES = [
+  { id: 'monitor', label: 'หน้าจอ', icon: '📺' },
+  { id: 'pc', label: 'คอมพิวเตอร์', icon: '💻' },
+  { id: 'printer', label: 'เครื่องพิมพ์', icon: '🖨️' },
+  { id: 'network', label: 'อินเทอร์เน็ต', icon: '🌐' },
+  { id: 'mouse_keyboard', label: 'เมาส์/คีย์บอร์ด', icon: '🖱️' },
+  { id: 'software', label: 'โปรแกรม', icon: '💿' },
+];
+
 function RepairLiffFormContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   // States
   const [linePictureUrl, setLinePictureUrl] = useState<string>("");
@@ -51,17 +52,20 @@ function RepairLiffFormContent() {
   const [formData, setFormData] = useState<FormData>({
     reporterName: "",
     reporterDepartment: "",
+    otherDepartment: "",
     reporterPhone: "",
     reporterLineId: "",
-    problemCategory: "HARDWARE",
+    problemCategory: "OTHER",
     problemTitle: "",
     problemDescription: "",
     location: "",
     urgency: "NORMAL",
   });
 
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<(File | string)[]>([]); // Can be File or Category ID/Icon
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const [showImageSource, setShowImageSource] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ show: boolean; ticketCode?: string }>({ show: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -130,6 +134,16 @@ function RepairLiffFormContent() {
         }
       });
       setFiles(prev => [...prev, ...validFiles]);
+      setShowImageSource(false);
+    }
+  };
+
+  const addCategoryAsImage = (category: typeof IMAGE_CATEGORIES[0]) => {
+    if (files.length < 3) {
+      setFiles(prev => [...prev, `CATEGORY:${category.id}`]);
+      setFilePreviews(prev => [...prev, category.icon]);
+      setShowCategoryPicker(false);
+      setShowImageSource(false);
     }
   };
 
@@ -143,8 +157,34 @@ function RepairLiffFormContent() {
     setLoading(true);
     try {
       const payload = new FormData();
-      Object.entries(formData).forEach(([key, val]) => payload.append(key, val));
-      files.forEach(file => payload.append("files", file));
+      
+      // Handle Department logic
+      const finalDepartment = formData.reporterDepartment === "OTHER" 
+        ? (formData.otherDepartment || "OTHER") 
+        : formData.reporterDepartment;
+
+      Object.entries(formData).forEach(([key, val]) => {
+        if (key === "reporterDepartment") {
+          payload.append(key, finalDepartment);
+        } else if (key !== "otherDepartment") {
+          payload.append(key, val || "");
+        }
+      });
+
+      // Handle Files and Category markers
+      const categoryMarkers: string[] = [];
+      files.forEach(item => {
+        if (item instanceof File) {
+          payload.append("files", item);
+        } else if (typeof item === "string" && item.startsWith("CATEGORY:")) {
+          categoryMarkers.push(item.split(":")[1]);
+        }
+      });
+
+      if (categoryMarkers.length > 0) {
+        payload.append("imageCategories", JSON.stringify(categoryMarkers));
+      }
+
       if (linePictureUrl) payload.append("pictureUrl", linePictureUrl);
 
       const data = await apiFetch("/api/repairs/liff/create", {
@@ -152,8 +192,9 @@ function RepairLiffFormContent() {
         body: payload,
       });
       setSuccess({ show: true, ticketCode: data.ticketCode });
-    } catch (err: any) {
-      setErrors({ submit: err.message || "Submission failed" });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Submission failed";
+      setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -190,49 +231,67 @@ function RepairLiffFormContent() {
           
           {/* Section 1: User Profile */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <User size={14} /> ข้อมูลผู้แจ้ง
+            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+              <User size={14} className="text-blue-500" /> ข้อมูลผู้ส่งเรื่อง
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-slate-400 mb-1.5 block ml-1">ชื่อ-นามสกุล</label>
+                <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block ml-1">ชื่อ-นามสกุล <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="reporterName"
                   value={formData.reporterName}
                   onChange={handleInputChange}
-                  placeholder="กรอกชื่อของคุณ"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none dark:text-white"
+                  placeholder="กรุณากรอกชื่อ-นามสกุล"
+                  className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white transition-all"
                   required
                 />
               </div>
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="text-xs text-slate-400 mb-1.5 block ml-1">แผนก / ฝ่าย</label>
-                  <select
-                    name="reporterDepartment"
-                    value={formData.reporterDepartment}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white appearance-none"
-                    required
-                  >
-                    <option value="">เลือกแผนก</option>
-                    <option value="ACCOUNTING">ฝ่ายบัญชี</option>
-                    <option value="SALES">ฝ่ายขาย</option>
-                    <option value="PRODUCTION">ฝ่ายผลิต</option>
-                    <option value="IT">ฝ่ายไอที</option>
-                    <option value="OTHER">อื่นๆ</option>
-                  </select>
+                  <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block ml-1">หน่วยงาน / ฝ่าย <span className="text-red-500">*</span></label>
+                  <div className="space-y-3">
+                    <select
+                      name="reporterDepartment"
+                      value={formData.reporterDepartment}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white appearance-none transition-all"
+                      required
+                    >
+                      <option value="">กรุณาเลือกฝ่ายหรืองาน</option>
+                      <option value="ACCOUNTING">ฝ่ายบัญชี</option>
+                      <option value="SALES">ฝ่ายขาย</option>
+                      <option value="PRODUCTION">ฝ่ายผลิต</option>
+                      <option value="IT">ฝ่ายไอที</option>
+                      <option value="HR">ฝ่ายบุคคล</option>
+                      <option value="MAINTENANCE">ฝ่ายซ่อมบำรุง</option>
+                      <option value="OTHER">อื่นๆ (โปรดระบุ)</option>
+                    </select>
+                    
+                    {formData.reporterDepartment === "OTHER" && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <input
+                          type="text"
+                          name="otherDepartment"
+                          value={formData.otherDepartment}
+                          onChange={handleInputChange}
+                          placeholder="ระบุตำแหน่งหรือหน่วยงานของคุณ"
+                          className="w-full px-4 py-3.5 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white placeholder:text-blue-400/60"
+                          required
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 mb-1.5 block ml-1">เบอร์โทรติดต่อ</label>
+                  <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block ml-1">ช่องทางติดต่อ (เบอร์โทรศัพท์)</label>
                   <input
                     type="tel"
                     name="reporterPhone"
                     value={formData.reporterPhone}
                     onChange={handleInputChange}
-                    placeholder="08X-XXX-XXXX"
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/20 outline-none dark:text-white"
+                    placeholder="ตัวอย่าง 081-234-5678"
+                    className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white transition-all"
                   />
                 </div>
               </div>
@@ -241,46 +300,42 @@ function RepairLiffFormContent() {
 
           {/* Section 2: Problem Details */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Info size={14} /> รายละเอียดปัญหา
+            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+              <Info size={14} className="text-blue-500" /> รายละเอียดปัญหา <span className="text-red-500">*</span>
             </h2>
             <div className="space-y-4">
-              <select
-                name="problemCategory"
-                value={formData.problemCategory}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white"
-              >
-                {PROBLEM_CATEGORIES.map(cat => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                name="problemTitle"
-                value={formData.problemTitle}
-                onChange={handleInputChange}
-                placeholder="สรุปปัญหา (เช่น เปิดเครื่องไม่ติด)"
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white"
-                required
-              />
-              <textarea
-                name="problemDescription"
-                value={formData.problemDescription}
-                onChange={handleInputChange}
-                rows={3}
-                placeholder="ระบุรายละเอียดเพิ่มเติม..."
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white resize-none"
-              />
+              <div>
+                <input
+                  type="text"
+                  name="problemTitle"
+                  value={formData.problemTitle}
+                  onChange={handleInputChange}
+                  placeholder="สรุปปัญหาเบื้องต้น (เช่น พิมพ์งานไม่ได้, เข้าเน็ตไม่ได้)"
+                  className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white transition-all font-medium"
+                  required
+                />
+              </div>
+              <div>
+                <textarea
+                  name="problemDescription"
+                  value={formData.problemDescription}
+                  onChange={handleInputChange}
+                  rows={4}
+                  placeholder="กรุณาระบุรายละเอียดเพิ่มเติมของปัญหา เพื่อความรวดเร็วในการตรวจสอบ..."
+                  className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white resize-none transition-all text-sm leading-relaxed"
+                />
+              </div>
               <div className="relative">
-                <MapPin className="absolute left-4 top-3.5 w-4 h-4 text-blue-500" />
+                <div className="absolute left-4 top-3.5 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-blue-500" />
+                </div>
                 <input
                   type="text"
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  placeholder="สถานที่ / ชั้น / เลขโต๊ะ"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 dark:text-white"
+                  placeholder="สถานที่ปฏิบัติงาน / อาคาร / ชั้น / เลขโต๊ะ"
+                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white transition-all"
                   required
                 />
               </div>
@@ -290,33 +345,46 @@ function RepairLiffFormContent() {
           {/* Section 3: Photo Upload (Professional Grid) */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2">
-                <Camera size={14} /> รูปภาพประกอบ
+              <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Camera size={14} className="text-blue-500" /> ภาพถ่ายหรือสัญลักษณ์ประกอบ
               </h2>
-              <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">{files.length}/3</span>
+              <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full text-blue-600 dark:text-blue-400 font-bold tracking-wider">{files.length}/3</span>
             </div>
             
             <div className="grid grid-cols-3 gap-3">
               {filePreviews.map((src, i) => (
-                <div key={i} className="relative aspect-square rounded-2xl overflow-hidden ring-1 ring-slate-100 dark:ring-slate-800">
-                  <img src={src} alt="preview" className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => removeFile(i)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full shadow-lg">
-                    <X size={12} />
+                <div key={i} className="relative aspect-square rounded-2xl overflow-hidden group ring-1 ring-slate-100 dark:ring-slate-800">
+                  {src.startsWith('data:') ? (
+                    <img src={src} alt="preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-3xl">
+                      {src}
+                    </div>
+                  )}
+                  <button 
+                    type="button" 
+                    onClick={() => removeFile(i)} 
+                    className="absolute top-1.5 right-1.5 bg-red-500/90 hover:bg-red-600 text-white p-1.5 rounded-full shadow-lg transition-all scale-90 group-hover:scale-100"
+                  >
+                    <X size={12} strokeWidth={3} />
                   </button>
                 </div>
               ))}
               {files.length < 3 && (
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1 text-slate-400 hover:bg-blue-50/50 transition-colors"
+                  onClick={() => setShowImageSource(true)}
+                  className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all group"
                 >
-                  <Camera size={20} />
-                  <span className="text-[10px] font-medium">เพิ่มรูป</span>
+                  <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+                    <Plus size={20} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">เพิ่มรูป</span>
                 </button>
               )}
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
           </div>
 
           {/* Section 4: Urgency Level */}
@@ -343,12 +411,82 @@ function RepairLiffFormContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-2xl font-bold shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-3xl font-bold shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-4"
           >
-            {loading ? <Loader2 className="animate-spin" /> : <>ส่งข้อมูลแจ้งซ่อม <ChevronRight size={18} /></>}
+            {loading ? <Loader2 className="animate-spin" /> : <>ส่งเรื่องแจ้งซ่อม <ChevronRight size={18} /></>}
           </button>
         </form>
       </main>
+
+      {/* Image Source Picker Modal */}
+      {showImageSource && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-300">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl animate-in slide-in-from-bottom-full duration-500">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white">เพิ่มรูปประกอบ</h3>
+              <button onClick={() => setShowImageSource(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-4 pb-8">
+              <button 
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                  <Camera size={28} />
+                </div>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">ถ่ายรูป</span>
+              </button>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                  <ImageIcon size={28} />
+                </div>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">คลังภาพ</span>
+              </button>
+              <button 
+                onClick={() => setShowCategoryPicker(true)}
+                className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                  <LayoutGrid size={28} />
+                </div>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">หมวดหมู่</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Picker Modal */}
+      {showCategoryPicker && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm animate-in fade-in duration-200 p-6">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">เลือกสัญลักษณ์</h3>
+              <button onClick={() => setShowCategoryPicker(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-500 mb-6">ระบุสัญลักษณ์ที่ตรงกับปัญหาของคุณเบื้องต้น</p>
+            <div className="grid grid-cols-3 gap-4">
+              {IMAGE_CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => addCategoryAsImage(cat)}
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all border border-slate-50 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800"
+                >
+                  <span className="text-3xl">{cat.icon}</span>
+                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 line-clamp-1">{cat.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
