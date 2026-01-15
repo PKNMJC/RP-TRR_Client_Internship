@@ -22,16 +22,8 @@ const modalStyles = `
   }
 `;
 
-// Inject styles
-if (typeof document !== 'undefined') {
-  const styleId = 'it-repairs-modal-styles';
-  if (!document.getElementById(styleId)) {
-    const styleSheet = document.createElement('style');
-    styleSheet.id = styleId;
-    styleSheet.textContent = modalStyles;
-    document.head.appendChild(styleSheet);
-  }
-}
+// Inject styles is now handled inside the component to avoid hydration mismatches
+
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -139,7 +131,7 @@ export default function ITRepairsPage() {
   // New states for Assignee & Realtime
   const [itStaff, setItStaff] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
 
   const fetchRepairs = useCallback(async (isBackground = false) => {
@@ -176,6 +168,15 @@ export default function ITRepairsPage() {
   };
 
   useEffect(() => {
+    // Inject styles
+    const styleId = 'it-repairs-modal-styles';
+    if (!document.getElementById(styleId)) {
+      const styleSheet = document.createElement('style');
+      styleSheet.id = styleId;
+      styleSheet.textContent = modalStyles;
+      document.head.appendChild(styleSheet);
+    }
+
     fetchRepairs();
     fetchSupportingData();
 
@@ -346,7 +347,7 @@ export default function ITRepairsPage() {
                 <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-0.5 md:px-3 md:py-1 rounded-full border border-gray-200">
                   <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isAutoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
                   <span className="text-[8px] md:text-xs text-gray-500 font-mono">
-                    Updated: {lastUpdated.toLocaleTimeString('th-TH')}
+                    Updated: {lastUpdated ? lastUpdated.toLocaleTimeString('th-TH') : '...'}
                   </span>
                   <button
                     onClick={() => fetchRepairs()}
@@ -671,13 +672,13 @@ export default function ITRepairsPage() {
                       <h2 className="text-lg md:text-2xl font-bold text-white tracking-tight">
                         รายละเอียดการแจ้งซ่อม
                       </h2>
-                      {selectedRepair && <StatusBadge status={selectedRepair.status} />}
+                      <StatusBadge status={selectedRepair.status} />
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="text-[10px] md:text-sm text-gray-300 font-mono bg-white/10 px-2 md:px-3 py-0.5 md:py-1 rounded-full backdrop-blur-sm">
-                        #{selectedRepair?.ticketCode}
+                        #{selectedRepair.ticketCode}
                       </span>
-                      {selectedRepair && <UrgencyBadge urgency={selectedRepair.urgency} />}
+                      <UrgencyBadge urgency={selectedRepair.urgency} />
                     </div>
                   </div>
                 </div>

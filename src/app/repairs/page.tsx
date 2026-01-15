@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Upload, X } from "lucide-react";
 import { apiFetch } from "@/services/api";
 
-export const dynamic = "force-dynamic";
+
 
 const PROBLEM_CATEGORIES = [
   { value: "HARDWARE", label: "💻 Hardware (คอมพิวเตอร์, อุปกรณ์)" },
