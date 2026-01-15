@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: "/api/:path*",
-          destination: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/:path*`, // Forward to backend with /api prefix
+          destination: `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3000"}/api/:path*`, // Forward to backend (default port 3000)
         },
       ],
     };
