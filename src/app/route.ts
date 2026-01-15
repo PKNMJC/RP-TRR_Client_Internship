@@ -15,18 +15,18 @@ export async function GET(request: NextRequest) {
     liffClientId: !!liffClientId,
   });
 
+  if (liffClientId || liffRedirectUri) {
+    console.log('LIFF request detected at root - redirecting to LIFF entry point');
+    const liffEntryUrl = new URL('/repairs/liff', request.nextUrl.origin);
+    searchParams.forEach((value, key) => liffEntryUrl.searchParams.append(key, value));
+    return NextResponse.redirect(liffEntryUrl.toString());
+  }
+
   if (code) {
-    // Build callback URL with all parameters
     const baseUrl = request.nextUrl.origin;
     const callbackUrl = new URL('/callback', baseUrl);
-
     if (code) callbackUrl.searchParams.append('code', code);
     if (state) callbackUrl.searchParams.append('state', state);
-    if (liffClientId) callbackUrl.searchParams.append('liffClientId', liffClientId);
-    if (liffRedirectUri) callbackUrl.searchParams.append('liffRedirectUri', liffRedirectUri);
-
-    console.log('Redirecting to callback:', callbackUrl.toString());
-
     return NextResponse.redirect(callbackUrl.toString());
   }
 
