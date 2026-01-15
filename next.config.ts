@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: "/api/:path*",
-          destination: `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3000"}/api/:path*`, // Forward to backend (default port 3000)
+          destination: `${process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV === 'development' ? "http://127.0.0.1:3000" : "https://rp-trr-server-internship.vercel.app")}/api/:path*`,
         },
       ],
     };
