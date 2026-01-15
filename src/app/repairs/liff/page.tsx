@@ -22,7 +22,7 @@ function RepairLiffContent() {
 
     // โหลดข้อมูลเมื่อ action เป็น status หรือ history
     if (action === "status") {
-      fetchTickets();
+      router.push(`/repairs/liff/tracking?lineUserId=${lineUserId || searchParams.get("lineUserId")}`);
     } else if (action === "history") {
       const ticketId = searchParams.get("id");
       if (ticketId) {
@@ -465,8 +465,8 @@ function RepairLiffContent() {
                  )}
                </div>
 
-               <button
-                  onClick={() => router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`)}
+                <button
+                  onClick={() => router.push(`/repairs/liff/tracking?lineUserId=${lineUserId}`)}
                   className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition shadow-sm"
                 >
                   กลับหน้ารายการของฉัน
