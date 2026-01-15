@@ -384,8 +384,24 @@ function RepairLiffFormContent() {
                 </button>
               )}
             </div>
-            <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
-            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
+            <input 
+              ref={fileInputRef} 
+              type="file" 
+              accept="image/*" 
+              multiple 
+              onChange={handleFileChange} 
+              onClick={(e) => (e.target as HTMLInputElement).value = ''}
+              className="hidden" 
+            />
+            <input 
+              ref={cameraInputRef} 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              onChange={handleFileChange} 
+              onClick={(e) => (e.target as HTMLInputElement).value = ''}
+              className="hidden" 
+            />
           </div>
 
           {/* Section 4: Urgency Level */}
