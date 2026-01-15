@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { safeFormat } from "@/lib/date-utils";
 
 // --- Types ---
 type LoanStatus = "BORROWED" | "RETURNED" | "OVERDUE";
@@ -332,11 +333,11 @@ export default function ITLoansPage() {
                     <div className="text-[9px] md:text-xs text-gray-500 space-y-0.5">
                       <div className="flex items-center gap-1">
                         <Calendar size={10} className="text-gray-400" />
-                        <span>คืน: {format(new Date(loan.expectedReturnDate), "dd MMM yy", { locale: th })}</span>
+                        <span>คืน: {safeFormat(loan.expectedReturnDate, "dd MMM yy")}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={10} className="text-gray-400" />
-                        <span>ยืม: {format(new Date(loan.borrowDate), "dd/MM/yy")}</span>
+                        <span>ยืม: {safeFormat(loan.borrowDate, "dd/MM/yy")}</span>
                       </div>
                     </div>
                     <div className="flex gap-1.5">
@@ -418,15 +419,11 @@ export default function ITLoansPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-black">
-                          {format(
-                            new Date(loan.expectedReturnDate),
-                            "dd MMM yyyy",
-                            { locale: th }
-                          )}
+                          {safeFormat(loan.expectedReturnDate, "dd MMM yyyy")}
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           ยืมเมื่อ:{" "}
-                          {format(new Date(loan.borrowDate), "dd/MM/yy")}
+                          {safeFormat(loan.borrowDate, "dd/MM/yy")}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -573,35 +570,23 @@ export default function ITLoansPage() {
                     <div>
                       <p className="text-xs text-gray-500 mb-1">วันยืม</p>
                       <p className="font-medium text-black">
-                        {format(
-                          new Date(selectedLoan.borrowDate),
-                          "dd MMM yyyy",
-                          { locale: th }
-                        )}
+                        {safeFormat(selectedLoan.borrowDate, "dd MMM yyyy")}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {format(new Date(selectedLoan.borrowDate), "HH:mm")}
+                        {safeFormat(selectedLoan.borrowDate, "HH:mm")}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 mb-1">วันคืนต้อง</p>
                       <p className="font-medium text-black">
-                        {format(
-                          new Date(selectedLoan.expectedReturnDate),
-                          "dd MMM yyyy",
-                          { locale: th }
-                        )}
+                        {safeFormat(selectedLoan.expectedReturnDate, "dd MMM yyyy")}
                       </p>
                     </div>
                     {selectedLoan.returnDate && (
                       <div className="col-span-2">
                         <p className="text-xs text-gray-500 mb-1">วันคืนจริง</p>
                         <p className="font-medium text-black">
-                          {format(
-                            new Date(selectedLoan.returnDate),
-                            "dd MMM yyyy",
-                            { locale: th }
-                          )}
+                          {safeFormat(selectedLoan.returnDate, "dd MMM yyyy")}
                         </p>
                       </div>
                     )}

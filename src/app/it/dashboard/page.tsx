@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
+import { safeFormat } from '@/lib/date-utils';
 
 interface DashboardStats {
   totalLoans: number;
@@ -345,8 +346,8 @@ function ActivityCard({
                   </p>
                   <p className="text-[10px] text-neutral-400 font-medium truncate">
                     {type === 'loan' 
-                      ? `${item.borrowerName || 'Unknown'} • ${format(new Date(item.borrowAt!), 'dd/MM/yy', { locale: th })}`
-                      : `#${item.ticketCode} • ${format(new Date(item.createdAt!), 'dd/MM/yy', { locale: th })}`
+                      ? `${item.borrowerName || 'Unknown'} • ${safeFormat(item.borrowAt, 'dd/MM/yy')}`
+                      : `#${item.ticketCode} • ${safeFormat(item.createdAt, 'dd/MM/yy')}`
                     }
                   </p>
                 </div>

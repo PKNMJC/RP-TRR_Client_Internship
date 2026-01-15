@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
+import { safeFormat } from "@/lib/date-utils";
 
 // --- Types ---
 interface RepairTicket {
@@ -472,7 +473,7 @@ export default function ITRepairsPage() {
                       <div className="flex items-center gap-1.5 mt-1.5 text-gray-400">
                         <Clock size={10} />
                         <span className="text-[10px] md:text-xs">
-                          {format(new Date(repair.createdAt), "dd MMM yy HH:mm", { locale: th })}
+                          {safeFormat(repair.createdAt, "dd MMM yy HH:mm")}
                         </span>
                       </div>
                     </div>
@@ -566,7 +567,7 @@ export default function ITRepairsPage() {
                         </div>
                         <div className="text-xs text-gray-500 mt-1">
                           แจ้งเมื่อ:{" "}
-                          {format(new Date(repair.createdAt), "dd/MM/yy HH:mm")}
+                          {safeFormat(repair.createdAt, "dd/MM/yy HH:mm")}
                         </div>
                       </td>
                       <td className="px-6 py-4">
