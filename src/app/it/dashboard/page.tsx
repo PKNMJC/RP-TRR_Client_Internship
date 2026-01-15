@@ -109,15 +109,15 @@ export default function ITDashboard() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-6 bg-black rounded-full" />
-              <span className="text-sm font-bold uppercase tracking-[0.3em] text-neutral-400">Management</span>
+              <span className="text-sm font-black uppercase tracking-[0.2em] text-neutral-400">ภาพรวมระบบ</span>
             </div>
             <h1 className="text-4xl font-black tracking-tighter text-neutral-900 md:text-5xl">
-              SYSTEM <span className="text-neutral-400">OVERVIEW</span>
+              IT <span className="text-neutral-400">DASHBOARD</span>
             </h1>
           </div>
-          <div className="flex items-center gap-3 text-sm font-medium text-neutral-500 bg-white px-4 py-2 rounded-full border border-neutral-200 shadow-sm">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Live System Status: {new Date().toLocaleTimeString('th-TH')}
+          <div className="flex items-center gap-3 text-sm font-semibold text-neutral-600 bg-white px-5 py-2.5 rounded-2xl border border-neutral-200 shadow-sm">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20" />
+            สถานะระบบ: ออนไลน์ ({new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })})
           </div>
         </header>
 
@@ -125,34 +125,34 @@ export default function ITDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
           <StatCard 
             className="md:col-span-4"
-            title="Inventory & Loans"
+            title="พัสดุและรายการยืม"
             mainValue={stats.totalLoans}
             subStats={[
-              { label: 'Active Borrow', value: stats.activeLoans },
-              { label: 'Overdue', value: stats.overdueLoans, urgent: true },
+              { label: 'กำลังยืม', value: stats.activeLoans },
+              { label: 'เกินกำหนด', value: stats.overdueLoans, urgent: true },
             ]}
-            icon={<Package size={24} />}
+            icon={<Package size={22} />}
             dark={true}
           />
           <StatCard 
             className="md:col-span-4"
-            title="Maintenance"
+            title="รายการซ่อมบำรุง"
             mainValue={stats.totalRepairs}
             subStats={[
-              { label: 'Pending Task', value: stats.pendingRepairs },
-              { label: 'Resolved', value: stats.completedRepairs },
+              { label: 'รอการแก้ไข', value: stats.pendingRepairs },
+              { label: 'เสร็จสิ้นแล้ว', value: stats.completedRepairs },
             ]}
-            icon={<Wrench size={24} />}
+            icon={<Wrench size={22} />}
           />
           <StatCard 
             className="md:col-span-4"
-            title="System Load"
+            title="ภาระงานระบบ"
             mainValue={Math.round(((stats.activeLoans + stats.pendingRepairs) / 20) * 100)}
             unit="%"
             subStats={[
-              { label: 'Operational Status', value: 'OPTIMAL' },
+              { label: 'สถานะการทำงาน', value: 'ปกติ' },
             ]}
-            icon={<Activity size={24} />}
+            icon={<Activity size={22} />}
           />
         </div>
 
@@ -160,15 +160,15 @@ export default function ITDashboard() {
           {/* Main Activity Column */}
           <div className="lg:col-span-8 space-y-8">
             <section>
-              <SectionHeader title="Recent Transactions" icon={<Activity size={20} />} href="/it/loans" />
-              <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+              <SectionHeader title="รายการยืมล่าสุด" icon={<Activity size={18} />} href="/it/loans" />
+              <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <ActivityTable items={stats.recentLoans} type="loan" />
               </div>
             </section>
 
             <section>
-              <SectionHeader title="Repair Tickets" icon={<Wrench size={20} />} href="/it/repairs" />
-              <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+              <SectionHeader title="รายการแจ้งซ่อม" icon={<Wrench size={18} />} href="/it/repairs" />
+              <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <ActivityTable items={stats.recentRepairs} type="repair" />
               </div>
             </section>
@@ -180,21 +180,25 @@ export default function ITDashboard() {
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
                 <LayoutDashboard size={120} />
               </div>
-              <h3 className="text-xl font-bold mb-6 relative z-10">Quick Control</h3>
+              <h3 className="text-xl font-black mb-6 relative z-10 flex items-center gap-2">
+                <LayoutDashboard size={20} /> ทางลัดจัดการ
+              </h3>
               <div className="grid grid-cols-2 gap-3 relative z-10">
-                <SidebarButton href="/it/loans" label="New Loan" icon={<Package size={18} />} />
-                <SidebarButton href="/it/repairs" label="Ticket" icon={<Wrench size={18} />} />
-                <SidebarButton href="/it/settings/profile" label="Profile" icon={<Users size={18} />} />
-                <SidebarButton href="/it/settings/security" label="Logs" icon={<AlertCircle size={18} />} />
+                <SidebarButton href="/it/loans" label="ยืมพัสดุ" icon={<Package size={18} />} />
+                <SidebarButton href="/it/repairs" label="แจ้งซ่อม" icon={<Wrench size={18} />} />
+                <SidebarButton href="/it/settings/profile" label="โปรไฟล์" icon={<Users size={18} />} />
+                <SidebarButton href="/it/settings/security" label="ประวัติใช้งาน" icon={<AlertCircle size={18} />} />
               </div>
             </div>
 
             <div className="bg-white border border-neutral-200 rounded-3xl p-8">
-              <h3 className="text-sm font-black uppercase tracking-widest text-neutral-400 mb-6">Service Health</h3>
-              <div className="space-y-4">
-                <HealthBar label="API Response" percentage={98} />
-                <HealthBar label="Database" percentage={100} />
-                <HealthBar label="Storage" percentage={45} />
+              <h3 className="text-sm font-black uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-2">
+                สถานะการทำงาน <span className="inline-block w-1 h-1 bg-neutral-300 rounded-full" /> ประสิทธิภาพ
+              </h3>
+              <div className="space-y-5">
+                <HealthBar label="การตอบสนอง API" percentage={98} />
+                <HealthBar label="ฐานข้อมูล" percentage={100} />
+                <HealthBar label="พื้นที่จัดเก็บ" percentage={45} />
               </div>
             </div>
           </div>
@@ -208,23 +212,23 @@ export default function ITDashboard() {
 
 function StatCard({ title, mainValue, subStats, icon, dark = false, className = "", unit = "" }: any) {
   return (
-    <div className={`p-8 rounded-[2.5rem] transition-all duration-300 ${dark ? 'bg-neutral-900 text-white shadow-xl' : 'bg-white border border-neutral-200 text-neutral-900 shadow-sm hover:border-neutral-900'} ${className}`}>
-      <div className="flex justify-between items-start mb-6">
-        <div className={`p-3 rounded-2xl ${dark ? 'bg-white/10' : 'bg-neutral-100'}`}>{icon}</div>
-        <ArrowUpRight size={20} className={dark ? 'text-neutral-500' : 'text-neutral-300'} />
+    <div className={`p-8 rounded-[2.5rem] transition-all duration-300 group ${dark ? 'bg-neutral-900 text-white shadow-xl hover:bg-black' : 'bg-white border border-neutral-100 text-neutral-900 shadow-sm hover:border-black hover:shadow-md'} ${className}`}>
+      <div className="flex justify-between items-start mb-8">
+        <div className={`p-3.5 rounded-2xl ${dark ? 'bg-white/10' : 'bg-neutral-50 border border-neutral-100'}`}>{icon}</div>
+        <ArrowUpRight size={18} className={`${dark ? 'text-neutral-600 transition-colors group-hover:text-white' : 'text-neutral-300 transition-colors group-hover:text-black'}`} />
       </div>
       <div>
-        <p className={`text-sm font-bold uppercase tracking-widest mb-1 ${dark ? 'text-neutral-400' : 'text-neutral-500'}`}>{title}</p>
-        <div className="flex items-baseline gap-1 mb-6">
-          <span className="text-5xl font-black font-mono tracking-tighter">{mainValue}</span>
-          {unit && <span className="text-xl font-bold opacity-50">{unit}</span>}
+        <p className={`text-[11px] font-black uppercase tracking-widest mb-1.5 ${dark ? 'text-neutral-500' : 'text-neutral-400'}`}>{title}</p>
+        <div className="flex items-baseline gap-1.5 mb-8">
+          <span className="text-6xl font-black font-mono tracking-tighter leading-none">{mainValue}</span>
+          {unit && <span className="text-2xl font-black opacity-30">{unit}</span>}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 pt-6 border-t border-dashed border-neutral-700/50">
+      <div className={`grid grid-cols-2 gap-4 pt-8 border-t border-dashed ${dark ? 'border-neutral-800' : 'border-neutral-100'}`}>
         {subStats.map((s: any, i: number) => (
           <div key={i}>
-            <p className={`text-[10px] font-bold uppercase tracking-tight mb-1 ${dark ? 'text-neutral-500' : 'text-neutral-400'}`}>{s.label}</p>
-            <p className={`text-lg font-black font-mono ${s.urgent ? 'text-rose-500' : ''}`}>{s.value}</p>
+            <p className={`text-[10px] font-black uppercase tracking-tight mb-1.5 ${dark ? 'text-neutral-500' : 'text-neutral-400'}`}>{s.label}</p>
+            <p className={`text-xl font-black font-mono leading-none ${s.urgent ? 'text-rose-500' : ''}`}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -235,12 +239,12 @@ function StatCard({ title, mainValue, subStats, icon, dark = false, className = 
 function SectionHeader({ title, icon, href }: any) {
   return (
     <div className="flex items-center justify-between mb-4 px-2">
-      <div className="flex items-center gap-2">
-        <span className="p-1.5 bg-black text-white rounded-lg">{icon}</span>
-        <h2 className="text-lg font-black tracking-tight">{title}</h2>
+      <div className="flex items-center gap-2.5">
+        <span className="p-2 bg-black text-white rounded-xl shadow-lg shadow-black/10 group-hover:scale-110 transition-transform">{icon}</span>
+        <h2 className="text-xl font-black tracking-tight">{title}</h2>
       </div>
-      <a href={href} className="text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors flex items-center gap-1">
-        View All <ChevronRight size={14} />
+      <a href={href} className="text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-black transition-all flex items-center gap-1.5 group">
+        ดูทั้งหมด <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
       </a>
     </div>
   );
@@ -249,8 +253,11 @@ function SectionHeader({ title, icon, href }: any) {
 function ActivityTable({ items, type }: { items: ActivityItem[], type: 'loan' | 'repair' }) {
   if (items.length === 0) {
     return (
-      <div className="p-12 text-center text-neutral-400 font-medium italic">
-        No recent records found in the ledger.
+      <div className="p-16 text-center">
+        <div className="inline-flex items-center justify-center p-4 bg-neutral-50 rounded-full mb-4">
+          <Activity className="text-neutral-300" size={32} />
+        </div>
+        <p className="text-sm font-bold text-neutral-400 italic">ไม่พบรายการล่าสุดในระบบ</p>
       </div>
     );
   }
@@ -260,9 +267,9 @@ function ActivityTable({ items, type }: { items: ActivityItem[], type: 'loan' | 
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-neutral-100 bg-neutral-50/50">
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-neutral-400">Identity / Item</th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-neutral-400">Assignee / Date</th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-neutral-400 text-right">Status</th>
+            <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-neutral-400">ข้อมูลรายการ / ชื่อสิ่งของ</th>
+            <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-neutral-400">ผู้รับผิดชอบ / วันที่</th>
+            <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-neutral-400 text-right">สถานะ</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-neutral-50">
@@ -279,8 +286,8 @@ function ActivityTable({ items, type }: { items: ActivityItem[], type: 'loan' | 
                 <p className="text-[10px] text-neutral-400">{safeFormat(type === 'loan' ? item.borrowAt : item.createdAt, 'dd MMM yyyy')}</p>
               </td>
               <td className="px-6 py-4 text-right">
-                <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black tracking-tighter border ${getStatusStyle(item.status)}`}>
-                  {item.status}
+                <span className={`inline-block px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.1em] border transition-all ${getStatusStyle(item.status)}`}>
+                  {translateStatus(item.status)}
                 </span>
               </td>
             </tr>
@@ -293,11 +300,24 @@ function ActivityTable({ items, type }: { items: ActivityItem[], type: 'loan' | 
 
 function SidebarButton({ href, label, icon }: any) {
   return (
-    <a href={href} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white hover:text-black transition-all duration-300">
-      <div className="mb-2">{icon}</div>
-      <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
+    <a href={href} className="flex flex-col items-center justify-center p-5 rounded-3xl bg-white/5 border border-white/10 hover:bg-white hover:text-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group">
+      <div className="mb-3 group-hover:scale-110 transition-transform">{icon}</div>
+      <span className="text-[10px] font-black uppercase tracking-[0.15em]">{label}</span>
     </a>
   );
+}
+
+function translateStatus(status: string) {
+  switch (status) {
+    case 'PENDING': return 'รอดำเนินการ';
+    case 'BORROWED': return 'กำลังยืม';
+    case 'RETURNED': return 'คืนแล้ว';
+    case 'OVERDUE': return 'เกินกำหนด';
+    case 'COMPLETED': return 'เสร็จสิ้น';
+    case 'URGENT': return 'เร่งด่วน';
+    case 'REPAIRING': return 'กำลังซ่อม';
+    default: return status;
+  }
 }
 
 function HealthBar({ label, percentage }: any) {
