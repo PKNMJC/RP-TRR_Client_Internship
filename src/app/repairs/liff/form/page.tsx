@@ -119,22 +119,88 @@ function RepairLiffFormContent() {
     });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+      };
+      
+      reader.onerror = reject;
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const MAX_WIDTH = 1200; // Resize to reasonable max width for mobile
+        const MAX_HEIGHT = 1200;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const compressedFile = new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          } else {
+            reject(new Error('Compression failed'));
+          }
+        }, 'image/jpeg', 0.7); // 70% quality JPEG
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (selectedFiles) {
       const remainingSlots = 3 - files.length;
-      const validFiles: File[] = [];
       
-      Array.from(selectedFiles).slice(0, remainingSlots).forEach(file => {
-        if (file.size <= 10 * 1024 * 1024) { // 10MB
+      const fileArray = Array.from(selectedFiles).slice(0, remainingSlots);
+      
+      // Filter large files (> 30MB mostly video accident) but try compressing typical images
+      const processableFiles = fileArray.filter(f => f.size <= 30 * 1024 * 1024);
+
+      setLoading(true); // Show loading while compressing
+      try {
+        const compressedFiles = await Promise.all(processableFiles.map(f => compressImage(f)));
+        
+        const validFiles: File[] = [];
+        compressedFiles.forEach(file => {
           validFiles.push(file);
           const reader = new FileReader();
           reader.onloadend = () => setFilePreviews(prev => [...prev, reader.result as string]);
           reader.readAsDataURL(file);
-        }
-      });
-      setFiles(prev => [...prev, ...validFiles]);
-      setShowImageSource(false);
+        });
+
+        setFiles(prev => [...prev, ...validFiles]);
+        setShowImageSource(false);
+      } catch (error) {
+        console.error("Compression error:", error);
+        setErrors({ submit: "ไม่สามารถประมวลผลรูปภาพได้ กรุณาลองใหม่" });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -384,6 +450,7 @@ function RepairLiffFormContent() {
                 </button>
               )}
             </div>
+            {/* Hidden inputs but kept in layout for programmatic access */}
             <input 
               ref={fileInputRef} 
               type="file" 
@@ -391,7 +458,7 @@ function RepairLiffFormContent() {
               multiple 
               onChange={handleFileChange} 
               onClick={(e) => (e.target as HTMLInputElement).value = ''}
-              className="hidden" 
+              className="absolute w-0 h-0 opacity-0 overflow-hidden" 
             />
             <input 
               ref={cameraInputRef} 
@@ -400,7 +467,7 @@ function RepairLiffFormContent() {
               capture="environment" 
               onChange={handleFileChange} 
               onClick={(e) => (e.target as HTMLInputElement).value = ''}
-              className="hidden" 
+              className="absolute w-0 h-0 opacity-0 overflow-hidden" 
             />
           </div>
 
