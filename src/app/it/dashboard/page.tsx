@@ -7,15 +7,12 @@ import {
   Package,
   Wrench,
   AlertCircle,
-  TrendingUp,
-  Calendar,
+  Activity,
   Users,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
   ChevronRight,
   LayoutDashboard,
-  Activity,
+  Clock,
+  ArrowUpRight,
 } from 'lucide-react';
 import { safeFormat } from '@/lib/date-utils';
 
@@ -66,7 +63,6 @@ export default function ITDashboard() {
         return;
       }
 
-      // Parallel Data Fetching
       const [repairsData, loansData] = await Promise.all([
         apiFetch('/api/repairs').catch(() => []),
         apiFetch('/api/loans').catch(() => []),
@@ -94,111 +90,91 @@ export default function ITDashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000); // 1 minute is enough for production
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
   if (loading) return <DashboardSkeleton />;
 
   return (
-    <div className="min-h-screen bg-[#F4F4F5] text-neutral-900 font-sans selection:bg-neutral-900 selection:text-white">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         
-        {/* Header: Minimalist & Strong */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        {/* Header */}
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-6 bg-black rounded-full" />
-              <span className="text-sm font-black uppercase tracking-[0.2em] text-neutral-400">ภาพรวมระบบ</span>
-            </div>
-            <h1 className="text-4xl font-black tracking-tighter text-neutral-900 md:text-5xl">
-              IT <span className="text-neutral-400">DASHBOARD</span>
-            </h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">ภาพรวมระบบ IT</h1>
+            <p className="text-slate-500 text-sm mt-1">ยินดีต้อนรับเข้าสู่ระบบจัดการพัสดุและแจ้งซ่อม</p>
           </div>
-          <div className="flex items-center gap-3 text-sm font-semibold text-neutral-600 bg-white px-5 py-2.5 rounded-2xl border border-neutral-200 shadow-sm">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-500/20" />
-            สถานะระบบ: ออนไลน์ ({new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })})
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg w-fit shadow-sm">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            อัปเดตล่าสุด: {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
           </div>
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
           <StatCard 
-            className="md:col-span-4"
-            title="พัสดุและรายการยืม"
-            mainValue={stats.totalLoans}
-            subStats={[
-              { label: 'กำลังยืม', value: stats.activeLoans },
-              { label: 'เกินกำหนด', value: stats.overdueLoans, urgent: true },
-            ]}
-            icon={<Package size={22} />}
-            dark={true}
+            title="รายการยืมพัสดุ"
+            value={stats.totalLoans}
+            subtext={`กำลังยืม ${stats.activeLoans} | เกินกำหนด ${stats.overdueLoans}`}
+            icon={<Package className="text-blue-600" size={20} />}
+            urgent={stats.overdueLoans > 0}
           />
           <StatCard 
-            className="md:col-span-4"
             title="รายการซ่อมบำรุง"
-            mainValue={stats.totalRepairs}
-            subStats={[
-              { label: 'รอการแก้ไข', value: stats.pendingRepairs },
-              { label: 'เสร็จสิ้นแล้ว', value: stats.completedRepairs },
-            ]}
-            icon={<Wrench size={22} />}
+            value={stats.totalRepairs}
+            subtext={`ค้างดำเนินการ ${stats.pendingRepairs} | สำเร็จ ${stats.completedRepairs}`}
+            icon={<Wrench className="text-slate-600" size={20} />}
           />
           <StatCard 
-            className="md:col-span-4"
-            title="ภาระงานระบบ"
-            mainValue={Math.round(((stats.activeLoans + stats.pendingRepairs) / 20) * 100)}
-            unit="%"
-            subStats={[
-              { label: 'สถานะการทำงาน', value: 'ปกติ' },
-            ]}
-            icon={<Activity size={22} />}
+            title="ประสิทธิภาพระบบ"
+            value={`${Math.round(((stats.activeLoans + stats.pendingRepairs) / 20) * 100)}%`}
+            subtext="สถานะการทำงานปกติ"
+            icon={<Activity className="text-emerald-600" size={20} />}
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Activity Column */}
-          <div className="lg:col-span-8 space-y-8">
-            <section>
-              <SectionHeader title="รายการยืมล่าสุด" icon={<Activity size={18} />} href="/it/loans" />
-              <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <ActivityTable items={stats.recentLoans} type="loan" />
-              </div>
-            </section>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content Areas */}
+          <div className="lg:col-span-2 space-y-6">
+            <Section 
+              title="รายการยืมล่าสุด" 
+              icon={<Clock size={16} />} 
+              href="/it/loans"
+            >
+              <ActivityList items={stats.recentLoans} type="loan" />
+            </Section>
 
-            <section>
-              <SectionHeader title="รายการแจ้งซ่อม" icon={<Wrench size={18} />} href="/it/repairs" />
-              <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                <ActivityTable items={stats.recentRepairs} type="repair" />
-              </div>
-            </section>
+            <Section 
+              title="รายการแจ้งซ่อมล่าสุด" 
+              icon={<Wrench size={16} />} 
+              href="/it/repairs"
+            >
+              <ActivityList items={stats.recentRepairs} type="repair" />
+            </Section>
           </div>
 
-          {/* Sidebar Column */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-neutral-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:rotate-12 transition-transform">
-                <LayoutDashboard size={120} />
-              </div>
-              <h3 className="text-xl font-black mb-6 relative z-10 flex items-center gap-2">
-                <LayoutDashboard size={20} /> ทางลัดจัดการ
+          {/* Sidebar / Quick Actions */}
+          <div className="space-y-6">
+            <div className="bg-slate-900 text-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <LayoutDashboard size={18} /> ทางลัดจัดการ
               </h3>
-              <div className="grid grid-cols-2 gap-3 relative z-10">
-                <SidebarButton href="/it/loans" label="ยืมพัสดุ" icon={<Package size={18} />} />
-                <SidebarButton href="/it/repairs" label="แจ้งซ่อม" icon={<Wrench size={18} />} />
-                <SidebarButton href="/it/settings/profile" label="โปรไฟล์" icon={<Users size={18} />} />
-                <SidebarButton href="/it/settings/security" label="ประวัติใช้งาน" icon={<AlertCircle size={18} />} />
+              <div className="grid grid-cols-2 gap-3">
+                <ActionBtn href="/it/loans" label="ยืมพัสดุ" icon={<Package size={16} />} />
+                <ActionBtn href="/it/repairs" label="แจ้งซ่อม" icon={<Wrench size={16} />} />
+                <ActionBtn href="/it/settings/profile" label="โปรไฟล์" icon={<Users size={16} />} />
+                <ActionBtn href="/it/settings/security" label="ประวัติงาน" icon={<Activity size={16} />} />
               </div>
             </div>
 
-            <div className="bg-white border border-neutral-200 rounded-3xl p-8">
-              <h3 className="text-sm font-black uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-2">
-                สถานะการทำงาน <span className="inline-block w-1 h-1 bg-neutral-300 rounded-full" /> ประสิทธิภาพ
-              </h3>
-              <div className="space-y-5">
-                <HealthBar label="การตอบสนอง API" percentage={98} />
-                <HealthBar label="ฐานข้อมูล" percentage={100} />
-                <HealthBar label="พื้นที่จัดเก็บ" percentage={45} />
+            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+              <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">สุขภาพของระบบ</h3>
+              <div className="space-y-4">
+                <HealthMetric label="API Response" val={98} />
+                <HealthMetric label="Database" val={100} />
+                <HealthMetric label="Storage" val={45} />
               </div>
             </div>
           </div>
@@ -208,160 +184,155 @@ export default function ITDashboard() {
   );
 }
 
-// --- Sub-Components ---
+// --- Internal Components ---
 
-function StatCard({ title, mainValue, subStats, icon, dark = false, className = "", unit = "" }: any) {
+function StatCard({ title, value, subtext, icon, urgent }: any) {
   return (
-    <div className={`p-8 rounded-[2.5rem] transition-all duration-300 group ${dark ? 'bg-neutral-900 text-white shadow-xl hover:bg-black' : 'bg-white border border-neutral-100 text-neutral-900 shadow-sm hover:border-black hover:shadow-md'} ${className}`}>
-      <div className="flex justify-between items-start mb-8">
-        <div className={`p-3.5 rounded-2xl ${dark ? 'bg-white/10' : 'bg-neutral-50 border border-neutral-100'}`}>{icon}</div>
-        <ArrowUpRight size={18} className={`${dark ? 'text-neutral-600 transition-colors group-hover:text-white' : 'text-neutral-300 transition-colors group-hover:text-black'}`} />
+    <div className={`bg-white border p-5 rounded-xl shadow-sm transition-all hover:shadow-md ${urgent ? 'border-rose-100 bg-rose-50/10' : 'border-slate-200'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">{icon}</div>
+        <ArrowUpRight size={16} className="text-slate-300" />
       </div>
-      <div>
-        <p className={`text-[11px] font-black uppercase tracking-widest mb-1.5 ${dark ? 'text-neutral-500' : 'text-neutral-400'}`}>{title}</p>
-        <div className="flex items-baseline gap-1.5 mb-8">
-          <span className="text-6xl font-black font-mono tracking-tighter leading-none">{mainValue}</span>
-          {unit && <span className="text-2xl font-black opacity-30">{unit}</span>}
+      <p className="text-sm font-medium text-slate-500">{title}</p>
+      <div className="mt-1 flex items-baseline gap-2">
+        <span className="text-3xl font-bold tracking-tight">{value}</span>
+      </div>
+      <p className={`text-xs mt-2 font-medium ${urgent ? 'text-rose-600' : 'text-slate-400'}`}>{subtext}</p>
+    </div>
+  );
+}
+
+function Section({ title, icon, href, children }: any) {
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="flex items-center gap-2 font-bold text-slate-700">
+          {icon} <span>{title}</span>
         </div>
+        <a href={href} className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+          ดูทั้งหมด <ChevronRight size={12} />
+        </a>
       </div>
-      <div className={`grid grid-cols-2 gap-4 pt-8 border-t border-dashed ${dark ? 'border-neutral-800' : 'border-neutral-100'}`}>
-        {subStats.map((s: any, i: number) => (
-          <div key={i}>
-            <p className={`text-[10px] font-black uppercase tracking-tight mb-1.5 ${dark ? 'text-neutral-500' : 'text-neutral-400'}`}>{s.label}</p>
-            <p className={`text-xl font-black font-mono leading-none ${s.urgent ? 'text-rose-500' : ''}`}>{s.value}</p>
-          </div>
-        ))}
+      <div className="overflow-x-auto">
+        {children}
       </div>
     </div>
   );
 }
 
-function SectionHeader({ title, icon, href }: any) {
-  return (
-    <div className="flex items-center justify-between mb-4 px-2">
-      <div className="flex items-center gap-2.5">
-        <span className="p-2 bg-black text-white rounded-xl shadow-lg shadow-black/10 group-hover:scale-110 transition-transform">{icon}</span>
-        <h2 className="text-xl font-black tracking-tight">{title}</h2>
-      </div>
-      <a href={href} className="text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-black transition-all flex items-center gap-1.5 group">
-        ดูทั้งหมด <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-      </a>
-    </div>
-  );
-}
-
-function ActivityTable({ items, type }: { items: ActivityItem[], type: 'loan' | 'repair' }) {
+function ActivityList({ items, type }: { items: ActivityItem[], type: 'loan' | 'repair' }) {
   if (items.length === 0) {
     return (
-      <div className="p-16 text-center">
-        <div className="inline-flex items-center justify-center p-4 bg-neutral-50 rounded-full mb-4">
-          <Activity className="text-neutral-300" size={32} />
-        </div>
-        <p className="text-sm font-bold text-neutral-400 italic">ไม่พบรายการล่าสุดในระบบ</p>
+      <div className="p-12 text-center text-slate-400 text-sm italic">
+        ไม่พบรายการข้อมูลในขณะนี้
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-neutral-100 bg-neutral-50/50">
-            <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-neutral-400">ข้อมูลรายการ / ชื่อสิ่งของ</th>
-            <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-neutral-400">ผู้รับผิดชอบ / วันที่</th>
-            <th className="px-6 py-5 text-[11px] font-black uppercase tracking-widest text-neutral-400 text-right">สถานะ</th>
+    <table className="w-full text-left border-collapse min-w-[500px]">
+      <thead>
+        <tr className="bg-slate-50 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+          <th className="px-5 py-3">รายละเอียด</th>
+          <th className="px-5 py-3">ข้อมูลผู้ใช้ / วันที่</th>
+          <th className="px-5 py-3 text-right">สถานะ</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-100">
+        {items.map((item) => (
+          <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+            <td className="px-5 py-4">
+              <p className="text-sm font-semibold text-slate-900 leading-none">
+                {type === 'loan' ? item.itemName : item.problemTitle}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1.5 font-mono">
+                {type === 'loan' ? 'ASSET-SYSTEM' : `#${item.ticketCode}`}
+              </p>
+            </td>
+            <td className="px-5 py-4">
+              <p className="text-xs font-medium text-slate-600">{type === 'loan' ? item.borrowerName : 'ฝ่ายเทคนิค'}</p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                {safeFormat(type === 'loan' ? item.borrowAt : item.createdAt, 'dd MMM yyyy')}
+              </p>
+            </td>
+            <td className="px-5 py-4 text-right">
+              <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border ${getStatusStyles(item.status)}`}>
+                {translateStatus(item.status)}
+              </span>
+            </td>
           </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-50">
-          {items.map((item) => (
-            <tr key={item.id} className="hover:bg-neutral-50 transition-colors group">
-              <td className="px-6 py-4">
-                <p className="font-bold text-sm text-neutral-900 group-hover:underline underline-offset-4">
-                  {type === 'loan' ? item.itemName : item.problemTitle}
-                </p>
-                <p className="text-[10px] font-mono text-neutral-400">{type === 'loan' ? 'ASSET-LOAN' : `#${item.ticketCode}`}</p>
-              </td>
-              <td className="px-6 py-4">
-                <p className="text-xs font-bold text-neutral-700">{type === 'loan' ? item.borrowerName : 'Technical Support'}</p>
-                <p className="text-[10px] text-neutral-400">{safeFormat(type === 'loan' ? item.borrowAt : item.createdAt, 'dd MMM yyyy')}</p>
-              </td>
-              <td className="px-6 py-4 text-right">
-                <span className={`inline-block px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.1em] border transition-all ${getStatusStyle(item.status)}`}>
-                  {translateStatus(item.status)}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
-function SidebarButton({ href, label, icon }: any) {
+function ActionBtn({ href, label, icon }: any) {
   return (
-    <a href={href} className="flex flex-col items-center justify-center p-5 rounded-3xl bg-white/5 border border-white/10 hover:bg-white hover:text-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group">
-      <div className="mb-3 group-hover:scale-110 transition-transform">{icon}</div>
-      <span className="text-[10px] font-black uppercase tracking-[0.15em]">{label}</span>
+    <a href={href} className="flex flex-col items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white hover:text-slate-900 transition-all text-xs font-bold">
+      {icon} <span>{label}</span>
     </a>
   );
 }
 
-function translateStatus(status: string) {
-  switch (status) {
-    case 'PENDING': return 'รอดำเนินการ';
-    case 'BORROWED': return 'กำลังยืม';
-    case 'RETURNED': return 'คืนแล้ว';
-    case 'OVERDUE': return 'เกินกำหนด';
-    case 'COMPLETED': return 'เสร็จสิ้น';
-    case 'URGENT': return 'เร่งด่วน';
-    case 'REPAIRING': return 'กำลังซ่อม';
-    default: return status;
-  }
-}
-
-function HealthBar({ label, percentage }: any) {
+function HealthMetric({ label, val }: any) {
   return (
     <div>
-      <div className="flex justify-between text-[10px] font-black uppercase mb-1">
+      <div className="flex justify-between text-[11px] font-bold uppercase text-slate-500 mb-1.5">
         <span>{label}</span>
-        <span className={percentage < 50 ? 'text-rose-500' : 'text-neutral-400'}>{percentage}%</span>
+        <span>{val}%</span>
       </div>
-      <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
+      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
         <div 
-          className={`h-full transition-all duration-1000 ${percentage < 50 ? 'bg-black' : 'bg-neutral-900'}`}
-          style={{ width: `${percentage}%` }}
+          className={`h-full transition-all duration-500 ${val < 50 ? 'bg-rose-500' : 'bg-slate-800'}`} 
+          style={{ width: `${val}%` }}
         />
       </div>
     </div>
   );
 }
 
-function getStatusStyle(status: string) {
-  switch (status) {
+function translateStatus(s: string) {
+  switch (s) {
+    case 'PENDING': return 'รอรับเรื่อง';
+    case 'BORROWED': return 'กำลังยืม';
+    case 'RETURNED': return 'คืนแล้ว';
+    case 'OVERDUE': return 'เกินกำหนด';
+    case 'COMPLETED': return 'เสร็จสิ้น';
+    case 'REPAIRING': return 'กำลังซ่อม';
+    default: return s;
+  }
+}
+
+function getStatusStyles(s: string) {
+  switch (s) {
     case 'COMPLETED':
     case 'RETURNED':
-      return 'bg-neutral-900 text-white border-neutral-900';
-    case 'PENDING':
-    case 'BORROWED':
-      return 'bg-white text-neutral-900 border-neutral-200';
+      return 'bg-emerald-50 text-emerald-700 border-emerald-100';
     case 'OVERDUE':
     case 'URGENT':
-      return 'bg-rose-50 text-rose-600 border-rose-100';
+      return 'bg-rose-50 text-rose-700 border-rose-100';
+    case 'PENDING':
+    case 'BORROWED':
+    case 'REPAIRING':
+      return 'bg-slate-50 text-slate-700 border-slate-200';
     default:
-      return 'bg-neutral-50 text-neutral-400 border-neutral-100';
+      return 'bg-slate-50 text-slate-400 border-slate-200';
   }
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-neutral-50 p-8 animate-pulse">
-      <div className="max-w-[1400px] mx-auto space-y-8">
-        <div className="h-12 w-64 bg-neutral-200 rounded-lg" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <div key={i} className="h-48 bg-white rounded-[2.5rem] border border-neutral-200" />)}
+    <div className="min-h-screen bg-slate-50 p-8 animate-pulse">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="h-10 w-48 bg-slate-200 rounded-lg" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white rounded-xl border border-slate-200 shadow-sm" />)}
         </div>
-        <div className="h-96 bg-white rounded-3xl border border-neutral-200" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 h-96 bg-white rounded-xl border border-slate-200 shadow-sm" />
+          <div className="h-96 bg-white rounded-xl border border-slate-200 shadow-sm" />
+        </div>
       </div>
     </div>
   );
