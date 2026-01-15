@@ -252,6 +252,12 @@ function RepairLiffFormContent() {
       }
 
       if (linePictureUrl) payload.append("pictureUrl", linePictureUrl);
+      
+      // DEBUG: Log FormData contents
+      // Note: JSON.stringify(payload) won't work, need to iterate
+      const debugObj: any = {};
+      payload.forEach((value, key) => debugObj[key] = value);
+      console.log('Sending Payload:', debugObj);
 
       const data = await apiFetch("/api/repairs/liff/create", {
         method: "POST",
