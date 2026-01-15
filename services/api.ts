@@ -65,7 +65,16 @@ export async function apiFetch(url: string, options?: string | FetchOptions | "G
   }
 
   try {
-    const res = await fetch(API_URL + url, {
+    // Determine the full URL
+    let fullUrl = API_URL + url;
+
+    // Fix for 405 Error: If using relative path (API_URL is empty) and URL doesn't start with /api, 
+    // prepend /api so it matches the Next.js rewrite rule.
+    if (API_URL === "" && !url.startsWith("/api")) {
+       fullUrl = `/api${url.startsWith("/") ? "" : "/"}${url}`;
+    }
+
+    const res = await fetch(fullUrl, {
       method,
       headers,
       body: requestBody,
