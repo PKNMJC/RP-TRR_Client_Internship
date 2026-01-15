@@ -755,8 +755,8 @@ export default function ITRepairsPage() {
                     href={`tel:${selectedRepair.reporterPhone}`}
                     className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:border-black hover:bg-black hover:text-white group transition-all"
                   >
-                    <Phone size={16} className="text-gray-400 group-hover:text-white" />
-                    <span className="text-sm font-medium">{selectedRepair.reporterPhone}</span>
+                    <Phone size={16} className="text-black group-hover:text-white" />
+                    <span className="text-sm font-bold text-black group-hover:text-white">{selectedRepair.reporterPhone}</span>
                   </a>
                 ) : (
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-gray-200 text-gray-300">
@@ -764,12 +764,6 @@ export default function ITRepairsPage() {
                     <span className="text-sm">ไม่ระบุเบอร์โทร</span>
                   </div>
                 )}
-                <div className={`flex items-center gap-3 p-3 rounded-xl border ${
-                  selectedRepair.reporterLineId ? 'border-gray-100 text-gray-900 bg-gray-50/50' : 'border-dashed border-gray-200 text-gray-300'
-                }`}>
-                  <MessageCircle size={16} className={selectedRepair.reporterLineId ? "text-gray-400" : ""} />
-                  <span className="text-sm font-mono">{selectedRepair.reporterLineId || "ไม่ระบุ LINE ID"}</span>
-                </div>
               </div>
             </div>
 
