@@ -50,6 +50,7 @@ import {
   FileText,
   Calendar,
   Share2,
+  Plus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -87,6 +88,9 @@ interface RepairTicket {
     name: string;
     email?: string;
     department?: string;
+    lineOALink?: {
+      pictureUrl?: string; // New nested field
+    };
   };
   notes?: string;
   logs?: RepairLog[];
@@ -758,88 +762,136 @@ export default function ITRepairsPage() {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 {/* Left Column - Reporter Info */}
                 <div className="md:col-span-2 space-y-4">
-                  {/* Reporter Card */}
+                  {/* Reporter Card - Premium Redesign */}
                   <div className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div className="absolute top-0 left-0 right-0 h-20 bg-neutral-900"></div>
-                    <div className="relative pt-10 pb-5 px-5">
-                      {/* Avatar */}
-                      <div className="flex justify-center mb-3">
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg border-4 border-white">
-                            <span className="text-2xl font-bold text-neutral-800">
-                              {(selectedRepair.reporterName || selectedRepair.user?.name || "?").charAt(0).toUpperCase()}
-                            </span>
+                    <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+                      {/* Abstract Decoration */}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full blur-xl -ml-5 -mb-5"></div>
+                    </div>
+                    
+                    <div className="relative pt-12 pb-6 px-6">
+                      {/* Avatar with Status Indicator */}
+                      <div className="flex justify-center mb-4">
+                        <div className="relative group">
+                          <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-lg shadow-black/10 transition-transform duration-300 group-hover:scale-105">
+                            {selectedRepair.user?.lineOALink?.pictureUrl ? (
+                              <img 
+                                src={selectedRepair.user.lineOALink.pictureUrl} 
+                                alt="Profile" 
+                                className="w-full h-full rounded-xl object-cover bg-gray-100"
+                              />
+                            ) : (
+                              <div className="w-full h-full rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                                <span className="text-3xl font-black text-neutral-300">
+                                  {(selectedRepair.reporterName || selectedRepair.user?.name || "?").charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center border-2 border-white shadow-md">
-                            <User className="text-white" size={12} />
+                          {/* Role Badge */}
+                          <div className="absolute -bottom-2 -right-2 bg-white rounded-lg p-1 shadow-md border border-gray-100">
+                            <div className="bg-neutral-900 text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              Requester
+                            </div>
                           </div>
                         </div>
                       </div>
                       
-                      <h3 className="text-center text-base font-bold text-gray-900 mb-0.5">
-                        {selectedRepair.reporterName || selectedRepair.user?.name || "ไม่ระบุชื่อ"}
-                      </h3>
-                      <p className="text-center text-xs text-gray-500 mb-3">
-                        {selectedRepair.reporterDepartment || selectedRepair.user?.department || "ไม่ระบุแผนก"}
-                      </p>
+                      <div className="text-center mb-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                          {selectedRepair.reporterName || selectedRepair.user?.name || "ไม่ระบุชื่อ"}
+                        </h3>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100">
+                          <Building2 size={12} className="text-blue-500" />
+                          <span className="text-xs font-semibold text-blue-700">
+                            {selectedRepair.reporterDepartment || selectedRepair.user?.department || "ไม่ระบุแผนก"}
+                          </span>
+                        </div>
+                      </div>
                       
-                      {/* Contact Info */}
-                      <div className="space-y-3">
-                        {selectedRepair.reporterPhone && (
+                      {/* Contact Info - Stacked */}
+                      <div className="space-y-3 pt-4 border-t border-dashed border-gray-100">
+                        {selectedRepair.reporterPhone ? (
                           <a 
                             href={`tel:${selectedRepair.reporterPhone}`}
-                            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 transition-colors group"
+                            className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-black hover:text-white transition-all group border border-transparent hover:border-black/5"
                           >
-                            <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                              <Phone className="text-white" size={18} />
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm text-gray-600 group-hover:text-black transition-colors">
+                                <Phone size={16} />
+                              </div>
+                              <span className="text-xs font-bold">เบอร์โทรศัพท์</span>
                             </div>
-                            <div>
-                              <p className="text-[9px] uppercase tracking-wider text-neutral-400 font-semibold">โทรศัพท์</p>
-                              <p className="text-xs font-semibold text-neutral-700">{selectedRepair.reporterPhone}</p>
-                            </div>
+                            <span className="text-sm font-semibold font-mono">{selectedRepair.reporterPhone}</span>
                           </a>
+                        ) : (
+                          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 opacity-50 cursor-not-allowed">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                                  <Phone size={16} className="text-gray-400" />
+                                </div>
+                                <span className="text-xs font-bold text-gray-400">เบอร์โทรศัพท์</span>
+                             </div>
+                             <span className="text-xs text-gray-400 font-medium">ไม่ระบุ</span>
+                          </div>
                         )}
                         
-                        {selectedRepair.reporterLineId && (
-                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
-                            <div className="w-10 h-10 rounded-xl bg-neutral-700 flex items-center justify-center shadow-md">
-                              <MessageCircle className="text-white" size={18} />
+                        {selectedRepair.reporterLineId ? (
+                         <div className="flex items-center justify-between p-3 rounded-xl bg-[#06C755]/5 hover:bg-[#06C755] transition-all group">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm text-[#06C755]">
+                                <MessageCircle size={18} />
+                              </div>
+                              <span className="text-xs font-bold text-gray-600 group-hover:text-white transition-colors">LINE ID</span>
                             </div>
-                            <div>
-                              <p className="text-[9px] uppercase tracking-wider text-neutral-400 font-semibold">LINE</p>
-                              <p className="text-xs font-mono font-semibold text-neutral-700">{selectedRepair.reporterLineId.slice(0, 10)}...</p>
-                            </div>
+                            <span className="text-[10px] font-mono font-bold text-[#06C755] group-hover:text-white transition-colors uppercase tracking-tight">
+                              {selectedRepair.reporterLineId.slice(0, 8)}...
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 opacity-50 cursor-not-allowed">
+                             <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                                  <MessageCircle size={16} className="text-gray-400" />
+                                </div>
+                                <span className="text-xs font-bold text-gray-400">LINE ID</span>
+                             </div>
+                             <span className="text-xs text-gray-400 font-medium">ไม่ระบุ</span>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Assignment Card */}
+                  {/* Assignment Card - Compact */}
                   <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-neutral-900 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
-                        <User className="text-neutral-600" size={16} />
-                      </div>
-                      ผู้รับผิดชอบ
+                    <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+                      ผู้รับผิดชอบงาน
                     </h4>
                     {selectedRepair?.assignee?.name ? (
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-neutral-50 border border-neutral-200">
-                        <div className="w-10 h-10 rounded-xl bg-neutral-800 flex items-center justify-center shadow-md">
-                          <span className="text-white font-bold">{selectedRepair.assignee.name.charAt(0).toUpperCase()}</span>
+                      <div className="flex items-center gap-3 bg-neutral-900 text-white p-4 rounded-xl shadow-lg shadow-neutral-900/20">
+                        <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/10">
+                          <span className="text-lg font-bold">{selectedRepair.assignee.name.charAt(0).toUpperCase()}</span>
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{selectedRepair.assignee.name}</p>
-                          <p className="text-xs text-gray-500">เจ้าหน้าที่ IT</p>
+                          <p className="text-sm font-bold">{selectedRepair.assignee.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            <p className="text-[10px] text-gray-300 font-medium uppercase tracking-wide">IT Support</p>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 border border-dashed border-gray-200">
-                        <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                          <User className="text-gray-400" size={18} />
-                        </div>
-                        <p className="text-sm text-gray-400 italic">ยังไม่มีผู้รับผิดชอบ</p>
-                      </div>
+                       <button
+                          onClick={() => handleAcceptRepair(selectedRepair.id)}
+                          className="w-full group flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-black hover:bg-gray-50 transition-all duration-300"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Plus size={20} className="text-gray-400 group-hover:text-black" />
+                          </div>
+                          <span className="text-xs font-bold text-gray-400 group-hover:text-black">คลิกเพื่อรับงานนี้</span>
+                        </button>
                     )}
                   </div>
                 </div>
