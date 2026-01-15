@@ -194,6 +194,7 @@ function RepairLiffFormContent() {
       setSuccess({ show: true, ticketCode: data.ticketCode });
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Submission failed";
+      console.error("Submit Error:", err);
       setErrors({ submit: errorMessage });
     } finally {
       setLoading(false);
@@ -406,6 +407,17 @@ function RepairLiffFormContent() {
               </label>
             ))}
           </div>
+
+          {/* Error Message Display */}
+          {errors.submit && (
+            <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-red-800 dark:text-red-300">เกิดข้อผิดพลาด</h4>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{errors.submit}</p>
+              </div>
+            </div>
+          )}
 
           {/* Submit Button */}
           <button
