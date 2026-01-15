@@ -16,10 +16,27 @@ export async function GET(request: NextRequest) {
   });
 
   if (liffClientId || liffRedirectUri) {
-    console.log('LIFF request detected at root - redirecting to LIFF entry point');
-    const liffEntryUrl = new URL('/repairs/liff', request.nextUrl.origin);
-    searchParams.forEach((value, key) => liffEntryUrl.searchParams.append(key, value));
-    return NextResponse.redirect(liffEntryUrl.toString());
+    console.log('LIFF request detected at root');
+    
+    // Check for deep link in liff.state
+    const liffState = searchParams.get('liff.state');
+    let targetPath = '/repairs/liff';
+    
+    if (liffState && liffState.startsWith('/')) {
+      targetPath = liffState;
+      console.log('LIFF deep link detected in liff.state:', targetPath);
+    }
+    
+    const targetUrl = new URL(targetPath, request.nextUrl.origin);
+    // Append all original search params to the target URL
+    searchParams.forEach((value, key) => {
+      if (key !== 'liff.state') { // Avoid duplicating state if we used it for the path
+        targetUrl.searchParams.append(key, value);
+      }
+    });
+
+    console.log('Redirecting LIFF root request to:', targetUrl.toString());
+    return NextResponse.redirect(targetUrl.toString());
   }
 
   if (code) {

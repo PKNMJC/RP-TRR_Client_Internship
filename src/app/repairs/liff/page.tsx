@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
-import { AlertCircle, CheckCircle2, Phone, Mail, Clock, ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, Phone, Mail, Clock, ArrowLeft, Wrench, Search, FilePlus, LayoutDashboard } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
 
@@ -13,7 +13,8 @@ function RepairLiffContent() {
   const router = useRouter();
   const actionFromParam = searchParams.get("action");
   const ticketIdFromParam = searchParams.get("id");
-  const action = actionFromParam || (ticketIdFromParam ? "history" : "create");
+  // Default to null if no explicit action or id is provided, which will trigger the Choice Portal
+  const action = actionFromParam || (ticketIdFromParam ? "history" : null);
   const [lineUserId, setLineUserId] = useState<string>(searchParams.get("lineUserId") || "");
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -524,6 +525,51 @@ function RepairLiffContent() {
             </div>
           )}
         </div>
+      </div>
+    );
+  }
+
+  // Action: Portal (Choice Menu)
+  if (!action) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 space-y-6">
+        <div className="max-w-xs w-full text-center space-y-2 mb-4">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-blue-500/20 mb-4">
+            <Wrench className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-800">ระบบแจ้งซ่อม IT</h1>
+          <p className="text-slate-500 text-sm">กรุณาเลือกรายการที่คุณต้องการ</p>
+        </div>
+
+        <div className="w-full max-w-xs grid grid-cols-1 gap-4">
+          <button 
+            onClick={() => router.push(`/repairs/liff/form?lineUserId=${lineUserId}`)}
+            className="group bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-blue-500 transition-all flex flex-col items-center text-center space-y-3"
+          >
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+              <FilePlus className="w-6 h-6 text-blue-600 group-hover:text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-slate-800">แจ้งซ่อมใหม่</p>
+              <p className="text-xs text-slate-400">ส่งเรื่องแจ้งปัญหาไอที</p>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => router.push(`/repairs/liff/tracking?lineUserId=${lineUserId}`)}
+            className="group bg-white border border-slate-200 p-6 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-blue-500 transition-all flex flex-col items-center text-center space-y-3"
+          >
+            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
+              <Search className="w-6 h-6 text-indigo-600 group-hover:text-white" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-slate-800">ติดตามสถานะ</p>
+              <p className="text-xs text-slate-400">ตรวจสอบความคืบหน้า</p>
+            </div>
+          </button>
+        </div>
+
+        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ticketing Portal v2.0</p>
       </div>
     );
   }
