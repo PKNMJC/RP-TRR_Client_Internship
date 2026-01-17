@@ -1,25 +1,20 @@
 "use client";
 
-import { useState, useEffect, Suspense, useRef } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  AlertCircle,
   CheckCircle2,
   Loader2,
-  Upload,
   X,
-  MapPin,
-  Phone,
-  User,
-  Building2,
-  Wrench,
   Camera,
   Image as ImageIcon,
   ChevronRight,
-  Info,
-  Plus,
+  MapPin,
+  AlertCircle,
+  Hash,
+  User,
+  Phone,
   LayoutGrid,
-  ArrowLeft,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
@@ -29,20 +24,20 @@ const URGENCY_LEVELS = [
   {
     value: "NORMAL",
     label: "ปกติ",
-    subLabel: "ความเร็วมาตรฐาน",
-    color: "blue",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+    activeColor: "bg-blue-600 text-white border-blue-600",
   },
   {
     value: "URGENT",
     label: "ด่วน",
-    subLabel: "จำเป็นต้องรีบใช้",
-    color: "amber",
+    color: "bg-amber-50 text-amber-700 border-amber-200",
+    activeColor: "bg-amber-500 text-white border-amber-500",
   },
   {
     value: "CRITICAL",
     label: "ด่วนที่สุด",
-    subLabel: "งานหยุดชะงัก",
-    color: "red",
+    color: "bg-red-50 text-red-700 border-red-200",
+    activeColor: "bg-red-600 text-white border-red-600",
   },
 ];
 
@@ -279,54 +274,38 @@ function RepairLiffFormContent() {
   if (success.show) return <SuccessView ticketCode={success.ticketCode} />;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-12 font-sans transition-colors">
-      {/* Premium Header */}
-      <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <Wrench className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tight leading-tight">
-                แจ้งซ่อม IT
-              </h1>
-              <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                Service Request
-              </p>
-            </div>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
+      {/* Header */}
+      <header className="bg-white px-6 pt-12 pb-6 shadow-sm sticky top-0 z-20">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              แจ้งซ่อม IT
+            </h1>
+            <p className="text-sm text-slate-500 font-medium">
+              Create Service Request
+            </p>
           </div>
           {linePictureUrl && (
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity blur-sm"></div>
-              <img
-                src={linePictureUrl}
-                alt="profile"
-                className="relative w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 object-cover"
-              />
-            </div>
+            <img
+              src={linePictureUrl}
+              alt="Profile"
+              className="w-10 h-10 rounded-full border border-slate-100 shadow-sm"
+            />
           )}
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto px-6 pt-8">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Section: Reporter */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/10 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
-
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
-                <User size={18} />
-              </div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                ข้อมูลส่วนตัว
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="group">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1 transition-colors group-focus-within:text-blue-600">
+      <main className="max-w-md mx-auto px-6 py-6 space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section 1: Contact Info */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+              <User size={16} /> ข้อมูลผู้แจ้ง
+            </h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
                   ชื่อ-นามสกุล <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -334,43 +313,43 @@ function RepairLiffFormContent() {
                   name="reporterName"
                   value={formData.reporterName}
                   onChange={handleInputChange}
-                  placeholder="เช่น สมชาย ใจดี"
-                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 dark:focus:border-blue-500/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 font-medium"
+                  placeholder="ชื่อ-นามสกุล"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
-                    เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
+                    เบอร์โทร <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="tel"
                       name="reporterPhone"
                       value={formData.reporterPhone}
                       onChange={handleInputChange}
-                      placeholder="08X-XXX-XXXX"
-                      className="w-full pl-12 pr-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all font-medium"
+                      placeholder="เบอร์โทร"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
-                    แผนก / ฝ่าย <span className="text-red-500">*</span>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
+                    แผนก <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="reporterDepartment"
                     value={formData.reporterDepartment}
                     onChange={handleInputChange}
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all font-medium appearance-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none"
                     required
                   >
-                    <option value="">เลือกหน่วยงาน</option>
+                    <option value="">เลือกแผนก</option>
                     {DEPARTMENTS.map((d) => (
                       <option key={d.value} value={d.value}>
                         {d.label}
@@ -381,140 +360,147 @@ function RepairLiffFormContent() {
               </div>
 
               {formData.reporterDepartment === "OTHER" && (
-                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                  <input
-                    type="text"
-                    name="otherDepartment"
-                    value={formData.otherDepartment}
-                    onChange={handleInputChange}
-                    placeholder="โปรดระบุแผนกของคุณ"
-                    className="w-full px-5 py-4 bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all placeholder:text-blue-300 dark:placeholder:text-blue-900"
-                    required
-                  />
-                </div>
+                <input
+                  type="text"
+                  name="otherDepartment"
+                  value={formData.otherDepartment}
+                  onChange={handleInputChange}
+                  placeholder="ระบุแผนกของคุณ"
+                  className="w-full px-4 py-3 bg-blue-50/50 border border-blue-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-blue-900 placeholder:text-blue-300"
+                  required
+                />
               )}
             </div>
-          </section>
+          </div>
 
-          {/* Section: Problem */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
-                <Info size={18} />
-              </div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                รายละเอียดปัญหา
-              </h2>
-            </div>
-
-            <div className="space-y-6">
+          {/* Section 2: Issue Details */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-2">
+              <AlertCircle size={16} /> รายละเอียดงาน
+            </h2>
+            <div className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
-                  หัวข้อแจ้งซ่อม <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
+                  หัวข้อเรื่อง <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="problemTitle"
                   value={formData.problemTitle}
                   onChange={handleInputChange}
-                  placeholder="เช่น ปริ้นเตอร์ไม่ออก, คอมพิวเตอร์ช้า"
-                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all font-semibold text-lg"
+                  placeholder="เช่น เครื่องปริ้นไม่ออก"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
-                  รายละเอียดเพิ่มเติม
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
+                  รายละเอียด
                 </label>
                 <textarea
                   name="problemDescription"
                   value={formData.problemDescription}
                   onChange={handleInputChange}
-                  rows={4}
-                  placeholder="กรุณาอธิบายปัญหาที่เกิดขึ้นโดยละเอียด..."
-                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all resize-none font-medium"
+                  rows={3}
+                  placeholder="อธิบายอาการเพิ่มเติม..."
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 resize-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
-                  สถานที่ / อาคาร / ชั้น <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
+                  สถานที่ <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     name="location"
                     value={formData.location}
                     onChange={handleInputChange}
-                    placeholder="เช่น อาคาร A ชั้น 2 ห้องบัญชี"
-                    className="w-full pl-12 pr-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all font-medium"
+                    placeholder="ระบุจุดที่ตั้งอุปกรณ์"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                     required
                   />
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* Section: Photos */}
-          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
-                  <Camera size={18} />
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 ml-1">
+                  ความเร่งด่วน
+                </label>
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  {URGENCY_LEVELS.map((level) => (
+                    <button
+                      key={level.value}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          urgency: level.value,
+                        }))
+                      }
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        formData.urgency === level.value
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-400 hover:text-slate-600"
+                      }`}
+                    >
+                      {level.label}
+                    </button>
+                  ))}
                 </div>
-                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
-                  รูปถ่ายประกอบ
-                </h2>
               </div>
-              <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full text-slate-500 tracking-widest">
-                {files.length} / 3
-              </span>
             </div>
+          </div>
 
-            <div className="grid grid-cols-3 gap-4">
+          {/* Section 3: Attachments */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+              <Camera size={16} /> รูปภาพ ({files.length}/3)
+            </h2>
+
+            <div className="grid grid-cols-4 gap-3">
               {filePreviews.map((src, i) => (
                 <div
                   key={i}
-                  className="relative aspect-square rounded-[1.5rem] overflow-hidden group shadow-sm bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
+                  className="aspect-square relative rounded-xl overflow-hidden bg-slate-100 group border border-slate-100 shadow-sm"
                 >
                   {src.length > 5 ? (
                     <img
                       src={src}
                       alt="preview"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">
+                    <div className="w-full h-full flex items-center justify-center text-2xl">
                       {src}
                     </div>
                   )}
                   <button
                     type="button"
                     onClick={() => removeFile(i)}
-                    className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 hover:bg-red-500 hover:text-white text-slate-900 p-2 rounded-xl shadow-lg transition-all backdrop-blur-md opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
+                    className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <X size={14} strokeWidth={3} />
+                    <X size={20} />
                   </button>
                 </div>
               ))}
+
               {files.length < 3 && (
                 <button
                   type="button"
                   onClick={() => setShowImageSource(true)}
-                  className="aspect-square rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group"
+                  className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:text-blue-500 hover:bg-blue-50 hover:border-blue-200 transition-all gap-1"
                 >
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-all">
-                    <Plus size={20} />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    เพิ่มรูป
-                  </span>
+                  <Camera size={20} />
+                  <span className="text-[10px] font-bold">เพิ่มรูป</span>
                 </button>
               )}
             </div>
 
+            {/* Hidden Inputs */}
             <input
               ref={fileInputRef}
               type="file"
@@ -531,184 +517,119 @@ function RepairLiffFormContent() {
               onChange={handleFileChange}
               className="hidden"
             />
-          </section>
-
-          {/* Section: Urgency */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-4 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>{" "}
-              ความเร่งด่วนของงาน
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {URGENCY_LEVELS.map((level) => (
-                <label
-                  key={level.value}
-                  className="relative cursor-pointer group"
-                >
-                  <input
-                    type="radio"
-                    name="urgency"
-                    value={level.value}
-                    checked={formData.urgency === level.value}
-                    onChange={handleInputChange}
-                    className="sr-only peer"
-                  />
-                  <div
-                    className={`p-6 rounded-3xl border-2 transition-all duration-300 ring-4 ring-transparent flex flex-col items-center gap-1
-                    ${
-                      formData.urgency === level.value
-                        ? level.color === "blue"
-                          ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 ring-blue-500/5"
-                          : level.color === "amber"
-                          ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/20 ring-amber-500/5"
-                          : "border-red-500 bg-red-50/50 dark:bg-red-900/20 ring-red-500/5"
-                        : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-200 dark:hover:border-slate-700"
-                    }`}
-                  >
-                    <span
-                      className={`text-base font-black ${
-                        formData.urgency === level.value
-                          ? "text-slate-900 dark:text-white"
-                          : "text-slate-500"
-                      }`}
-                    >
-                      {level.label}
-                    </span>
-                    <span className="text-[10px] font-bold opacity-50 tracking-wide uppercase">
-                      {level.subLabel}
-                    </span>
-                  </div>
-                </label>
-              ))}
-            </div>
           </div>
 
           {errors.submit && (
-            <div className="p-6 rounded-3xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800/30 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-4">
-              <AlertCircle className="w-6 h-6 text-red-600 shrink-0" />
-              <div className="flex-1">
-                <h4 className="text-sm font-black text-red-900 dark:text-red-200">
-                  ขออภัย เกิดข้อผิดพลาด
-                </h4>
-                <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-1 font-medium">
-                  {errors.submit}
-                </p>
-              </div>
+            <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+              <p className="text-xs text-red-600 font-medium">
+                {errors.submit}
+              </p>
             </div>
           )}
 
-          <div className="pt-4 pb-12">
+          <div className="pt-4">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-6 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-[2.5rem] font-black text-lg shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98] active:brightness-90 uppercase tracking-widest"
+              className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-base shadow-lg shadow-blue-500/30 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="flex items-center gap-3">
-                  <Loader2 className="animate-spin w-5 h-5" />
-                  <span>กำลังส่งข้อมูล...</span>
-                </div>
+                <>
+                  <Loader2 className="animate-spin" size={20} /> กำลังส่ง...
+                </>
               ) : (
                 <>
-                  ส่งเรื่องแจ้งซ่อม <ChevronRight size={20} strokeWidth={3} />
+                  ยืนยันการแจ้งซ่อม <ChevronRight size={20} />
                 </>
               )}
             </button>
-            <p className="text-center text-[10px] text-slate-400 mt-6 font-bold uppercase tracking-[0.2em] opacity-50">
-              Powered by TRR IT Support Team
-            </p>
           </div>
         </form>
       </main>
 
-      {/* Modern Bottom Sheet for Image Source */}
+      {/* Image Source Bottom Sheet */}
       {showImageSource && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-2xl animate-in slide-in-from-bottom-full duration-500 ease-out border border-white/10">
-            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-8"></div>
-            <div className="flex justify-between items-center mb-8 px-2">
-              <h3 className="text-2xl font-black tracking-tight">
-                เพิ่มรูปภาพ
-              </h3>
-              <button
-                onClick={() => setShowImageSource(false)}
-                className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setShowImageSource(false)}
+        >
+          <div
+            className="w-full max-w-md bg-white rounded-t-3xl p-6 animate-in slide-in-from-bottom duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6" />
+            <h3 className="text-lg font-bold text-slate-900 mb-6 px-2">
+              เลือกรูปภาพจาก
+            </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => cameraInputRef.current?.click()}
-                className="flex flex-col items-center gap-4 p-8 rounded-[2rem] bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-all border border-blue-100/50 dark:border-blue-800/30 group"
+                onClick={() => {
+                  cameraInputRef.current?.click();
+                  setShowImageSource(false);
+                }}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
               >
-                <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20 group-hover:scale-110 transition-transform">
-                  <Camera size={28} />
-                </div>
-                <span className="text-sm font-black uppercase tracking-widest">
-                  ถ่ายรูป
-                </span>
+                <Camera size={32} />
+                <span className="text-sm font-bold">ถ่ายภาพ</span>
               </button>
 
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center gap-4 p-8 rounded-[2rem] bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-800 group"
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setShowImageSource(false);
+                }}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors"
               >
-                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center text-slate-800 dark:text-white shadow-lg border border-slate-100 dark:border-slate-700 group-hover:scale-110 transition-transform">
-                  <ImageIcon size={28} />
-                </div>
-                <span className="text-sm font-black uppercase tracking-widest">
-                  คลังภาพ
-                </span>
-              </button>
-
-              <button
-                onClick={() => setShowCategoryPicker(true)}
-                className="col-span-2 flex items-center justify-center gap-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500/50 hover:bg-blue-50/30 transition-all group mt-2"
-              >
-                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
-                  <LayoutGrid size={20} />
-                </div>
-                <span className="text-sm font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600 transition-colors">
-                  เลือกจากสัญลักษณ์แทนปัญหา
-                </span>
+                <ImageIcon size={32} />
+                <span className="text-sm font-bold">อัลบั้ม</span>
               </button>
             </div>
+
+            <button
+              onClick={() => {
+                setShowCategoryPicker(true);
+                setShowImageSource(false);
+              }}
+              className="w-full mt-4 p-4 flex items-center justify-center gap-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+            >
+              <LayoutGrid size={18} /> ใช้ไอคอนแทนปัญหา
+            </button>
+
+            <div className="h-4" />
           </div>
         </div>
       )}
 
       {/* Icon Picker Overlay */}
       {showCategoryPicker && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300 p-8">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-black tracking-tight leading-tight">
-                สัญลักษณ์
-              </h3>
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
+          onClick={() => setShowCategoryPicker(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-3xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold">เลือกไอคอน</h3>
               <button
                 onClick={() => setShowCategoryPicker(false)}
-                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                className="p-2 bg-slate-100 rounded-full text-slate-500"
               >
-                <X size={24} />
+                <X size={18} />
               </button>
             </div>
-            <p className="text-xs font-bold text-slate-400 mb-8 uppercase tracking-widest">
-              สัญลักษณ์แทนปัญหาเบื้องต้น
-            </p>
-
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-4">
               {IMAGE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => addCategoryAsImage(cat)}
-                  className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group"
+                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors"
                 >
-                  <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all group-hover:scale-125 duration-300">
-                    {cat.icon}
-                  </span>
-                  <span className="text-[10px] font-black tracking-tighter text-slate-500 group-hover:text-blue-600 uppercase text-center">
+                  <span className="text-3xl">{cat.icon}</span>
+                  <span className="text-[10px] font-bold text-slate-500">
                     {cat.label}
                   </span>
                 </button>
@@ -721,17 +642,14 @@ function RepairLiffFormContent() {
   );
 }
 
-// --- Simplified UI Components ---
+// --- Status Views ---
 
 function LoadingIndicator() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-slate-950">
-      <div className="relative">
-        <div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-900 rounded-full" />
-        <div className="w-20 h-20 border-4 border-t-blue-600 rounded-full animate-spin absolute inset-0" />
-      </div>
-      <p className="mt-8 text-xs font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">
-        Initializing System
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+        Loading...
       </p>
     </div>
   );
@@ -739,65 +657,58 @@ function LoadingIndicator() {
 
 function SuccessView({ ticketCode }: { ticketCode?: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-blue-600">
-      <div className="max-w-sm w-full bg-white dark:bg-slate-900 rounded-[3.5rem] p-12 text-center shadow-2xl animate-in zoom-in-90 duration-500">
-        <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-xl shadow-green-500/20">
-          <CheckCircle2 className="w-12 h-12 text-white" />
-        </div>
-        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
-          ส่งข้อมูลสำเร็จ!
-        </h2>
-        <p className="text-slate-500 text-sm mb-12 font-medium leading-relaxed">
-          ได้รับข้อมูลของท่านแล้ว
-          เจ้าหน้าที่จะดำเนินการตามระดับความเร่งด่วนที่ระบุไว้
-        </p>
-
-        <div className="bg-slate-50 dark:bg-slate-800/50 py-6 px-4 rounded-[2rem] mb-12 border border-slate-100 dark:border-slate-800">
-          <p className="text-[10px] text-blue-600 font-extrabold uppercase tracking-[0.2em] mb-2">
-            Ref Code
-          </p>
-          <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-            #{ticketCode}
-          </p>
-        </div>
-
-        <button
-          onClick={() => liff.closeWindow()}
-          className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black text-lg hover:opacity-90 active:scale-95 transition-all"
-        >
-          ปิดหน้าแจ้งซ่อม
-        </button>
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white text-center">
+      <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 animate-in zoom-in">
+        <CheckCircle2 size={40} />
       </div>
+      <h2 className="text-2xl font-bold text-slate-900 mb-2">
+        ส่งงานซ่อมสำเร็จ!
+      </h2>
+      <p className="text-slate-500 text-sm mb-8 max-w-[250px] leading-relaxed">
+        ระบบได้รับข้อมูลการแจ้งซ่อมของท่านเรียบร้อยแล้ว
+      </p>
+
+      {ticketCode && (
+        <div className="bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100 mb-8">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">
+            Ticket ID
+          </p>
+          <div className="flex items-center gap-2 justify-center text-xl font-black text-slate-900">
+            <Hash size={20} className="text-slate-300" /> {ticketCode}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => liff.closeWindow()}
+        className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all"
+      >
+        ปิดหน้านี้
+      </button>
     </div>
   );
 }
 
 function AddFriendView() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 bg-white dark:bg-slate-950">
-      <div className="max-w-sm text-center">
-        <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-10 border-2 border-green-50 dark:border-green-800 rotate-12">
-          <User className="text-green-600" size={40} />
-        </div>
-        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tight">
-          กรุณาเพิ่มเพื่อน
-        </h2>
-        <p className="text-slate-500 font-medium mb-12 leading-relaxed">
-          เพื่อความสะดวกในการติดตามสถานะงานซ่อม และการแจ้งเตือนต่างๆ
-          กรุณาเพิ่มเพื่อนกับเราก่อนใช้งานระบบครับ
-        </p>
-        <a
-          href={`https://line.me/R/ti/p/@${
-            process.env.NEXT_PUBLIC_LINE_OA_ID || "your-id"
-          }`}
-          className="block w-full py-6 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-[2.5rem] font-black text-xl shadow-xl shadow-green-500/30 transition-all active:scale-95"
-        >
-          Add Friend
-        </a>
-        <p className="text-[10px] text-slate-300 mt-8 font-black uppercase tracking-widest">
-          Official Support Account
-        </p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white text-center">
+      <div className="w-20 h-20 bg-green-50 text-green-600 rounded-3xl flex items-center justify-center mb-6 border-2 border-green-100">
+        <User size={36} />
       </div>
+      <h2 className="text-xl font-bold text-slate-900 mb-3">
+        กรุณาเพิ่มเพื่อน
+      </h2>
+      <p className="text-slate-500 text-sm mb-8 leading-relaxed max-w-[280px]">
+        เพื่อติดตามสถานะงานซ่อม <br /> กรุณาเพิ่มเพื่อนกับเราก่อนใช้งานครับ
+      </p>
+      <a
+        href={`https://line.me/R/ti/p/@${
+          process.env.NEXT_PUBLIC_LINE_OA_ID || "your-id"
+        }`}
+        className="w-full py-4 bg-[#06C755] text-white rounded-xl font-bold shadow-lg shadow-green-500/20 hover:bg-[#05b34c] transition-all"
+      >
+        เพิ่มเพื่อน (Add Friend)
+      </a>
     </div>
   );
 }
