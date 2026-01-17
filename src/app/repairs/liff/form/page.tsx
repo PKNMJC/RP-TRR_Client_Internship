@@ -1,20 +1,68 @@
 "use client";
 
 import { useState, useEffect, Suspense, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { 
-  AlertCircle, CheckCircle2, Loader2, Upload, X, MapPin, 
-  Phone, User, Building2, Wrench, Camera, Image as ImageIcon,
-  ChevronRight, Info, Plus, LayoutGrid
+import { useRouter } from "next/navigation";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Upload,
+  X,
+  MapPin,
+  Phone,
+  User,
+  Building2,
+  Wrench,
+  Camera,
+  Image as ImageIcon,
+  ChevronRight,
+  Info,
+  Plus,
+  LayoutGrid,
+  ArrowLeft,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
 
 // --- Constants ---
 const URGENCY_LEVELS = [
-  { value: "NORMAL", label: "ทั่วไป", subLabel: "ความเร่งด่วนปกติ", color: "peer-checked:bg-blue-50 peer-checked:border-blue-500 peer-checked:text-blue-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
-  { value: "URGENT", label: "ด่วน", subLabel: "จำเป็นต้องใช้งาน", color: "peer-checked:bg-orange-50 peer-checked:border-orange-500 peer-checked:text-orange-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
-  { value: "CRITICAL", label: "ด่วนที่สุด", subLabel: "งานหยุดชะงัก", color: "peer-checked:bg-red-50 peer-checked:border-red-500 peer-checked:text-red-700 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800" },
+  {
+    value: "NORMAL",
+    label: "ปกติ",
+    subLabel: "ความเร็วมาตรฐาน",
+    color: "blue",
+  },
+  {
+    value: "URGENT",
+    label: "ด่วน",
+    subLabel: "จำเป็นต้องรีบใช้",
+    color: "amber",
+  },
+  {
+    value: "CRITICAL",
+    label: "ด่วนที่สุด",
+    subLabel: "งานหยุดชะงัก",
+    color: "red",
+  },
+];
+
+const IMAGE_CATEGORIES = [
+  { id: "monitor", label: "หน้าจอ", icon: "📺" },
+  { id: "pc", label: "คอมพิวเตอร์", icon: "💻" },
+  { id: "printer", label: "เครื่องพิมพ์", icon: "🖨️" },
+  { id: "network", label: "เน็ตเวิร์ก", icon: "🌐" },
+  { id: "mouse_keyboard", label: "เมาส์/คีย์บอร์ด", icon: "🖱️" },
+  { id: "software", label: "ซอฟต์แวร์", icon: "💿" },
+];
+
+const DEPARTMENTS = [
+  { value: "ACCOUNTING", label: "ฝ่ายบัญชี" },
+  { value: "SALES", label: "ฝ่ายขาย" },
+  { value: "PRODUCTION", label: "ฝ่ายผลิต" },
+  { value: "IT", label: "ฝ่ายไอที" },
+  { value: "HR", label: "ฝ่ายบุคคล" },
+  { value: "MAINTENANCE", label: "ฝ่ายซ่อมบำรุง" },
+  { value: "OTHER", label: "อื่นๆ (โปรดระบุ)" },
 ];
 
 // --- Interfaces ---
@@ -31,23 +79,13 @@ interface FormData {
   urgency: string;
 }
 
-const IMAGE_CATEGORIES = [
-  { id: 'monitor', label: 'หน้าจอ', icon: '📺' },
-  { id: 'pc', label: 'คอมพิวเตอร์', icon: '💻' },
-  { id: 'printer', label: 'เครื่องพิมพ์', icon: '🖨️' },
-  { id: 'network', label: 'อินเทอร์เน็ต', icon: '🌐' },
-  { id: 'mouse_keyboard', label: 'เมาส์/คีย์บอร์ด', icon: '🖱️' },
-  { id: 'software', label: 'โปรแกรม', icon: '💿' },
-];
-
 function RepairLiffFormContent() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  
+
   // States
   const [linePictureUrl, setLinePictureUrl] = useState<string>("");
-  const [deviceOS, setDeviceOS] = useState<string>("");
   const [isFriend, setIsFriend] = useState<boolean | null>(null);
   const [formData, setFormData] = useState<FormData>({
     reporterName: "",
@@ -62,14 +100,16 @@ function RepairLiffFormContent() {
     urgency: "NORMAL",
   });
 
-  const [files, setFiles] = useState<(File | string)[]>([]); // Can be File or Category ID/Icon
+  const [files, setFiles] = useState<(File | string)[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [showImageSource, setShowImageSource] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<{ show: boolean; ticketCode?: string }>({ show: false });
+  const [success, setSuccess] = useState<{
+    show: boolean;
+    ticketCode?: string;
+  }>({ show: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [liffError, setLiffError] = useState<string | null>(null);
   const [isLiffInitializing, setIsLiffInitializing] = useState(true);
 
   // --- LIFF Initialization ---
@@ -77,14 +117,9 @@ function RepairLiffFormContent() {
     const initLiff = async () => {
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
-        if (!liffId) {
-          setLiffError("System Error: LIFF ID missing");
-          return;
-        }
+        if (!liffId) return;
 
         await liff.init({ liffId, withLoginOnExternalBrowser: true });
-        setDeviceOS(liff.getOS() || "unknown");
-
         if (!liff.isLoggedIn()) {
           liff.login();
           return;
@@ -100,8 +135,8 @@ function RepairLiffFormContent() {
           reporterLineId: profile.userId,
           reporterName: profile.displayName || "",
         }));
-      } catch (error: any) {
-        setLiffError(error.message || "LIFF Error");
+      } catch (error) {
+        console.error("LIFF Init Error:", error);
       } finally {
         setIsLiffInitializing(false);
       }
@@ -109,113 +144,96 @@ function RepairLiffFormContent() {
     initLiff();
   }, []);
 
-  // --- Handlers ---
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => {
-      const { [name]: _, ...rest } = prev;
-      return rest;
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const compressImage = async (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const img = new Image();
       const reader = new FileReader();
-
       reader.onload = (e) => {
         img.src = e.target?.result as string;
       };
-      
-      reader.onerror = reject;
-
       img.onload = () => {
-        const canvas = document.createElement('canvas');
+        const canvas = document.createElement("canvas");
         let width = img.width;
         let height = img.height;
-        const MAX_WIDTH = 1200; // Resize to reasonable max width for mobile
-        const MAX_HEIGHT = 1200;
-
+        const MAX = 1200;
         if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
+          if (width > MAX) {
+            height *= MAX / width;
+            width = MAX;
           }
         } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
+          if (height > MAX) {
+            width *= MAX / height;
+            height = MAX;
           }
         }
-
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now(),
-            });
-            resolve(compressedFile);
-          } else {
-            reject(new Error('Compression failed'));
-          }
-        }, 'image/jpeg', 0.7); // 70% quality JPEG
+        canvas.getContext("2d")?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(
+                new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                })
+              );
+            }
+          },
+          "image/jpeg",
+          0.8
+        );
       };
-
       reader.readAsDataURL(file);
     });
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles) {
-      const remainingSlots = 3 - files.length;
-      
-      const fileArray = Array.from(selectedFiles).slice(0, remainingSlots);
-      
-      // Filter large files (> 30MB mostly video accident) but try compressing typical images
-      const processableFiles = fileArray.filter(f => f.size <= 30 * 1024 * 1024);
-
-      setLoading(true); // Show loading while compressing
+    if (e.target.files) {
+      setLoading(true);
+      const newFiles = Array.from(e.target.files).slice(0, 3 - files.length);
       try {
-        const compressedFiles = await Promise.all(processableFiles.map(f => compressImage(f)));
-        
-        const validFiles: File[] = [];
-        compressedFiles.forEach(file => {
-          validFiles.push(file);
+        const compressed = await Promise.all(
+          newFiles.map((f) => compressImage(f))
+        );
+        setFiles((prev) => [...prev, ...compressed]);
+        compressed.forEach((file) => {
           const reader = new FileReader();
-          reader.onloadend = () => setFilePreviews(prev => [...prev, reader.result as string]);
+          reader.onloadend = () =>
+            setFilePreviews((prev) => [...prev, reader.result as string]);
           reader.readAsDataURL(file);
         });
-
-        setFiles(prev => [...prev, ...validFiles]);
         setShowImageSource(false);
-      } catch (error) {
-        console.error("Compression error:", error);
-        setErrors({ submit: "ไม่สามารถประมวลผลรูปภาพได้ กรุณาลองใหม่" });
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const addCategoryAsImage = (category: typeof IMAGE_CATEGORIES[0]) => {
+  const addCategoryAsImage = (category: (typeof IMAGE_CATEGORIES)[0]) => {
     if (files.length < 3) {
-      setFiles(prev => [...prev, `CATEGORY:${category.id}`]);
-      setFilePreviews(prev => [...prev, category.icon]);
+      setFiles((prev) => [...prev, `CATEGORY:${category.id}`]);
+      setFilePreviews((prev) => [...prev, category.icon]);
       setShowCategoryPicker(false);
       setShowImageSource(false);
     }
   };
 
   const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-    setFilePreviews(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFilePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,223 +241,261 @@ function RepairLiffFormContent() {
     setLoading(true);
     try {
       const payload = new FormData();
-      
-      // Handle Department logic
-      const finalDepartment = formData.reporterDepartment === "OTHER" 
-        ? (formData.otherDepartment || "OTHER") 
-        : formData.reporterDepartment;
+      const finalDept =
+        formData.reporterDepartment === "OTHER"
+          ? formData.otherDepartment || "OTHER"
+          : formData.reporterDepartment;
 
       Object.entries(formData).forEach(([key, val]) => {
-        if (key === "reporterDepartment") {
-          payload.append(key, finalDepartment);
-        } else if (key !== "otherDepartment") {
-          payload.append(key, val || "");
-        }
+        if (key === "reporterDepartment") payload.append(key, finalDept);
+        else if (key !== "otherDepartment") payload.append(key, val || "");
       });
 
-      // Handle Files and Category markers
-      const categoryMarkers: string[] = [];
-      files.forEach(item => {
-        if (item instanceof File) {
-          payload.append("files", item);
-        } else if (typeof item === "string" && item.startsWith("CATEGORY:")) {
-          categoryMarkers.push(item.split(":")[1]);
-        }
+      const catMarkers: string[] = [];
+      files.forEach((item) => {
+        if (item instanceof File) payload.append("files", item);
+        else if (typeof item === "string" && item.startsWith("CATEGORY:"))
+          catMarkers.push(item.split(":")[1]);
       });
 
-      if (categoryMarkers.length > 0) {
-        payload.append("imageCategories", JSON.stringify(categoryMarkers));
-      }
-
+      if (catMarkers.length > 0)
+        payload.append("imageCategories", JSON.stringify(catMarkers));
       if (linePictureUrl) payload.append("pictureUrl", linePictureUrl);
-      
-      // DEBUG: Log FormData contents
-      // Note: JSON.stringify(payload) won't work, need to iterate
-      const debugObj: any = {};
-      payload.forEach((value, key) => debugObj[key] = value);
-      console.log('Sending Payload:', debugObj);
 
       const data = await apiFetch("/api/repairs/liff/create", {
         method: "POST",
         body: payload,
       });
       setSuccess({ show: true, ticketCode: data.ticketCode });
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Submission failed";
-      console.error("Submit Error:", err);
-      setErrors({ submit: errorMessage });
+    } catch (err: any) {
+      setErrors({ submit: err.message || "เกิดข้อผิดพลาดในการส่งข้อมูล" });
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Views ---
-  if (isLiffInitializing) return <LoadingSpinner />;
-  if (liffError) return <ErrorMessage message={liffError} os={deviceOS} />;
+  if (isLiffInitializing) return <LoadingIndicator />;
   if (isFriend === false) return <AddFriendView />;
   if (success.show) return <SuccessView ticketCode={success.ticketCode} />;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-10 transition-colors">
-      {/* Professional Header */}
-      <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-md mx-auto px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Wrench className="w-5 h-5 text-white" />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-12 font-sans transition-colors">
+      {/* Premium Header */}
+      <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-xl mx-auto px-6 py-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <Wrench className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">ระบบแจ้งซ่อม IT</h1>
-              <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Ticketing System</p>
+              <h1 className="text-xl font-black tracking-tight leading-tight">
+                แจ้งซ่อม IT
+              </h1>
+              <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                Service Request
+              </p>
             </div>
           </div>
           {linePictureUrl && (
-            <img src={linePictureUrl} alt="profile" className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-blue-500 rounded-full opacity-20 group-hover:opacity-40 transition-opacity blur-sm"></div>
+              <img
+                src={linePictureUrl}
+                alt="profile"
+                className="relative w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 object-cover"
+              />
+            </div>
           )}
         </div>
       </header>
 
-      <main className="max-w-md mx-auto p-5">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          
-          {/* Section 1: User Profile */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-              <User size={14} className="text-blue-500" /> ข้อมูลผู้ส่งเรื่อง
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block ml-1">ชื่อ-นามสกุล <span className="text-red-500">*</span></label>
+      <main className="max-w-xl mx-auto px-6 pt-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Section: Reporter */}
+          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/10 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                <User size={18} />
+              </div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                ข้อมูลส่วนตัว
+              </h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="group">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1 transition-colors group-focus-within:text-blue-600">
+                  ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="reporterName"
                   value={formData.reporterName}
                   onChange={handleInputChange}
-                  placeholder="กรุณากรอกชื่อ-นามสกุล"
-                  className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white transition-all"
+                  placeholder="เช่น สมชาย ใจดี"
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 dark:focus:border-blue-500/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 font-medium"
                   required
                 />
               </div>
-              <div className="grid grid-cols-1 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block ml-1">หน่วยงาน / ฝ่าย <span className="text-red-500">*</span></label>
-                  <div className="space-y-3">
-                    <select
-                      name="reporterDepartment"
-                      value={formData.reporterDepartment}
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
+                    เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="tel"
+                      name="reporterPhone"
+                      value={formData.reporterPhone}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white appearance-none transition-all"
+                      placeholder="08X-XXX-XXXX"
+                      className="w-full pl-12 pr-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all font-medium"
                       required
-                    >
-                      <option value="">กรุณาเลือกฝ่ายหรืองาน</option>
-                      <option value="ACCOUNTING">ฝ่ายบัญชี</option>
-                      <option value="SALES">ฝ่ายขาย</option>
-                      <option value="PRODUCTION">ฝ่ายผลิต</option>
-                      <option value="IT">ฝ่ายไอที</option>
-                      <option value="HR">ฝ่ายบุคคล</option>
-                      <option value="MAINTENANCE">ฝ่ายซ่อมบำรุง</option>
-                      <option value="OTHER">อื่นๆ (โปรดระบุ)</option>
-                    </select>
-                    
-                    {formData.reporterDepartment === "OTHER" && (
-                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                        <input
-                          type="text"
-                          name="otherDepartment"
-                          value={formData.otherDepartment}
-                          onChange={handleInputChange}
-                          placeholder="ระบุตำแหน่งหรือหน่วยงานของคุณ"
-                          className="w-full px-4 py-3.5 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/50 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white placeholder:text-blue-400/60"
-                          required
-                        />
-                      </div>
-                    )}
+                    />
                   </div>
                 </div>
+
                 <div>
-                  <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block ml-1">ช่องทางติดต่อ (เบอร์โทรศัพท์)</label>
-                  <input
-                    type="tel"
-                    name="reporterPhone"
-                    value={formData.reporterPhone}
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
+                    แผนก / ฝ่าย <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="reporterDepartment"
+                    value={formData.reporterDepartment}
                     onChange={handleInputChange}
-                    placeholder="ตัวอย่าง 081-234-5678"
-                    className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none dark:text-white transition-all"
-                  />
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all font-medium appearance-none"
+                    required
+                  >
+                    <option value="">เลือกหน่วยงาน</option>
+                    {DEPARTMENTS.map((d) => (
+                      <option key={d.value} value={d.value}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Section 2: Problem Details */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-            <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-              <Info size={14} className="text-blue-500" /> รายละเอียดปัญหา <span className="text-red-500">*</span>
-            </h2>
-            <div className="space-y-4">
+              {formData.reporterDepartment === "OTHER" && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <input
+                    type="text"
+                    name="otherDepartment"
+                    value={formData.otherDepartment}
+                    onChange={handleInputChange}
+                    placeholder="โปรดระบุแผนกของคุณ"
+                    className="w-full px-5 py-4 bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all placeholder:text-blue-300 dark:placeholder:text-blue-900"
+                    required
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Section: Problem */}
+          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                <Info size={18} />
+              </div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                รายละเอียดปัญหา
+              </h2>
+            </div>
+
+            <div className="space-y-6">
               <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
+                  หัวข้อแจ้งซ่อม <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="problemTitle"
                   value={formData.problemTitle}
                   onChange={handleInputChange}
-                  placeholder="สรุปปัญหาเบื้องต้น (เช่น พิมพ์งานไม่ได้, เข้าเน็ตไม่ได้)"
-                  className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white transition-all font-medium"
+                  placeholder="เช่น ปริ้นเตอร์ไม่ออก, คอมพิวเตอร์ช้า"
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all font-semibold text-lg"
                   required
                 />
               </div>
+
               <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
+                  รายละเอียดเพิ่มเติม
+                </label>
                 <textarea
                   name="problemDescription"
                   value={formData.problemDescription}
                   onChange={handleInputChange}
                   rows={4}
-                  placeholder="กรุณาระบุรายละเอียดเพิ่มเติมของปัญหา เพื่อความรวดเร็วในการตรวจสอบ..."
-                  className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white resize-none transition-all text-sm leading-relaxed"
+                  placeholder="กรุณาอธิบายปัญหาที่เกิดขึ้นโดยละเอียด..."
+                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all resize-none font-medium"
                 />
               </div>
-              <div className="relative">
-                <div className="absolute left-4 top-3.5 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-blue-500" />
-                </div>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="สถานที่ปฏิบัติงาน / อาคาร / ชั้น / เลขโต๊ะ"
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white transition-all"
-                  required
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* Section 3: Photo Upload (Professional Grid) */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                <Camera size={14} className="text-blue-500" /> ภาพถ่ายหรือสัญลักษณ์ประกอบ
-              </h2>
-              <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 px-2.5 py-1 rounded-full text-blue-600 dark:text-blue-400 font-bold tracking-wider">{files.length}/3</span>
+              <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block ml-1">
+                  สถานที่ / อาคาร / ชั้น <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    placeholder="เช่น อาคาร A ชั้น 2 ห้องบัญชี"
+                    className="w-full pl-12 pr-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none transition-all font-medium"
+                    required
+                  />
+                </div>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-3 gap-3">
+          </section>
+
+          {/* Section: Photos */}
+          <section className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                  <Camera size={18} />
+                </div>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+                  รูปถ่ายประกอบ
+                </h2>
+              </div>
+              <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full text-slate-500 tracking-widest">
+                {files.length} / 3
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               {filePreviews.map((src, i) => (
-                <div key={i} className="relative aspect-square rounded-2xl overflow-hidden group ring-1 ring-slate-100 dark:ring-slate-800">
-                  {src.startsWith('data:') ? (
-                    <img src={src} alt="preview" className="w-full h-full object-cover" />
+                <div
+                  key={i}
+                  className="relative aspect-square rounded-[1.5rem] overflow-hidden group shadow-sm bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-700"
+                >
+                  {src.length > 5 ? (
+                    <img
+                      src={src}
+                      alt="preview"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
                   ) : (
-                    <div className="w-full h-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-3xl">
+                    <div className="w-full h-full flex items-center justify-center text-4xl">
                       {src}
                     </div>
                   )}
-                  <button 
-                    type="button" 
-                    onClick={() => removeFile(i)} 
-                    className="absolute top-1.5 right-1.5 bg-red-500/90 hover:bg-red-600 text-white p-1.5 rounded-full shadow-lg transition-all scale-90 group-hover:scale-100"
+                  <button
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 hover:bg-red-500 hover:text-white text-slate-900 p-2 rounded-xl shadow-lg transition-all backdrop-blur-md opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100"
                   >
-                    <X size={12} strokeWidth={3} />
+                    <X size={14} strokeWidth={3} />
                   </button>
                 </div>
               ))}
@@ -447,141 +503,214 @@ function RepairLiffFormContent() {
                 <button
                   type="button"
                   onClick={() => setShowImageSource(true)}
-                  className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all group"
+                  className="aspect-square rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-blue-500 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group"
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-all">
                     <Plus size={20} />
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider">เพิ่มรูป</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">
+                    เพิ่มรูป
+                  </span>
                 </button>
               )}
             </div>
-            {/* Hidden inputs but kept in layout for programmatic access */}
-            <input 
-              ref={fileInputRef} 
-              type="file" 
-              accept="image/*" 
-              multiple 
-              onChange={handleFileChange} 
-              onClick={(e) => (e.target as HTMLInputElement).value = ''}
-              className="absolute w-0 h-0 opacity-0 overflow-hidden" 
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
             />
-            <input 
-              ref={cameraInputRef} 
-              type="file" 
-              accept="image/*" 
-              capture="environment" 
-              onChange={handleFileChange} 
-              onClick={(e) => (e.target as HTMLInputElement).value = ''}
-              className="absolute w-0 h-0 opacity-0 overflow-hidden" 
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
             />
+          </section>
+
+          {/* Section: Urgency */}
+          <div className="space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-4 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>{" "}
+              ความเร่งด่วนของงาน
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {URGENCY_LEVELS.map((level) => (
+                <label
+                  key={level.value}
+                  className="relative cursor-pointer group"
+                >
+                  <input
+                    type="radio"
+                    name="urgency"
+                    value={level.value}
+                    checked={formData.urgency === level.value}
+                    onChange={handleInputChange}
+                    className="sr-only peer"
+                  />
+                  <div
+                    className={`p-6 rounded-3xl border-2 transition-all duration-300 ring-4 ring-transparent flex flex-col items-center gap-1
+                    ${
+                      formData.urgency === level.value
+                        ? level.color === "blue"
+                          ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 ring-blue-500/5"
+                          : level.color === "amber"
+                          ? "border-amber-500 bg-amber-50/50 dark:bg-amber-900/20 ring-amber-500/5"
+                          : "border-red-500 bg-red-50/50 dark:bg-red-900/20 ring-red-500/5"
+                        : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-200 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    <span
+                      className={`text-base font-black ${
+                        formData.urgency === level.value
+                          ? "text-slate-900 dark:text-white"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {level.label}
+                    </span>
+                    <span className="text-[10px] font-bold opacity-50 tracking-wide uppercase">
+                      {level.subLabel}
+                    </span>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
 
-          {/* Section 4: Urgency Level */}
-          <div className="grid grid-cols-3 gap-3">
-            {URGENCY_LEVELS.map((level) => (
-              <label key={level.value} className="cursor-pointer group">
-                <input
-                  type="radio"
-                  name="urgency"
-                  value={level.value}
-                  checked={formData.urgency === level.value}
-                  onChange={handleInputChange}
-                  className="sr-only peer"
-                />
-                <div className={`p-3 rounded-2xl border-2 text-center transition-all ${level.color}`}>
-                  <p className="text-sm font-bold">{level.label}</p>
-                  <p className="text-[10px] opacity-60">{level.subLabel}</p>
-                </div>
-              </label>
-            ))}
-          </div>
-
-          {/* Error Message Display */}
           {errors.submit && (
-            <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <div className="p-6 rounded-3xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800/30 flex items-start gap-4 animate-in fade-in slide-in-from-bottom-4">
+              <AlertCircle className="w-6 h-6 text-red-600 shrink-0" />
               <div className="flex-1">
-                <h4 className="text-sm font-bold text-red-800 dark:text-red-300">เกิดข้อผิดพลาด</h4>
-                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{errors.submit}</p>
+                <h4 className="text-sm font-black text-red-900 dark:text-red-200">
+                  ขออภัย เกิดข้อผิดพลาด
+                </h4>
+                <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-1 font-medium">
+                  {errors.submit}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-3xl font-bold shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center gap-2 active:scale-[0.98] mt-4"
-          >
-            {loading ? <Loader2 className="animate-spin" /> : <>ส่งเรื่องแจ้งซ่อม <ChevronRight size={18} /></>}
-          </button>
+          <div className="pt-4 pb-12">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-6 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-[2.5rem] font-black text-lg shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/40 transition-all flex items-center justify-center gap-3 active:scale-[0.98] active:brightness-90 uppercase tracking-widest"
+            >
+              {loading ? (
+                <div className="flex items-center gap-3">
+                  <Loader2 className="animate-spin w-5 h-5" />
+                  <span>กำลังส่งข้อมูล...</span>
+                </div>
+              ) : (
+                <>
+                  ส่งเรื่องแจ้งซ่อม <ChevronRight size={20} strokeWidth={3} />
+                </>
+              )}
+            </button>
+            <p className="text-center text-[10px] text-slate-400 mt-6 font-bold uppercase tracking-[0.2em] opacity-50">
+              Powered by TRR IT Support Team
+            </p>
+          </div>
         </form>
       </main>
 
-      {/* Image Source Picker Modal */}
+      {/* Modern Bottom Sheet for Image Source */}
       {showImageSource && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl animate-in slide-in-from-bottom-full duration-500">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">เพิ่มรูปประกอบ</h3>
-              <button onClick={() => setShowImageSource(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                <X size={20} className="text-slate-400" />
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300 p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[3rem] p-8 shadow-2xl animate-in slide-in-from-bottom-full duration-500 ease-out border border-white/10">
+            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-8"></div>
+            <div className="flex justify-between items-center mb-8 px-2">
+              <h3 className="text-2xl font-black tracking-tight">
+                เพิ่มรูปภาพ
+              </h3>
+              <button
+                onClick={() => setShowImageSource(false)}
+                className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <X size={20} />
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-4 pb-8">
-              <button 
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+                className="flex flex-col items-center gap-4 p-8 rounded-[2rem] bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-all border border-blue-100/50 dark:border-blue-800/30 group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20 group-hover:scale-110 transition-transform">
                   <Camera size={28} />
                 </div>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">ถ่ายรูป</span>
+                <span className="text-sm font-black uppercase tracking-widest">
+                  ถ่ายรูป
+                </span>
               </button>
-              <button 
+
+              <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+                className="flex flex-col items-center gap-4 p-8 rounded-[2rem] bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-800 group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center text-slate-800 dark:text-white shadow-lg border border-slate-100 dark:border-slate-700 group-hover:scale-110 transition-transform">
                   <ImageIcon size={28} />
                 </div>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">คลังภาพ</span>
+                <span className="text-sm font-black uppercase tracking-widest">
+                  คลังภาพ
+                </span>
               </button>
-              <button 
+
+              <button
                 onClick={() => setShowCategoryPicker(true)}
-                className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+                className="col-span-2 flex items-center justify-center gap-4 p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500/50 hover:bg-blue-50/30 transition-all group mt-2"
               >
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
-                  <LayoutGrid size={28} />
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
+                  <LayoutGrid size={20} />
                 </div>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">หมวดหมู่</span>
+                <span className="text-sm font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600 transition-colors">
+                  เลือกจากสัญลักษณ์แทนปัญหา
+                </span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Category Picker Modal */}
+      {/* Icon Picker Overlay */}
       {showCategoryPicker && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 backdrop-blur-sm animate-in fade-in duration-200 p-6">
-          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 border border-slate-100 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white">เลือกสัญลักษณ์</h3>
-              <button onClick={() => setShowCategoryPicker(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
-                <X size={20} className="text-slate-400" />
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300 p-8">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95 duration-300 border border-white/5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-black tracking-tight leading-tight">
+                สัญลักษณ์
+              </h3>
+              <button
+                onClick={() => setShowCategoryPicker(false)}
+                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                <X size={24} />
               </button>
             </div>
-            <p className="text-sm text-slate-500 mb-6">ระบุสัญลักษณ์ที่ตรงกับปัญหาของคุณเบื้องต้น</p>
-            <div className="grid grid-cols-3 gap-4">
-              {IMAGE_CATEGORIES.map(cat => (
+            <p className="text-xs font-bold text-slate-400 mb-8 uppercase tracking-widest">
+              สัญลักษณ์แทนปัญหาเบื้องต้น
+            </p>
+
+            <div className="grid grid-cols-3 gap-6">
+              {IMAGE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => addCategoryAsImage(cat)}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all border border-slate-50 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-800"
+                  className="flex flex-col items-center gap-3 p-4 rounded-3xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all group"
                 >
-                  <span className="text-3xl">{cat.icon}</span>
-                  <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 line-clamp-1">{cat.label}</span>
+                  <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all group-hover:scale-125 duration-300">
+                    {cat.icon}
+                  </span>
+                  <span className="text-[10px] font-black tracking-tighter text-slate-500 group-hover:text-blue-600 uppercase text-center">
+                    {cat.label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -592,32 +721,51 @@ function RepairLiffFormContent() {
   );
 }
 
-// --- Sub-components ---
+// --- Simplified UI Components ---
 
-function LoadingSpinner() {
+function LoadingIndicator() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
-      <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />
-      <p className="text-slate-500 font-medium animate-pulse text-sm">กำลังโหลดข้อมูลระบบ...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-slate-950">
+      <div className="relative">
+        <div className="w-20 h-20 border-4 border-slate-100 dark:border-slate-900 rounded-full" />
+        <div className="w-20 h-20 border-4 border-t-blue-600 rounded-full animate-spin absolute inset-0" />
+      </div>
+      <p className="mt-8 text-xs font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">
+        Initializing System
+      </p>
     </div>
   );
 }
 
 function SuccessView({ ticketCode }: { ticketCode?: string }) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
-      <div className="max-w-xs w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 text-center shadow-2xl border border-slate-100 dark:border-slate-800">
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="w-10 h-10 text-green-600" />
+    <div className="min-h-screen flex items-center justify-center p-8 bg-blue-600">
+      <div className="max-w-sm w-full bg-white dark:bg-slate-900 rounded-[3.5rem] p-12 text-center shadow-2xl animate-in zoom-in-90 duration-500">
+        <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-xl shadow-green-500/20">
+          <CheckCircle2 className="w-12 h-12 text-white" />
         </div>
-        <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">เรียบร้อย!</h2>
-        <p className="text-slate-500 text-sm mb-8 leading-relaxed">ได้รับเรื่องแล้ว เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด</p>
-        <div className="bg-slate-50 dark:bg-slate-800/50 py-4 rounded-3xl mb-8 border border-slate-100 dark:border-slate-700">
-          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em] mb-1">Ticket Number</p>
-          <p className="text-2xl font-mono font-black text-blue-600">#{ticketCode}</p>
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+          ส่งข้อมูลสำเร็จ!
+        </h2>
+        <p className="text-slate-500 text-sm mb-12 font-medium leading-relaxed">
+          ได้รับข้อมูลของท่านแล้ว
+          เจ้าหน้าที่จะดำเนินการตามระดับความเร่งด่วนที่ระบุไว้
+        </p>
+
+        <div className="bg-slate-50 dark:bg-slate-800/50 py-6 px-4 rounded-[2rem] mb-12 border border-slate-100 dark:border-slate-800">
+          <p className="text-[10px] text-blue-600 font-extrabold uppercase tracking-[0.2em] mb-2">
+            Ref Code
+          </p>
+          <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
+            #{ticketCode}
+          </p>
         </div>
-        <button onClick={() => liff.closeWindow()} className="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl font-bold">
-          ปิดหน้าต่าง
+
+        <button
+          onClick={() => liff.closeWindow()}
+          className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-black text-lg hover:opacity-90 active:scale-95 transition-all"
+        >
+          ปิดหน้าแจ้งซ่อม
         </button>
       </div>
     </div>
@@ -626,28 +774,29 @@ function SuccessView({ ticketCode }: { ticketCode?: string }) {
 
 function AddFriendView() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-white dark:bg-slate-950 text-center">
-      <div className="max-w-xs">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <User className="text-green-600" size={32} />
+    <div className="min-h-screen flex items-center justify-center p-8 bg-white dark:bg-slate-950">
+      <div className="max-w-sm text-center">
+        <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-[2rem] flex items-center justify-center mx-auto mb-10 border-2 border-green-50 dark:border-green-800 rotate-12">
+          <User className="text-green-600" size={40} />
         </div>
-        <h2 className="text-xl font-bold mb-3 dark:text-white">กรุณาเพิ่มเพื่อน</h2>
-        <p className="text-slate-500 text-sm mb-8">เพื่อรับการแจ้งเตือนสถานะงานซ่อม กรุณาเพิ่มเพื่อนกับเราก่อนใช้งานครับ</p>
-        <a href="https://line.me/R/ti/p/@yourid" className="block w-full py-4 bg-[#06C755] text-white rounded-2xl font-bold mb-3 shadow-lg shadow-green-500/20">
-          เพิ่มเพื่อน (Add Friend)
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-6 uppercase tracking-tight">
+          กรุณาเพิ่มเพื่อน
+        </h2>
+        <p className="text-slate-500 font-medium mb-12 leading-relaxed">
+          เพื่อความสะดวกในการติดตามสถานะงานซ่อม และการแจ้งเตือนต่างๆ
+          กรุณาเพิ่มเพื่อนกับเราก่อนใช้งานระบบครับ
+        </p>
+        <a
+          href={`https://line.me/R/ti/p/@${
+            process.env.NEXT_PUBLIC_LINE_OA_ID || "your-id"
+          }`}
+          className="block w-full py-6 bg-[#06C755] hover:bg-[#05b34c] text-white rounded-[2.5rem] font-black text-xl shadow-xl shadow-green-500/30 transition-all active:scale-95"
+        >
+          Add Friend
         </a>
-      </div>
-    </div>
-  );
-}
-
-function ErrorMessage({ message, os }: { message: string; os: string }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="text-center">
-        <AlertCircle className="text-red-500 mx-auto mb-4" size={48} />
-        <p className="text-red-600 font-bold mb-2">Error: {message}</p>
-        <p className="text-slate-400 text-xs">OS Detected: {os}</p>
+        <p className="text-[10px] text-slate-300 mt-8 font-black uppercase tracking-widest">
+          Official Support Account
+        </p>
       </div>
     </div>
   );
@@ -655,7 +804,7 @@ function ErrorMessage({ message, os }: { message: string; os: string }) {
 
 export default function RepairLiffFormPage() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<LoadingIndicator />}>
       <RepairLiffFormContent />
     </Suspense>
   );
