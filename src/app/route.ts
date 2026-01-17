@@ -52,7 +52,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(callbackUrl.toString());
   }
 
+  // Check if this is from a LINE browser/app
+  const userAgent = request.headers.get('user-agent') || '';
+  const isLine = /Line/i.test(userAgent);
+
+  if (isLine && !code && !liffClientId && !liffRedirectUri) {
+    console.log('LINE User detected at root, redirecting to reporter portal');
+    return NextResponse.redirect(new URL('/repairs/liff', request.nextUrl.origin));
+  }
+
   // Not a callback, redirect to login
-  console.log('Not a LINE callback, redirecting to login');
+  console.log('Not a LINE callback or app, redirecting to login');
   return NextResponse.redirect(new URL('/login', request.nextUrl.origin));
 }
