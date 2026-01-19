@@ -152,16 +152,10 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-sm">
                   <MapPin size={14} className="text-slate-300" />
-                  {translatedDepartment}
                   {repair.location && ` · ${repair.location}`}
                 </div>
               </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
-                  ประเภทปัญหา
-                </p>
-                <p className="text-sm mt-1">{translatedCategory}</p>
-              </div>
+            
             </section>
 
             <section className="pt-6 border-t border-slate-100 flex gap-8">
