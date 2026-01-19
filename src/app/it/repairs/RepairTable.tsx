@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, User } from "lucide-react";
+import { ArrowRight, User, MoreHorizontal } from "lucide-react";
 import { RepairTicket } from "./types/repair.types";
 import { StatusBadge, UrgencyBadge } from "./ui/Badge";
 import { Avatar } from "./ui/Avatar";
@@ -27,39 +27,40 @@ const DEPARTMENT_MAP: Record<string, string> = {
 
 export const RepairTable: React.FC<RepairTableProps> = ({
   repairs,
-  activeTab,
   onAccept,
-  onTransfer,
   onView,
   submitting,
 }) => {
   if (repairs.length === 0) {
     return (
-      <div className="hidden lg:flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-200 rounded-2xl">
-        <p className="text-slate-400 font-medium">ไม่พบข้อมูลรายการแจ้งซ่อม</p>
+      <div className="hidden lg:flex flex-col items-center justify-center py-32 bg-white border border-slate-100 rounded-3xl">
+        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+          <User className="text-slate-300" size={24} />
+        </div>
+        <p className="text-slate-400 font-medium">ไม่พบข้อมูลรายการแจ้งซ่อมในขณะนี้</p>
       </div>
     );
   }
 
   return (
-    <div className="hidden lg:block overflow-hidden bg-white border border-slate-100 rounded-2xl shadow-sm">
+    <div className="hidden lg:block overflow-hidden bg-white border border-slate-200/60 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="border-b border-slate-100 bg-slate-50/50">
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[120px]">
-              ID CODE
+          <tr className="border-b border-slate-100 bg-white">
+            <th className="px-6 py-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Ticket ID
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[150px]">
-              STATUS
+            <th className="px-6 py-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Status
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
-              PROBLEM & REPORTER
+            <th className="px-6 py-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Details & Reporter
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[180px]">
-              ASSIGNEE
+            <th className="px-6 py-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Assignee
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[100px] text-right">
-              ACTION
+            <th className="px-6 py-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 text-right">
+              Action
             </th>
           </tr>
         </thead>
@@ -68,55 +69,65 @@ export const RepairTable: React.FC<RepairTableProps> = ({
             <tr
               key={repair.id}
               onClick={() => onView(repair)}
-              className="group cursor-pointer hover:bg-slate-50 transition-all"
+              className="group cursor-pointer hover:bg-slate-50/50 transition-colors duration-200"
             >
-              <td className="px-6 py-5">
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded w-fit">
+              {/* Ticket ID & Urgency */}
+              <td className="px-6 py-6">
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs font-mono font-semibold text-blue-600 bg-blue-50/50 px-2 py-1 rounded-md w-fit">
                     #{repair.ticketCode}
                   </span>
                   <UrgencyBadge urgency={repair.urgency} />
                 </div>
               </td>
-              <td className="px-6 py-5">
+
+              {/* Status */}
+              <td className="px-6 py-6">
                 <StatusBadge status={repair.status} />
               </td>
-              <td className="px-6 py-5">
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-bold text-slate-900 line-clamp-1 group-hover:translate-x-1 transition-transform">
+
+              {/* Problem Details */}
+              <td className="px-6 py-6">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[15px] font-semibold text-slate-800 line-clamp-1">
                     {repair.problemTitle}
                   </span>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                    <span className="font-medium text-slate-700">
-                      {repair.reporterName || "Anonymous"}
-                    </span>
-                    <span className="text-slate-300">|</span>
-                    <span>
-                      {DEPARTMENT_MAP[
-                        repair.reporterDepartment?.toUpperCase() || ""
-                      ] ||
-                        repair.reporterDepartment ||
-                        "N/A"}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                      <span className="font-medium">{repair.reporterName || "Anonymous"}</span>
+                      <span className="text-slate-300">•</span>
+                      <span className="text-slate-400">
+                        {DEPARTMENT_MAP[repair.reporterDepartment?.toUpperCase() || ""] ||
+                          repair.reporterDepartment || "ทั่วไป"}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </td>
-              <td className="px-6 py-5">
+
+              {/* Assignee */}
+              <td className="px-6 py-6">
                 {repair.assignee ? (
-                  <div className="flex items-center gap-2.5">
-                    <Avatar name={repair.assignee.name} size="sm" />
-                    <span className="text-[11px] font-bold text-slate-900">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={repair.assignee.name} size="sm" className="ring-2 ring-white shadow-sm" />
+                    <span className="text-sm font-medium text-slate-700">
                       {repair.assignee.name}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-[10px] text-slate-400 italic font-medium">
-                    รอมอบหมายงาน
-                  </span>
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <div className="w-8 h-8 rounded-full border border-dashed border-slate-200 flex items-center justify-center">
+                      <User size={14} />
+                    </div>
+                    <span className="text-xs italic">ยังไม่มีผู้รับผิดชอบ</span>
+                  </div>
                 )}
               </td>
-              <td className="px-6 py-5 text-right">
-                <div className="flex justify-end gap-2">
+
+              {/* Action Buttons */}
+              <td className="px-6 py-6 text-right">
+                <div className="flex justify-end items-center gap-3">
                   {repair.status === "PENDING" && (
                     <button
                       onClick={(e) => {
@@ -124,14 +135,14 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                         onAccept(repair.id);
                       }}
                       disabled={submitting}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-[0.98]"
+                      className="px-5 py-2 bg-slate-900 text-white rounded-full hover:bg-blue-600 transition-all duration-200 text-xs font-bold disabled:opacity-50 active:scale-95 shadow-sm"
                     >
                       รับเรื่อง
                     </button>
                   )}
-                  <div className="p-2 rounded-full border border-slate-100 text-slate-300 group-hover:text-blue-600 group-hover:border-blue-600 transition-all">
-                    <ArrowRight size={14} />
-                  </div>
+                  <button className="p-2.5 rounded-full bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all duration-200">
+                    <ArrowRight size={16} />
+                  </button>
                 </div>
               </td>
             </tr>
