@@ -212,15 +212,7 @@ function RepairFormContent() {
 
           <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/10">
             <div className="w-12 h-12 rounded-2xl border-2 border-white/20 p-0.5 bg-indigo-500 flex items-center justify-center overflow-hidden">
-              {userProfile?.pictureUrl ? (
-                <img
-                  src={userProfile.pictureUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover rounded-[14px]"
-                />
-              ) : (
-                <User className="w-6 h-6 text-white" />
-              )}
+              <User className="w-6 h-6 text-white" />
             </div>
             <div>
               <p className="text-white/50 text-[10px] font-black uppercase tracking-widest">

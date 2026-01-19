@@ -170,7 +170,6 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                   <div className="flex items-center gap-4">
                     <Avatar
                       name={repair.reporterName}
-                      pictureUrl={repair.user?.lineOALink?.pictureUrl}
                       size="xl"
                       className="rounded-none border border-neutral-200 grayscale shadow-sm"
                     />

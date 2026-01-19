@@ -4,14 +4,12 @@ import Image from "next/image";
 
 interface AvatarProps {
   name?: string;
-  pictureUrl?: string;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
 export const Avatar: React.FC<AvatarProps> = ({
   name,
-  pictureUrl,
   size = "md",
   className = "",
 }) => {
@@ -33,14 +31,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     <div
       className={`${sizeClasses[size]} rounded-full bg-white border border-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-sm overflow-hidden relative ${className}`}
     >
-      {pictureUrl ? (
-        <Image
-          src={pictureUrl}
-          alt={name || "User Avatar"}
-          fill
-          className="object-cover"
-        />
-      ) : name ? (
+      {name ? (
         name.charAt(0).toUpperCase()
       ) : (
         <UserIcon size={iconSizes[size]} className="text-gray-300" />
