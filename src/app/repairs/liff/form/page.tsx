@@ -36,6 +36,7 @@ export default function RepairLiffFormPage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lineUserId, setLineUserId] = useState("");
 
   // --- LIFF Init (Only for closing window, no profile fetch) ---
   useEffect(() => {
@@ -44,6 +45,13 @@ export default function RepairLiffFormPage() {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
         if (liffId) {
           await liff.init({ liffId });
+          if (liff.isLoggedIn()) {
+            const profile = await liff.getProfile();
+            setLineUserId(profile.userId);
+          } else {
+            // For testing outside LINE or if login needed
+            // liff.login();
+          }
         }
       } catch (error) {
         console.error("LIFF Init Error:", error);
@@ -75,6 +83,7 @@ export default function RepairLiffFormPage() {
       const payload = new FormData();
       // Mapping fields to Backend Expected Keys
       payload.append("reporterName", formData.name);
+      payload.append("reporterLineId", lineUserId || "Uguest"); // Required by backend
 
       let mappedDept = "OTHER";
       const d = formData.dept;
