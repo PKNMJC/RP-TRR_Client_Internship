@@ -21,10 +21,10 @@
 :root {
   /* Dynamic Backgrounds */
   --background: #ffffff;
-  --foreground: #000000;
+  --foreground: #111111;
 
   --card-bg: #ffffff;
-  --card-border: #f3f4f6; /* gray-100 */
+  --card-border: #e5e7eb; /* gray-200 */
 }
 
 @media (prefers-color-scheme: dark) {
