@@ -43,6 +43,16 @@ const CATEGORY_MAP: Record<string, string> = {
   GENERAL: "ทั่วไป",
 };
 
+const DEPARTMENT_MAP: Record<string, string> = {
+  ACCOUNTING: "บัญชี",
+  SALES: "การขาย",
+  PRODUCTION: "ฝ่ายผลิต",
+  IT: "ไอที",
+  HR: "บุคคล",
+  MAINTENANCE: "ซ่อมบำรุง",
+  OTHER: "อื่นๆ",
+};
+
 export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
   repair,
   onClose,
@@ -57,6 +67,11 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
     CATEGORY_MAP[repair.problemCategory?.toUpperCase() || ""] ||
     repair.problemCategory ||
     "ทั่วไป";
+
+  const translatedDepartment =
+    DEPARTMENT_MAP[repair.reporterDepartment?.toUpperCase() || ""] ||
+    repair.reporterDepartment ||
+    "-";
 
   return (
     <div
@@ -167,21 +182,6 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                   <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
                     ผู้แจ้งซ่อม
                   </p>
-                  <div className="flex items-center gap-4">
-                    <Avatar
-                      name={repair.reporterName}
-                      size="xl"
-                      className="rounded-none border border-neutral-200 grayscale shadow-sm"
-                    />
-                    <div>
-                      <h3 className="text-lg font-bold text-neutral-900">
-                        {repair.reporterName}
-                      </h3>
-                      <p className="text-xs text-neutral-500 uppercase tracking-wider">
-                        {repair.reporterDepartment}
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="space-y-4 pt-4">
@@ -196,7 +196,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                       {repair.reporterPhone || "-"}
                     </span>
                   </div>
-                 
+
                   <div className="flex items-center justify-between py-3 border-b border-neutral-100">
                     <div className="flex items-center gap-3 text-neutral-500">
                       <Building2 size={14} strokeWidth={1.5} />
@@ -205,7 +205,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                       </span>
                     </div>
                     <span className="text-sm font-semibold text-neutral-800 text-right">
-                      {repair.reporterDepartment || "-"}
+                      {translatedDepartment}
                     </span>
                   </div>
                 </div>
