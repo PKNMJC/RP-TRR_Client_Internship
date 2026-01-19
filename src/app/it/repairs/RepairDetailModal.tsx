@@ -31,8 +31,7 @@ const CATEGORY_MAP: Record<string, string> = {
   PERIPHERAL: "อุปกรณ์ต่อพ่วง",
   EMAIL_OFFICE365: "Email / Office 365",
   ACCOUNT_PASSWORD: "Account / Password",
-  GENERAL: "ทั่วไป",
-  OTHER: "อื่นๆ",
+  OTHER: "ทั่วไป / อื่นๆ",
 };
 
 const DEPARTMENT_MAP: Record<string, string> = {
@@ -155,7 +154,6 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                   {repair.location}
                 </div>
               </div>
-            
             </section>
 
             <section className="pt-6 border-t border-slate-100 flex gap-8">
@@ -183,8 +181,16 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
             <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
               ผู้แจ้งซ่อม
             </p>
-            <InfoRow icon={User} label="ชื่อผู้แจ้ง" value={repair.reporterName} />
-            <InfoRow icon={Phone} label="เบอร์โทร" value={repair.reporterPhone} />
+            <InfoRow
+              icon={User}
+              label="ชื่อผู้แจ้ง"
+              value={repair.reporterName}
+            />
+            <InfoRow
+              icon={Phone}
+              label="เบอร์โทร"
+              value={repair.reporterPhone}
+            />
             <InfoRow
               icon={Building2}
               label="แผนก"

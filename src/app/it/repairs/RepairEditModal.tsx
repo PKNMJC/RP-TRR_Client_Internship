@@ -85,14 +85,13 @@ export const RepairEditModal: React.FC<RepairEditModalProps> = ({
                 setEditForm({ ...editForm, problemCategory: e.target.value })
               }
             >
-              <option value="GENERAL">ทั่วไป (General)</option>
+              <option value="OTHER">ทั่วไป (General / Other)</option>
               <option value="HARDWARE">ฮาร์ดแวร์ (Hardware)</option>
               <option value="SOFTWARE">ซอฟต์แวร์ (Software)</option>
               <option value="NETWORK">เครือข่าย/อินเทอร์เน็ต (Network)</option>
               <option value="PERIPHERAL">อุปกรณ์ต่อพ่วง (Peripheral)</option>
               <option value="EMAIL_OFFICE365">Email / Office 365</option>
               <option value="ACCOUNT_PASSWORD">Account / Password</option>
-              <option value="OTHER">อื่นๆ (Other)</option>
             </select>
           </div>
           <div className="space-y-1.5">

@@ -136,7 +136,7 @@ function RepairFormContent() {
       payload.append("problemDescription", formData.details);
       payload.append("location", formData.location || "ไม่ได้ระบุ");
       payload.append("urgency", formData.urgency);
-      payload.append("problemCategory", "GENERAL");
+      payload.append("problemCategory", "OTHER");
 
       if (file) payload.append("files", file);
 
