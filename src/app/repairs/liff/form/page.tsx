@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  CheckCircle2,
   Loader2,
   X,
   Camera,
@@ -16,6 +15,7 @@ import {
   Phone,
   LayoutGrid,
 } from "lucide-react";
+import Swal from "sweetalert2";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
 
@@ -100,10 +100,10 @@ function RepairLiffFormContent() {
   const [showImageSource, setShowImageSource] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState<{
-    show: boolean;
-    ticketCode?: string;
-  }>({ show: false });
+  // const [success, setSuccess] = useState<{
+  //   show: boolean;
+  //   ticketCode?: string;
+  // }>({ show: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLiffInitializing, setIsLiffInitializing] = useState(true);
 
@@ -142,7 +142,7 @@ function RepairLiffFormContent() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -181,12 +181,12 @@ function RepairLiffFormContent() {
                 new File([blob], file.name, {
                   type: "image/jpeg",
                   lastModified: Date.now(),
-                })
+                }),
               );
             }
           },
           "image/jpeg",
-          0.8
+          0.8,
         );
       };
       reader.readAsDataURL(file);
@@ -199,7 +199,7 @@ function RepairLiffFormContent() {
       const newFiles = Array.from(e.target.files).slice(0, 3 - files.length);
       try {
         const compressed = await Promise.all(
-          newFiles.map((f) => compressImage(f))
+          newFiles.map((f) => compressImage(f)),
         );
         setFiles((prev) => [...prev, ...compressed]);
         compressed.forEach((file) => {
@@ -261,7 +261,37 @@ function RepairLiffFormContent() {
         method: "POST",
         body: payload,
       });
-      setSuccess({ show: true, ticketCode: data.ticketCode });
+
+      // Show SweetAlert2 Modal
+      await Swal.fire({
+        icon: "success",
+        title: "บันทึกสำเร็จ",
+        html: `รหัสแจ้งซ่อมของคุณคือ:<br><h2 style="color:#06C755; margin-top:10px;">${data.ticketCode}</h2><br>เจ้าหน้าที่ได้รับเรื่องแล้วครับ`,
+        confirmButtonText: "ปิดหน้าต่าง",
+        confirmButtonColor: "#06C755",
+        allowOutsideClick: false,
+      }).then(() => {
+        if (liff.isInClient()) {
+          liff.closeWindow();
+        } else {
+          // Reset form if not in LIFF (e.g. browser testing)
+          setFormData({
+            reporterName: formData.reporterName, // Keep name/dept if desired, or reset all
+            reporterDepartment: formData.reporterDepartment,
+            otherDepartment: "",
+            reporterPhone: formData.reporterPhone,
+            reporterLineId: formData.reporterLineId,
+            problemCategory: "OTHER",
+            problemTitle: "",
+            problemDescription: "",
+            location: "",
+            urgency: "NORMAL",
+          });
+          setFiles([]);
+          setFilePreviews([]);
+        }
+      });
+      // setSuccess({ show: true, ticketCode: data.ticketCode });
     } catch (err: any) {
       setErrors({ submit: err.message || "เกิดข้อผิดพลาดในการส่งข้อมูล" });
     } finally {
@@ -271,7 +301,7 @@ function RepairLiffFormContent() {
 
   if (isLiffInitializing) return <LoadingIndicator />;
   if (isFriend === false) return <AddFriendView />;
-  if (success.show) return <SuccessView ticketCode={success.ticketCode} />;
+  // if (success.show) return <SuccessView ticketCode={success.ticketCode} />;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-20">
@@ -655,39 +685,7 @@ function LoadingIndicator() {
   );
 }
 
-function SuccessView({ ticketCode }: { ticketCode?: string }) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-white text-center">
-      <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 animate-in zoom-in">
-        <CheckCircle2 size={40} />
-      </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">
-        ส่งงานซ่อมสำเร็จ!
-      </h2>
-      <p className="text-slate-500 text-sm mb-8 max-w-[250px] leading-relaxed">
-        ระบบได้รับข้อมูลการแจ้งซ่อมของท่านเรียบร้อยแล้ว
-      </p>
-
-      {ticketCode && (
-        <div className="bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100 mb-8">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">
-            Ticket ID
-          </p>
-          <div className="flex items-center gap-2 justify-center text-xl font-black text-slate-900">
-            <Hash size={20} className="text-slate-300" /> {ticketCode}
-          </div>
-        </div>
-      )}
-
-      <button
-        onClick={() => liff.closeWindow()}
-        className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all"
-      >
-        ปิดหน้านี้
-      </button>
-    </div>
-  );
-}
+// SuccessView removed in favor of SweetAlert2
 
 function AddFriendView() {
   return (
