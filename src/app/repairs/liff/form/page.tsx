@@ -46,7 +46,7 @@ const URGENCY_LEVELS = [
 function RepairFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [formData, setFormData] = useState({
     name: "",
     dept: "",
@@ -61,7 +61,9 @@ function RepairFormContent() {
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [lineUserId, setLineUserId] = useState(searchParams.get("lineUserId") || "");
+  const [lineUserId, setLineUserId] = useState(
+    searchParams.get("lineUserId") || "",
+  );
   const [userProfile, setUserProfile] = useState<{
     displayName: string;
     pictureUrl?: string;
@@ -94,7 +96,9 @@ function RepairFormContent() {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -112,10 +116,10 @@ function RepairFormContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Simple Validation
     if (!formData.dept) {
-        return Swal.fire("แจ้งเตือน", "กรุณาเลือกแผนกของคุณ", "warning");
+      return Swal.fire("แจ้งเตือน", "กรุณาเลือกแผนกของคุณ", "warning");
     }
 
     setIsLoading(true);
@@ -150,7 +154,11 @@ function RepairFormContent() {
 
       router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`);
     } catch (error: any) {
-      Swal.fire("เกิดข้อผิดพลาด", error.message || "กรุณาลองใหม่อีกครั้ง", "error");
+      Swal.fire(
+        "เกิดข้อผิดพลาด",
+        error.message || "กรุณาลองใหม่อีกครั้ง",
+        "error",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -161,47 +169,61 @@ function RepairFormContent() {
       {/* Header Section */}
       <div className="bg-indigo-700 px-6 pt-12 pb-24 rounded-b-[3rem] shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        
+
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex justify-between items-center">
-            <button onClick={() => router.back()} className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white">
+            <button
+              onClick={() => router.back()}
+              className="p-2 bg-white/20 backdrop-blur-md rounded-xl text-white"
+            >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-lg font-bold text-white uppercase tracking-wider">New Repair Request</h1>
-          </div>
-
-          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20">
-            <div className="w-14 h-14 rounded-full border-2 border-white/40 overflow-hidden bg-indigo-500 shadow-inner">
-              {userProfile?.pictureUrl ? (
-                <img src={userProfile.pictureUrl} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white"><User /></div>
-              )}
-            </div>
-            <div className="flex-1">
-              <p className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em]">Logged in as</p>
-              <h4 className="text-white font-bold text-lg leading-tight">{userProfile?.displayName || "Guest User"}</h4>
-            </div>
+            <h1 className="text-lg font-bold text-white uppercase tracking-wider">
+              New Repair Request
+            </h1>
           </div>
         </div>
       </div>
 
       {/* Form Card */}
       <div className="px-6 -mt-10 relative z-20">
-        <form onSubmit={handleSubmit} className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100 space-y-8">
-          
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-[2rem] p-6 shadow-xl border border-slate-100 space-y-8"
+        >
           {/* Section 1: Reporter Info */}
           <div className="space-y-5">
             <div className="flex items-center gap-2 border-b border-slate-50 pb-2">
               <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">ข้อมูลผู้แจ้งซ่อม</h3>
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                ข้อมูลผู้แจ้งซ่อม
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 ml-1">
+                    ชื่อผู้แจ้ง <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      id="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="ระบุชื่อจริง-นามสกุล"
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:border-indigo-500 outline-none font-semibold transition-all"
+                    />
+                  </div>
+                </div>
                 {/* แผนก / โซน - เปลี่ยนเป็น Select เพื่อความโปร่งใสของข้อมูล */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 ml-1">แผนกที่สังกัด <span className="text-rose-500">*</span></label>
+                  <label className="text-[11px] font-bold text-slate-500 ml-1">
+                    แผนกที่สังกัด <span className="text-rose-500">*</span>
+                  </label>
                   <select
                     id="dept"
                     value={formData.dept}
@@ -211,7 +233,9 @@ function RepairFormContent() {
                   >
                     <option value="">เลือกแผนกของคุณ</option>
                     {DEPARTMENTS.map((d) => (
-                      <option key={d.value} value={d.value}>{d.label}</option>
+                      <option key={d.value} value={d.value}>
+                        {d.label}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -219,7 +243,9 @@ function RepairFormContent() {
                 {/* แสดงเมื่อเลือก 'อื่นๆ' */}
                 {formData.dept === "OTHER" && (
                   <div className="animate-in slide-in-from-top-2 duration-300">
-                    <label className="text-[11px] font-bold text-slate-500 ml-1">ระบุแผนกของคุณ</label>
+                    <label className="text-[11px] font-bold text-slate-500 ml-1">
+                      ระบุแผนกของคุณ
+                    </label>
                     <input
                       type="text"
                       id="otherDept"
@@ -233,7 +259,9 @@ function RepairFormContent() {
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 ml-1">เบอร์ติดต่อภายใน/มือถือ</label>
+                  <label className="text-[11px] font-bold text-slate-500 ml-1">
+                    เบอร์ติดต่อภายใน/มือถือ
+                  </label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -254,26 +282,36 @@ function RepairFormContent() {
           <div className="space-y-5">
             <div className="flex items-center gap-2 border-b border-slate-50 pb-2">
               <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">รายละเอียดอาการเสีย</h3>
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                รายละเอียดอาการเสีย
+              </h3>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">ประเภทอุปกรณ์/ปัญหา <span className="text-rose-500">*</span></label>
+                <label className="text-[11px] font-bold text-slate-500 ml-1">
+                  ประเภทอุปกรณ์/ปัญหา <span className="text-rose-500">*</span>
+                </label>
                 <select
-                    id="issueType"
-                    value={formData.issueType}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:border-indigo-500 outline-none font-semibold"
+                  id="issueType"
+                  value={formData.issueType}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:border-indigo-500 outline-none font-semibold"
                 >
-                    <option value="">เลือกประเภทปัญหา</option>
-                    {ISSUE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                  <option value="">เลือกประเภทปัญหา</option>
+                  {ISSUE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">อาการเสียโดยละเอียด</label>
+                <label className="text-[11px] font-bold text-slate-500 ml-1">
+                  อาการเสียโดยละเอียด
+                </label>
                 <textarea
                   id="details"
                   rows={3}
@@ -285,7 +323,9 @@ function RepairFormContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 ml-1 font-sans">สถานที่/ตำแหน่ง <span className="text-rose-500">*</span></label>
+                <label className="text-[11px] font-bold text-slate-500 ml-1 font-sans">
+                  สถานที่/ตำแหน่ง <span className="text-rose-500">*</span>
+                </label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
@@ -301,13 +341,17 @@ function RepairFormContent() {
 
               {/* Urgency Selection */}
               <div className="space-y-3">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">ระดับความเร่งด่วน</label>
+                <label className="text-[11px] font-bold text-slate-500 ml-1">
+                  ระดับความเร่งด่วน
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {URGENCY_LEVELS.map((level) => (
                     <button
                       key={level.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, urgency: level.id })}
+                      onClick={() =>
+                        setFormData({ ...formData, urgency: level.id })
+                      }
                       className={`py-3 rounded-2xl text-[11px] font-black uppercase transition-all border ${
                         formData.urgency === level.id
                           ? `bg-${level.color}-500 border-${level.color}-500 text-white shadow-lg scale-105 z-10`
@@ -322,13 +366,22 @@ function RepairFormContent() {
 
               {/* Image Upload */}
               <div className="pt-2">
-                <label className="text-[11px] font-bold text-slate-500 ml-1 mb-2 block">รูปถ่ายหน้าจอหรือจุดที่เสีย (ถ้ามี)</label>
+                <label className="text-[11px] font-bold text-slate-500 ml-1 mb-2 block">
+                  รูปถ่ายหน้าจอหรือจุดที่เสีย (ถ้ามี)
+                </label>
                 {filePreview ? (
                   <div className="relative rounded-2xl overflow-hidden border-2 border-slate-100">
-                    <img src={filePreview} alt="Preview" className="w-full h-40 object-cover" />
+                    <img
+                      src={filePreview}
+                      alt="Preview"
+                      className="w-full h-40 object-cover"
+                    />
                     <button
                       type="button"
-                      onClick={() => { setFile(null); setFilePreview(null); }}
+                      onClick={() => {
+                        setFile(null);
+                        setFilePreview(null);
+                      }}
                       className="absolute top-2 right-2 p-2 bg-rose-500 text-white rounded-full shadow-lg"
                     >
                       <X className="w-4 h-4" />
@@ -337,8 +390,15 @@ function RepairFormContent() {
                 ) : (
                   <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer">
                     <Camera className="w-6 h-6 text-slate-400 mb-1" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tap to upload photo</span>
-                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Tap to upload photo
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
                   </label>
                 )}
               </div>
@@ -353,16 +413,18 @@ function RepairFormContent() {
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : (
-              <><Send className="w-4 h-4" /> ส่งใบแจ้งซ่อม</>
+              <>
+                <Send className="w-4 h-4" /> ส่งใบแจ้งซ่อม
+              </>
             )}
           </button>
         </form>
 
         <div className="mt-8 flex flex-col items-center gap-1 opacity-30">
-            <AlertCircle className="w-4 h-4" />
-            <p className="text-[9px] font-black tracking-[0.3em] uppercase text-center">
-              Internal Maintenance Management System
-            </p>
+          <AlertCircle className="w-4 h-4" />
+          <p className="text-[9px] font-black tracking-[0.3em] uppercase text-center">
+            Internal Maintenance Management System
+          </p>
         </div>
       </div>
     </div>
@@ -371,7 +433,13 @@ function RepairFormContent() {
 
 export default function RepairLiffFormPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="animate-spin w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+        </div>
+      }
+    >
       <RepairFormContent />
     </Suspense>
   );
