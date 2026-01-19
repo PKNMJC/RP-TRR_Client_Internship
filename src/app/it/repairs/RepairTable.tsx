@@ -54,52 +54,53 @@ export const RepairTable: React.FC<RepairTableProps> = ({
           {repairs.map((repair) => (
             <tr
               key={repair.id}
-              className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group border-b border-gray-100 dark:border-slate-800 last:border-0"
+              className="bg-white dark:bg-slate-900 hover:bg-gray-50/80 dark:hover:bg-slate-800/80 transition-colors group border-b border-gray-100 dark:border-slate-800 last:border-0"
             >
-              <td className="px-6 py-4">
-                <span className="text-xs font-semibold font-mono text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded">
+              <td className="px-6 py-5">
+                <span className="text-[10px] font-bold font-mono text-black dark:text-white bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded border border-gray-200 dark:border-slate-700">
                   #{repair.ticketCode}
                 </span>
               </td>
-              <td className="px-6 py-4">
-                <div className="text-sm font-semibold text-black dark:text-white">
+              <td className="px-6 py-5">
+                <div className="text-sm font-bold text-black dark:text-white group-hover:translate-x-1 transition-transform">
                   {repair.problemTitle}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700"></span>
                   แจ้งเมื่อ: {safeFormat(repair.createdAt, "dd/MM/yy HH:mm")}
                 </div>
               </td>
-              <td className="px-6 py-4">
+              <td className="px-6 py-5">
                 <UrgencyBadge urgency={repair.urgency} />
               </td>
-              <td className="px-6 py-4">
+              <td className="px-6 py-5">
                 <StatusBadge status={repair.status} />
               </td>
               {activeTab !== "available" && activeTab !== "completed" && (
-                <td className="px-6 py-4">
+                <td className="px-6 py-5">
                   <div className="text-sm font-medium text-black dark:text-white">
                     {repair.assignee?.name ? (
                       <div className="flex items-center gap-2">
                         <Avatar name={repair.assignee.name} size="sm" />
-                        <span className="truncate max-w-[100px]">
+                        <span className="truncate max-w-[120px] font-bold">
                           {repair.assignee.name}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-gray-400 text-xs italic">
+                      <span className="text-gray-300 dark:text-gray-600 text-xs italic">
                         - ไม่ระบุ -
                       </span>
                     )}
                   </div>
                 </td>
               )}
-              <td className="px-6 py-4 text-right">
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <td className="px-6 py-5 text-right">
+                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                   {repair.status === "PENDING" && (
                     <button
                       onClick={() => onAccept(repair.id)}
                       disabled={submitting}
-                      className="bg-black dark:bg-white text-white dark:text-black px-3 py-2 rounded-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-all disabled:opacity-50 text-xs font-medium"
+                      className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 transition-all disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/5"
                       title="รับเรื่อง"
                     >
                       รับเรื่อง

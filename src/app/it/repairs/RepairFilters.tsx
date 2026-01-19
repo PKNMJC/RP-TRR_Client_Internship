@@ -36,7 +36,7 @@ export const RepairFilters: React.FC<RepairFiltersProps> = ({
         <input
           type="text"
           placeholder="ค้นหาชื่อผู้แจ้ง, รหัสตั๋ว..."
-          className="w-full pl-10 pr-4 py-2.5 md:py-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all shadow-sm text-sm dark:text-white dark:placeholder-gray-500"
+          className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-black dark:focus:ring-white outline-none transition-all shadow-sm text-sm dark:text-white dark:placeholder-gray-600 font-medium"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           aria-label="ค้นหาการแจ้งซ่อม"
@@ -44,7 +44,7 @@ export const RepairFilters: React.FC<RepairFiltersProps> = ({
       </div>
       <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
         <select
-          className="px-3 md:px-4 py-2 md:py-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white outline-none shadow-sm font-medium text-[11px] md:text-sm appearance-none pr-8 dark:text-white"
+          className="px-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-black dark:focus:ring-white outline-none shadow-sm font-bold text-xs appearance-none pr-10 dark:text-white transition-all cursor-pointer"
           style={selectStyles}
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
@@ -56,7 +56,7 @@ export const RepairFilters: React.FC<RepairFiltersProps> = ({
           <option value="WAITING_PARTS">รออะไหล่</option>
         </select>
         <select
-          className="px-3 md:px-4 py-2 md:py-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-black dark:focus:ring-white outline-none shadow-sm font-medium text-[11px] md:text-sm appearance-none pr-8 dark:text-white"
+          className="px-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-black dark:focus:ring-white outline-none shadow-sm font-bold text-xs appearance-none pr-10 dark:text-white transition-all cursor-pointer"
           style={selectStyles}
           value={filterPriority}
           onChange={(e) => setFilterPriority(e.target.value)}

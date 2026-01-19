@@ -20,8 +20,8 @@
 
 :root {
   /* Dynamic Backgrounds */
-  --background: #f8fafc; /* Slate-50 */
-  --foreground: #0f172a; /* Slate-900 */
+  --background: #ffffff; /* pure white */
+  --foreground: #000000; /* pure black */
 
   --card-bg: rgba(255, 255, 255, 0.7);
   --card-border: rgba(255, 255, 255, 0.5);
