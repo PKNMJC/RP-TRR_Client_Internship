@@ -127,7 +127,20 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                     <div className="flex items-center gap-2 text-slate-800">
                       <MapPin size={14} className="text-slate-300" />
                       <span className="text-sm font-medium">
-                        {repair.location || "สำนักงาน"}
+                        {translatedDepartment}{" "}
+                        {repair.location ? `· ${repair.location}` : ""}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
+                      หมวดหมู่ปัญหา
+                    </p>
+                    <div className="flex items-center gap-2 text-slate-800">
+                      <Tag size={14} className="text-slate-300" />
+                      <span className="text-sm font-medium">
+                        {translatedCategory}
                       </span>
                     </div>
                   </div>
