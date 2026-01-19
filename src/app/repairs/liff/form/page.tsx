@@ -243,7 +243,7 @@ export default function RepairLiffFormPage() {
               value={formData.phone}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base placeholder:text-slate-400"
-              placeholder="08X-XXX-XXXX"
+              placeholder=""
               pattern="[0-9]*"
               inputMode="numeric"
             />
