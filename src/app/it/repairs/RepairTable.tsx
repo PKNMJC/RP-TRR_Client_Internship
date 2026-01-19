@@ -54,10 +54,10 @@ export const RepairTable: React.FC<RepairTableProps> = ({
           {repairs.map((repair) => (
             <tr
               key={repair.id}
-              className="bg-white dark:bg-black hover:bg-gray-50/80 dark:hover:bg-neutral-900/50 transition-colors group border-b border-gray-100 dark:border-neutral-900 last:border-0"
+              className="bg-white dark:bg-black hover:bg-gray-50/50 dark:hover:bg-neutral-900/40 transition-colors group border-b border-gray-50 dark:border-neutral-900 last:border-0"
             >
               <td className="px-6 py-5">
-                <span className="text-[10px] font-bold font-mono text-black dark:text-white bg-gray-100 dark:bg-neutral-900 px-2 py-1 rounded border border-gray-200 dark:border-neutral-800">
+                <span className="text-[10px] font-bold font-mono text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-neutral-900 px-2 py-1 rounded border border-gray-100 dark:border-neutral-800">
                   #{repair.ticketCode}
                 </span>
               </td>
@@ -65,8 +65,8 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                 <div className="text-sm font-bold text-black dark:text-white group-hover:translate-x-1 transition-transform">
                   {repair.problemTitle}
                 </div>
-                <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-neutral-800"></span>
+                <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1.5 opacity-70">
+                  <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-neutral-700"></span>
                   แจ้งเมื่อ: {safeFormat(repair.createdAt, "dd/MM/yy HH:mm")}
                 </div>
               </td>
