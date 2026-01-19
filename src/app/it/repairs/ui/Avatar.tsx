@@ -29,7 +29,7 @@ export const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div
-      className={`${sizeClasses[size]} rounded-full bg-white border border-gray-100 flex items-center justify-center font-bold text-gray-600 shadow-sm overflow-hidden relative ${className}`}
+      className={`${sizeClasses[size]} rounded-full bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center font-bold text-gray-600 dark:text-gray-300 shadow-sm overflow-hidden relative ${className}`}
     >
       {name ? (
         name.charAt(0).toUpperCase()

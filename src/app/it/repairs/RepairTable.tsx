@@ -29,40 +29,40 @@ export const RepairTable: React.FC<RepairTableProps> = ({
     <div className="hidden lg:block overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="bg-gray-50 text-left">
-            <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+          <tr className="bg-gray-50 dark:bg-slate-800/50 text-left">
+            <th className="px-6 py-3 text-xs font-bold text-black dark:text-white uppercase border-b border-gray-100 dark:border-slate-800">
               ตั๋วเลขที่
             </th>
-            <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+            <th className="px-6 py-3 text-xs font-bold text-black dark:text-white uppercase border-b border-gray-100 dark:border-slate-800">
               หัวข้อแจ้งซ่อม
             </th>
-            <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+            <th className="px-6 py-3 text-xs font-bold text-black dark:text-white uppercase border-b border-gray-100 dark:border-slate-800">
               ความสำคัญ
             </th>
-            <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+            <th className="px-6 py-3 text-xs font-bold text-black dark:text-white uppercase border-b border-gray-100 dark:border-slate-800">
               สถานะ
             </th>
             {activeTab !== "available" && activeTab !== "completed" && (
-              <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+              <th className="px-6 py-3 text-xs font-bold text-black dark:text-white uppercase border-b border-gray-100 dark:border-slate-800">
                 ผู้รับผิดชอบ
               </th>
             )}
-            <th className="px-6 py-3 border-b border-gray-100"></th>
+            <th className="px-6 py-3 border-b border-gray-100 dark:border-slate-800"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {repairs.map((repair) => (
             <tr
               key={repair.id}
-              className="hover:bg-gray-50/50 transition-colors group"
+              className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group border-b border-gray-100 dark:border-slate-800 last:border-0"
             >
               <td className="px-6 py-4">
-                <span className="text-xs font-semibold font-mono text-gray-600 bg-gray-100 px-2.5 py-1 rounded">
+                <span className="text-xs font-semibold font-mono text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2.5 py-1 rounded">
                   #{repair.ticketCode}
                 </span>
               </td>
               <td className="px-6 py-4">
-                <div className="text-sm font-semibold text-black">
+                <div className="text-sm font-semibold text-black dark:text-white">
                   {repair.problemTitle}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
@@ -77,7 +77,7 @@ export const RepairTable: React.FC<RepairTableProps> = ({
               </td>
               {activeTab !== "available" && activeTab !== "completed" && (
                 <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-black">
+                  <div className="text-sm font-medium text-black dark:text-white">
                     {repair.assignee?.name ? (
                       <div className="flex items-center gap-2">
                         <Avatar name={repair.assignee.name} size="sm" />
@@ -99,7 +99,7 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                     <button
                       onClick={() => onAccept(repair.id)}
                       disabled={submitting}
-                      className="bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-900 transition-all disabled:opacity-50 text-xs font-medium"
+                      className="bg-black dark:bg-white text-white dark:text-black px-3 py-2 rounded-lg hover:bg-gray-900 dark:hover:bg-gray-100 transition-all disabled:opacity-50 text-xs font-medium"
                       title="รับเรื่อง"
                     >
                       รับเรื่อง
@@ -108,7 +108,7 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                   {repair.status !== "COMPLETED" && (
                     <button
                       onClick={() => onTransfer(repair)}
-                      className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
+                      className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 p-2 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"
                       title="โอนงาน"
                     >
                       <Share2 size={16} strokeWidth={2} />
@@ -116,7 +116,7 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                   )}
                   <button
                     onClick={() => onView(repair)}
-                    className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                    className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
                     title="ดูรายละเอียด"
                   >
                     <Eye size={16} strokeWidth={2} />

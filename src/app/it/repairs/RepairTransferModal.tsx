@@ -21,18 +21,20 @@ export const RepairTransferModal: React.FC<RepairTransferModalProps> = ({
   if (!repair) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-      <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-8 border-b border-gray-50">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in duration-200 border border-gray-100 dark:border-slate-800">
+        <div className="flex items-center justify-between p-8 border-b border-gray-50 dark:border-slate-800">
           <div>
-            <h3 className="text-xl font-black text-black">โอนงานซ่อม</h3>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+            <h3 className="text-xl font-black text-black dark:text-white">
+              โอนงานซ่อม
+            </h3>
+            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">
               Select new assignee
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors text-gray-400 dark:text-gray-500"
           >
             <X size={20} />
           </button>
@@ -44,28 +46,28 @@ export const RepairTransferModal: React.FC<RepairTransferModalProps> = ({
                 key={staff.id}
                 onClick={() => onTransfer(repair.id, staff.id)}
                 disabled={submitting || repair.assignee?.id === staff.id}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-all group disabled:opacity-50"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-all group disabled:opacity-50 text-left"
               >
                 <Avatar name={staff.name} size="md" />
                 <div className="flex-1 text-left">
-                  <p className="font-bold text-black text-sm group-hover:translate-x-1 transition-transform">
+                  <p className="font-bold text-black dark:text-white text-sm group-hover:translate-x-1 transition-transform">
                     {staff.name}
                   </p>
-                  <p className="text-[10px] font-medium text-gray-500">
+                  <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
                     {staff.department || "IT Department"}
                   </p>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all">
+                <div className="w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-black dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-black transition-all">
                   <Share2 size={14} />
                 </div>
               </button>
             ))}
           </div>
         </div>
-        <div className="p-6 bg-gray-50/50">
+        <div className="p-6 bg-gray-50/50 dark:bg-slate-800/30">
           <button
             onClick={onClose}
-            className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] text-gray-400 hover:text-black transition-colors"
+            className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 hover:text-black dark:hover:text-white transition-colors"
           >
             Close Window
           </button>
