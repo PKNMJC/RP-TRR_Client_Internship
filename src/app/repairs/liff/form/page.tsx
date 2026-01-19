@@ -128,16 +128,16 @@ function RepairFormContent() {
 
       let mappedDept = "OTHER";
       const d = formData.dept;
-      if (d === "บัญชี (ACCOUNTING)") mappedDept = "ACCOUNTING";
-      else if (d === "การขาย (SALES)") mappedDept = "SALES";
-      else if (d === "ผลิต (PRODUCTION)") mappedDept = "PRODUCTION";
-      else if (d === "ไอที (IT)") mappedDept = "IT";
-      else if (d === "บุคคล (HR)") mappedDept = "HR";
-      else if (d === "ซ่อมบำรุง (MAINTENANCE)") mappedDept = "MAINTENANCE";
+      if (d.includes("ACCOUNTING")) mappedDept = "ACCOUNTING";
+      else if (d.includes("SALES")) mappedDept = "SALES";
+      else if (d.includes("PRODUCTION")) mappedDept = "PRODUCTION";
+      else if (d.includes("IT")) mappedDept = "IT";
+      else if (d.includes("HR")) mappedDept = "HR";
+      else if (d.includes("MAINTENANCE")) mappedDept = "MAINTENANCE";
 
       payload.append("reporterDepartment", mappedDept);
       if (mappedDept === "OTHER") {
-        payload.append("otherDepartment", formData.otherDept || formData.dept);
+        payload.append("otherDepartment", formData.dept);
       }
 
       payload.append("reporterPhone", formData.phone || "ไม่ระบุ");
@@ -267,37 +267,22 @@ function RepairFormContent() {
                   แผนก / โซน
                 </label>
                 <div className="relative group">
-                  <select
-                    id="dept"
-                    value={formData.dept}
-                    onChange={handleChange}
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold appearance-none cursor-pointer"
-                    required
-                  >
-                    <option value="" disabled>
-                      -- เลือกแผนก --
-                    </option>
-                    {DEPARTMENTS.map((d, i) => (
-                      <option key={i} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <ChevronDown className="w-5 h-5" />
-                  </div>
-                </div>
-                {formData.dept === "อื่นๆ" && (
                   <input
                     type="text"
-                    id="otherDept"
-                    value={formData.otherDept}
+                    id="dept"
+                    list="dept-options"
+                    value={formData.dept}
                     onChange={handleChange}
-                    className="w-full mt-3 px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold animate-in slide-in-from-top-2"
-                    placeholder="ระบุแผนก/โซนของคุณ"
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold"
+                    placeholder="พิมพ์หรือเลือกแผนก/โซน"
                     required
                   />
-                )}
+                  <datalist id="dept-options">
+                    {DEPARTMENTS.map((d, i) => (
+                      <option key={i} value={d} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div>
@@ -388,37 +373,6 @@ function RepairFormContent() {
                     className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold"
                     placeholder="เช่น ชั้น 2, ห้องสมุด, โต๊ะทำงาน A1"
                   />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">
-                  หมวดหมู่ปัญหา
-                </label>
-                <div className="relative group">
-                  <select
-                    id="problemCategory"
-                    value={formData.problemCategory}
-                    onChange={handleChange}
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold appearance-none cursor-pointer"
-                    required
-                  >
-                    <option value="GENERAL">ทั่วไป (General)</option>
-                    <option value="HARDWARE">ฮาร์ดแวร์ (Hardware)</option>
-                    <option value="SOFTWARE">ซอฟต์แวร์ (Software)</option>
-                    <option value="NETWORK">
-                      เครือข่าย/อินเทอร์เน็ต (Network)
-                    </option>
-                    <option value="PERIPHERAL">
-                      อุปกรณ์ต่อพ่วง (Peripheral)
-                    </option>
-                    <option value="EMAIL_OFFICE365">Email / Office 365</option>
-                    <option value="ACCOUNT_PASSWORD">Account / Password</option>
-                    <option value="OTHER">อื่นๆ (Other)</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <ChevronDown className="w-5 h-5" />
-                  </div>
                 </div>
               </div>
 

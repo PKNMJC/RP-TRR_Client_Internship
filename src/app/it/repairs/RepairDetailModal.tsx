@@ -120,17 +120,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
 
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-2 gap-y-8 pt-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
-                      หมวดหมู่
-                    </p>
-                    <div className="flex items-center gap-2 text-neutral-800">
-                      <Tag size={14} className="text-neutral-300" />
-                      <span className="text-sm font-medium">
-                        {translatedCategory}
-                      </span>
-                    </div>
-                  </div>
+                  
                   <div className="space-y-1">
                     <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
                       สถานที่แจ้ง
@@ -183,8 +173,21 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                     ผู้แจ้งซ่อม
                   </p>
                 </div>
-
                 <div className="space-y-4 pt-4">
+                  {/* ชื่อผู้แจ้งซ่อม */}
+                  <div className="flex items-center justify-between py-3 border-b border-neutral-100">
+                    <div className="flex items-center gap-3 text-neutral-500">
+                      <User size={14} strokeWidth={1.5} />
+                      <span className="text-xs font-medium uppercase tracking-wider">
+                        ชื่อผู้แจ้งซ่อม
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-800">
+                      {repair.reporterName || "-"}
+                    </span>
+                  </div>
+
+
                   <div className="flex items-center justify-between py-3 border-b border-neutral-100">
                     <div className="flex items-center gap-3 text-neutral-500">
                       <Phone size={14} strokeWidth={1.5} />
