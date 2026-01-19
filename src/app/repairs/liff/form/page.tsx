@@ -15,28 +15,10 @@ import {
   X,
   AlertCircle,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 
 // --- Constants ---
-const DEPARTMENTS = [
-  { label: "บัญชี (ACCOUNTING)", value: "ACCOUNTING" },
-  { label: "การขาย (SALES)", value: "SALES" },
-  { label: "ผลิต (PRODUCTION)", value: "PRODUCTION" },
-  { label: "ไอที (IT)", value: "IT" },
-  { label: "บุคคล (HR)", value: "HR" },
-  { label: "ซ่อมบำรุง (MAINTENANCE)", value: "MAINTENANCE" },
-  { label: "อื่นๆ", value: "OTHER" },
-];
-
-const ISSUE_TYPES = [
-  "คอมพิวเตอร์",
-  "เครื่องพิมพ์",
-  "อินเทอร์เน็ต/เครือข่าย",
-  "โปรแกรม/ซอฟต์แวร์",
-  "อุปกรณ์ต่อพ่วง",
-  "อื่นๆ",
-];
-
 const URGENCY_LEVELS = [
   { id: "NORMAL", label: "ปกติ", color: "emerald" },
   { id: "URGENT", label: "ด่วน", color: "amber" },
@@ -50,7 +32,6 @@ function RepairFormContent() {
   const [formData, setFormData] = useState({
     name: "",
     dept: "",
-    otherDept: "",
     phone: "",
     issueType: "",
     details: "",
@@ -119,7 +100,7 @@ function RepairFormContent() {
 
     // Simple Validation
     if (!formData.dept) {
-      return Swal.fire("แจ้งเตือน", "กรุณาเลือกแผนกของคุณ", "warning");
+      return Swal.fire("แจ้งเตือน", "กรุณาระบุแผนกของคุณ", "warning");
     }
 
     setIsLoading(true);
@@ -128,9 +109,6 @@ function RepairFormContent() {
       payload.append("reporterName", formData.name);
       payload.append("reporterLineId", lineUserId || "Guest");
       payload.append("reporterDepartment", formData.dept);
-      if (formData.dept === "OTHER") {
-        payload.append("otherDepartment", formData.otherDept);
-      }
       payload.append("reporterPhone", formData.phone || "ไม่ระบุ");
       payload.append("problemTitle", formData.issueType);
       payload.append("problemDescription", formData.details);
@@ -221,42 +199,19 @@ function RepairFormContent() {
                 </div>
                 {/* แผนก / โซน - เปลี่ยนเป็น Select เพื่อความโปร่งใสของข้อมูล */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 ml-1">
-                    แผนกที่สังกัด <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    id="dept"
-                    value={formData.dept}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-semibold"
-                  >
-                    <option value="">เลือกแผนกของคุณ</option>
-                    {DEPARTMENTS.map((d) => (
-                      <option key={d.value} value={d.value}>
-                        {d.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* แสดงเมื่อเลือก 'อื่นๆ' */}
-                {formData.dept === "OTHER" && (
-                  <div className="animate-in slide-in-from-top-2 duration-300">
-                    <label className="text-[11px] font-bold text-slate-500 ml-1">
-                      ระบุแผนกของคุณ
-                    </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
-                      id="otherDept"
-                      value={formData.otherDept}
+                      id="dept"
+                      value={formData.dept}
                       onChange={handleChange}
-                      placeholder="เช่น แผนกจัดซื้อ, คลังสินค้า B"
-                      className="w-full px-4 py-3.5 bg-indigo-50/50 border border-indigo-100 rounded-2xl focus:border-indigo-500 outline-none font-semibold mt-1.5 shadow-inner"
                       required
+                      placeholder="เช่น แผนกบัญชี, ฝ่ายผลิต"
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:border-indigo-500 outline-none font-semibold transition-all"
                     />
                   </div>
-                )}
+                </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-slate-500 ml-1">
@@ -292,20 +247,20 @@ function RepairFormContent() {
                 <label className="text-[11px] font-bold text-slate-500 ml-1">
                   ประเภทอุปกรณ์/ปัญหา <span className="text-rose-500">*</span>
                 </label>
-                <select
-                  id="issueType"
-                  value={formData.issueType}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:border-indigo-500 outline-none font-semibold"
-                >
-                  <option value="">เลือกประเภทปัญหา</option>
-                  {ISSUE_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
+                    <AlertCircle className="w-full h-full" />
+                  </div>
+                  <input
+                    type="text"
+                    id="issueType"
+                    value={formData.issueType}
+                    onChange={handleChange}
+                    required
+                    placeholder="เช่น คอมพิวเตอร์ดับเอง, ปริ้นไม่ออก"
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:border-indigo-500 outline-none font-semibold transition-all"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">

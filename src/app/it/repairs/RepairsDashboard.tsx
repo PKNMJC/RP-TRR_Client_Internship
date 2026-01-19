@@ -48,6 +48,7 @@ export function RepairsDashboard() {
     assigneeId: "",
     location: "",
     problemCategory: "OTHER",
+    reporterDepartment: "",
   });
 
   const {
@@ -76,6 +77,7 @@ export function RepairsDashboard() {
         assigneeId: selectedRepair.assignee?.id.toString() || "",
         location: selectedRepair.location || "",
         problemCategory: selectedRepair.problemCategory || "OTHER",
+        reporterDepartment: selectedRepair.reporterDepartment || "",
       });
       setShowEditModal(true);
     }

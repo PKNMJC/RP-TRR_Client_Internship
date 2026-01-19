@@ -92,10 +92,14 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
 
   const translatedStatus = STATUS_MAP[repair.status];
   const translatedCategory =
-    CATEGORY_MAP[normalizeKey(repair.problemCategory) || ""] || "ทั่วไป";
+    CATEGORY_MAP[normalizeKey(repair.problemCategory) || ""] ||
+    repair.problemCategory ||
+    "ทั่วไป";
 
   const translatedDepartment =
-    DEPARTMENT_MAP[normalizeKey(repair.reporterDepartment) || ""] || "-";
+    DEPARTMENT_MAP[normalizeKey(repair.reporterDepartment) || ""] ||
+    repair.reporterDepartment ||
+    "-";
 
   const isCompleted = repair.status === RepairStatus.COMPLETED;
 

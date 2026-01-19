@@ -13,6 +13,7 @@ interface RepairEditModalProps {
     assigneeId: string;
     location: string;
     problemCategory: string;
+    reporterDepartment: string;
   };
   setEditForm: (form: any) => void;
   itStaff: User[];
@@ -60,6 +61,20 @@ export const RepairEditModal: React.FC<RepairEditModalProps> = ({
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+              แผนกผู้แจ้ง
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-900"
+              value={editForm.reporterDepartment}
+              onChange={(e) =>
+                setEditForm({ ...editForm, reporterDepartment: e.target.value })
+              }
+              placeholder="เช่น แผนกไอที, บัญชี"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
               ความสำคัญ
             </label>
             <select
@@ -76,23 +91,17 @@ export const RepairEditModal: React.FC<RepairEditModalProps> = ({
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
-              หมวดหมู่ปัญหา
+              หมวดหมู่ปัญหา (ประเภท)
             </label>
-            <select
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold appearance-none text-slate-900"
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-900"
               value={editForm.problemCategory}
               onChange={(e) =>
                 setEditForm({ ...editForm, problemCategory: e.target.value })
               }
-            >
-              <option value="OTHER">ทั่วไป (General / Other)</option>
-              <option value="HARDWARE">ฮาร์ดแวร์ (Hardware)</option>
-              <option value="SOFTWARE">ซอฟต์แวร์ (Software)</option>
-              <option value="NETWORK">เครือข่าย/อินเทอร์เน็ต (Network)</option>
-              <option value="PERIPHERAL">อุปกรณ์ต่อพ่วง (Peripheral)</option>
-              <option value="EMAIL_OFFICE365">Email / Office 365</option>
-              <option value="ACCOUNT_PASSWORD">Account / Password</option>
-            </select>
+              placeholder="เช่น Hardware, Software, Network"
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
