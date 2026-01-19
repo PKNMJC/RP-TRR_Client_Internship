@@ -54,10 +54,10 @@ export const RepairTable: React.FC<RepairTableProps> = ({
           {repairs.map((repair) => (
             <tr
               key={repair.id}
-              className="bg-white dark:bg-slate-900 hover:bg-gray-50/80 dark:hover:bg-slate-800/80 transition-colors group border-b border-gray-100 dark:border-slate-800 last:border-0"
+              className="bg-white dark:bg-black hover:bg-gray-50/80 dark:hover:bg-neutral-900/50 transition-colors group border-b border-gray-100 dark:border-neutral-900 last:border-0"
             >
               <td className="px-6 py-5">
-                <span className="text-[10px] font-bold font-mono text-black dark:text-white bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded border border-gray-200 dark:border-slate-700">
+                <span className="text-[10px] font-bold font-mono text-black dark:text-white bg-gray-100 dark:bg-neutral-900 px-2 py-1 rounded border border-gray-200 dark:border-neutral-800">
                   #{repair.ticketCode}
                 </span>
               </td>
@@ -66,7 +66,7 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                   {repair.problemTitle}
                 </div>
                 <div className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-slate-700"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-neutral-800"></span>
                   แจ้งเมื่อ: {safeFormat(repair.createdAt, "dd/MM/yy HH:mm")}
                 </div>
               </td>

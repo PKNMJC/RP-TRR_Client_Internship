@@ -35,7 +35,7 @@ export const RepairTabs: React.FC<RepairTabsProps> = ({
   ];
 
   return (
-    <div className="flex items-center gap-1 bg-gray-100/50 dark:bg-slate-800/30 p-1 rounded-2xl w-full md:w-fit border border-gray-200 dark:border-slate-800 shadow-sm mt-4">
+    <div className="flex items-center gap-1 bg-gray-100/50 dark:bg-neutral-900/30 p-1 rounded-2xl w-full md:w-fit border border-gray-200 dark:border-neutral-800 shadow-sm mt-4">
       {tabs.map((tab) => (
         <button
           key={tab.id}
