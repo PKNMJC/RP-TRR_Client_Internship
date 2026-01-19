@@ -150,16 +150,6 @@ export default function AdminLogin() {
               เข้าสู่ระบบ
             </Button>
           </form>
-
-          {/* Back to choice */}
-          <div className="text-center mt-6">
-            <Link
-              href="/login/choice"
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              ← กลับไปเลือกวิธีเข้าสู่ระบบ
-            </Link>
-          </div>
         </Card>
 
         {/* Footer */}

@@ -20,7 +20,7 @@ import {
   UserCog,
   User as UserIcon,
   Phone,
-  MessageCircle
+  MessageCircle,
 } from "lucide-react";
 
 // --- Types ---
@@ -63,9 +63,10 @@ export default function ITUsersPage() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+      const token =
+        localStorage.getItem("access_token") || localStorage.getItem("token");
       if (!token) {
-        router.push("/login");
+        router.push("/login/admin");
         return;
       }
 
@@ -90,7 +91,7 @@ export default function ITUsersPage() {
         `${user.name} ${user.email} ${user.department}`.toLowerCase();
       const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
       const matchesRole = filterRole === "all" || user.role === filterRole;
-      
+
       // Double check to exclude admins even if API returned them (safety)
       const isNotAdmin = user.role !== "ADMIN";
 
@@ -104,7 +105,7 @@ export default function ITUsersPage() {
       its: users.filter((u) => u.role === "IT").length,
       users: users.filter((u) => u.role === "USER").length,
     }),
-    [users]
+    [users],
   );
 
   const resetForm = () => {
@@ -254,18 +255,21 @@ export default function ITUsersPage() {
     setShowDetailModal(true);
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader2 className="animate-spin text-black" size={40} />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="animate-spin text-black" size={40} />
+      </div>
+    );
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">จัดการผู้ใช้</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            จัดการผู้ใช้
+          </h1>
           <p className="text-gray-500 mt-1">
             ดูแลและจัดการรายชื่อพนักงาน (ระดับ User เท่านั้น)
           </p>
@@ -290,9 +294,9 @@ export default function ITUsersPage() {
           icon={<Users className="text-neutral-600" />}
           bgClass="bg-neutral-50"
         />
-        <StatCard 
-          label="ทีม IT" 
-          count={stats.its} 
+        <StatCard
+          label="ทีม IT"
+          count={stats.its}
           icon={<Shield className="text-neutral-600" />}
           bgClass="bg-neutral-50"
         />
@@ -355,8 +359,12 @@ export default function ITUsersPage() {
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="text-sm font-semibold text-gray-900">{user.name}</div>
-                      <div className="text-xs text-gray-500">{user.department || "ไม่ระบุแผนก"}</div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {user.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {user.department || "ไม่ระบุแผนก"}
+                      </div>
                     </div>
                   </div>
                   <RoleBadge role={user.role} />
@@ -380,9 +388,9 @@ export default function ITUsersPage() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Actions Only for USER role or Self (if applicable, but restricted here to USER editing mostly) */}
-                {user.role === 'USER' && (
+                {user.role === "USER" && (
                   <div className="flex justify-end gap-2 bg-gray-50 p-2 rounded-lg">
                     <button
                       onClick={() => openEditModal(user)}
@@ -415,11 +423,21 @@ export default function ITUsersPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">ชื่อ-นามสกุล</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">ข้อมูลติดต่อ</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">สถานะ</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">แผนก</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">จัดการ</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">
+                  ชื่อ-นามสกุล
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">
+                  ข้อมูลติดต่อ
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">
+                  สถานะ
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-left">
+                  แผนก
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
+                  จัดการ
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -435,8 +453,15 @@ export default function ITUsersPage() {
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="text-sm font-semibold text-gray-900">{user.name}</div>
-                          <div className="text-xs text-gray-500">สมัครเมื่อ {new Date(user.createdAt).toLocaleDateString('th-TH')}</div>
+                          <div className="text-sm font-semibold text-gray-900">
+                            {user.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            สมัครเมื่อ{" "}
+                            {new Date(user.createdAt).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -454,7 +479,10 @@ export default function ITUsersPage() {
                         )}
                         {user.lineId && (
                           <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <MessageCircle size={12} className="text-gray-400" />
+                            <MessageCircle
+                              size={12}
+                              className="text-gray-400"
+                            />
                             {user.lineId}
                           </div>
                         )}
@@ -470,7 +498,7 @@ export default function ITUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {user.role === 'USER' && (
+                      {user.role === "USER" && (
                         <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEditModal(user)}
@@ -543,7 +571,9 @@ export default function ITUsersPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                    {showModal ? "รหัสผ่าน" : "รหัสผ่านใหม่ (ระบุเมื่อต้องการเปลี่ยน)"}
+                    {showModal
+                      ? "รหัสผ่าน"
+                      : "รหัสผ่านใหม่ (ระบุเมื่อต้องการเปลี่ยน)"}
                     {showModal && <span className="text-red-500">*</span>}
                   </label>
                   <div className="relative">
@@ -555,7 +585,9 @@ export default function ITUsersPage() {
                         setPasswordError("");
                       }}
                       className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all text-sm"
-                      placeholder={showModal ? "••••••••" : "เว้นว่างหากไม่ต้องการเปลี่ยน"}
+                      placeholder={
+                        showModal ? "••••••••" : "เว้นว่างหากไม่ต้องการเปลี่ยน"
+                      }
                     />
                     <button
                       type="button"
@@ -576,23 +608,34 @@ export default function ITUsersPage() {
                       type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={(e) => {
-                        setFormData({ ...formData, confirmPassword: e.target.value });
+                        setFormData({
+                          ...formData,
+                          confirmPassword: e.target.value,
+                        });
                         setPasswordError("");
                       }}
                       className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-black/5 focus:border-black outline-none transition-all text-sm"
-                      placeholder={showModal ? "••••••••" : "เว้นว่างหากไม่ต้องการเปลี่ยน"}
+                      placeholder={
+                        showModal ? "••••••••" : "เว้นว่างหากไม่ต้องการเปลี่ยน"
+                      }
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      {showConfirmPassword ? (
+                        <EyeOff size={14} />
+                      ) : (
+                        <Eye size={14} />
+                      )}
                     </button>
                   </div>
                 </div>
               </div>
-              
+
               {passwordError && (
                 <div className="text-xs text-red-600 bg-red-50 p-2 rounded-lg border border-red-100 flex items-center gap-2">
                   <X size={12} /> {passwordError}
@@ -602,12 +645,16 @@ export default function ITUsersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">บทบาท</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  บทบาท
+                </label>
                 <div className="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600 cursor-not-allowed flex items-center justify-between">
                   <span>ผู้ใช้ทั่วไป (General User)</span>
-                  <Shield size={14} className="text-neutral-500"/>
+                  <Shield size={14} className="text-neutral-500" />
                 </div>
-                <p className="text-xs text-gray-400 mt-1">* IT สามารถจัดการได้เฉพาะผู้ใช้ทั่วไป</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  * IT สามารถจัดการได้เฉพาะผู้ใช้ทั่วไป
+                </p>
               </div>
               <FormInput
                 label="แผนก"
@@ -640,14 +687,26 @@ export default function ITUsersPage() {
 
 // --- Components ---
 
-function StatCard({ label, count, icon, bgClass }: { label: string; count: number; icon: React.ReactNode; bgClass: string }) {
+function StatCard({
+  label,
+  count,
+  icon,
+  bgClass,
+}: {
+  label: string;
+  count: number;
+  icon: React.ReactNode;
+  bgClass: string;
+}) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
       <div>
         <p className="text-gray-500 text-sm font-medium mb-1">{label}</p>
         <p className="text-3xl font-bold text-gray-900">{count}</p>
       </div>
-      <div className={`w-12 h-12 rounded-xl ${bgClass} flex items-center justify-center`}>
+      <div
+        className={`w-12 h-12 rounded-xl ${bgClass} flex items-center justify-center`}
+      >
         {icon}
       </div>
     </div>
@@ -660,7 +719,7 @@ function RoleBadge({ role }: { role: string }) {
     IT: "bg-neutral-800 text-white border-neutral-800",
     USER: "bg-neutral-100 text-neutral-700 border-neutral-300",
   };
-  
+
   const labels = {
     ADMIN: "ผู้ดูแลระบบ",
     IT: "IT Support",
@@ -668,9 +727,11 @@ function RoleBadge({ role }: { role: string }) {
   };
 
   const roleKey = role as keyof typeof styles;
-  
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[roleKey] || 'bg-gray-100 text-gray-600'}`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${styles[roleKey] || "bg-gray-100 text-gray-600"}`}
+    >
       {labels[roleKey] || role}
     </span>
   );
@@ -682,19 +743,23 @@ function UserModal({ title, children, onClose, onSubmit, submitting }: any) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
           <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all">
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+          >
             <X size={20} />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto custom-scrollbar">
-          {children}
-        </div>
+        <div className="p-6 overflow-y-auto custom-scrollbar">{children}</div>
         <div className="p-4 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
-          <button onClick={onClose} className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-xl transition-all text-sm">
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 text-gray-700 font-medium hover:bg-gray-200 rounded-xl transition-all text-sm"
+          >
             ยกเลิก
           </button>
-          <button 
-            onClick={onSubmit} 
+          <button
+            onClick={onSubmit}
             disabled={submitting}
             className="px-5 py-2.5 bg-black text-white font-medium hover:bg-gray-800 rounded-xl transition-all flex items-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-black/20"
           >
@@ -716,7 +781,14 @@ interface FormInputProps {
   placeholder?: string;
 }
 
-function FormInput({ label, type = "text", required, value, onChange, placeholder }: FormInputProps) {
+function FormInput({
+  label,
+  type = "text",
+  required,
+  value,
+  onChange,
+  placeholder,
+}: FormInputProps) {
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700 mb-2">

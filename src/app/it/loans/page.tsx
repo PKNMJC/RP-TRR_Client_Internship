@@ -102,12 +102,13 @@ export default function ITLoansPage() {
 
   const fetchLoans = useCallback(async () => {
     try {
-      const token = localStorage.getItem("access_token") || localStorage.getItem("token");
+      const token =
+        localStorage.getItem("access_token") || localStorage.getItem("token");
       if (!token) {
-        router.push("/login");
+        router.push("/login/admin");
         return;
       }
-      
+
       setLoading(true);
       // ดึงข้อมูลทั้งหมดของการยืมเหมือนแอดมิน
       const data = await apiFetch("/api/loans/admin/all");
@@ -141,7 +142,7 @@ export default function ITLoansPage() {
       returned: loans.filter((l) => l.status === "RETURNED").length,
       overdue: loans.filter((l) => l.status === "OVERDUE").length,
     }),
-    [loans]
+    [loans],
   );
 
   const handleReturnItem = async (id: number) => {
@@ -224,247 +225,246 @@ export default function ITLoansPage() {
     <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
-            <div>
-              <h1 className="text-xl md:text-3xl font-bold text-black">
-                Loan Management (IT)
-              </h1>
-              <p className="text-[10px] md:text-base text-gray-600 font-medium mt-1 md:mt-2">
-                จัดการการยืม-คืนอุปกรณ์ทั้งหมดในระบบ (IT Officer)
-              </p>
-            </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-black hover:bg-gray-900 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-base font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
+        <div>
+          <h1 className="text-xl md:text-3xl font-bold text-black">
+            Loan Management (IT)
+          </h1>
+          <p className="text-[10px] md:text-base text-gray-600 font-medium mt-1 md:mt-2">
+            จัดการการยืม-คืนอุปกรณ์ทั้งหมดในระบบ (IT Officer)
+          </p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-black hover:bg-gray-900 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg text-xs md:text-base font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
+        >
+          <Plus size={18} strokeWidth={2} />
+          เพิ่มรายการใหม่
+        </button>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="รายการทั้งหมด"
+          count={stats.total}
+          icon={<FileText />}
+        />
+        <StatCard label="กำลังถูกยืม" count={stats.active} icon={<Clock />} />
+        <StatCard
+          label="เกินกำหนดคืน"
+          count={stats.overdue}
+          icon={<AlertCircle />}
+        />
+        <StatCard
+          label="คืนสำเร็จแล้ว"
+          count={stats.returned}
+          icon={<CheckCircle2 />}
+        />
+      </div>
+
+      {/* Search & Table Card */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="p-4 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="ค้นหาชื่ออุปกรณ์, ชื่อพนักงาน หรือแผนก..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm"
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select
+            className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-medium text-black focus:outline-none focus:ring-2 focus:ring-gray-400/20 text-sm"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">ทุกสถานะ</option>
+            <option value="BORROWED">กำลังยืม</option>
+            <option value="OVERDUE">เกินกำหนด</option>
+            <option value="RETURNED">คืนแล้ว</option>
+          </select>
+          <button
+            onClick={fetchLoans}
+            className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <RefreshCw size={18} />
+          </button>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden divide-y divide-gray-100">
+          {filteredLoans.map((loan) => (
+            <div
+              key={loan.id}
+              className="p-4 hover:bg-gray-50 transition-colors"
             >
-              <Plus size={18} strokeWidth={2} />
-              เพิ่มรายการใหม่
-            </button>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              label="รายการทั้งหมด"
-              count={stats.total}
-              icon={<FileText />}
-            />
-            <StatCard
-              label="กำลังถูกยืม"
-              count={stats.active}
-              icon={<Clock />}
-            />
-            <StatCard
-              label="เกินกำหนดคืน"
-              count={stats.overdue}
-              icon={<AlertCircle />}
-            />
-            <StatCard
-              label="คืนสำเร็จแล้ว"
-              count={stats.returned}
-              icon={<CheckCircle2 />}
-            />
-          </div>
-
-          {/* Search & Table Card */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
-                  type="text"
-                  placeholder="ค้นหาชื่ออุปกรณ์, ชื่อพนักงาน หรือแผนก..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-400/20 focus:border-gray-400 outline-none transition-all text-black font-medium placeholder-gray-400 text-sm"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              <div className="flex justify-between items-start mb-2">
+                <div className="max-w-[70%]">
+                  <h3 className="font-bold text-black text-sm md:text-base truncate">
+                    {loan.itemName}
+                  </h3>
+                  <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 line-clamp-1">
+                    {loan.description || "ไม่มีรายละเอียด"}
+                  </p>
+                </div>
+                <StatusBadge status={loan.status} />
               </div>
-              <select
-                className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-medium text-black focus:outline-none focus:ring-2 focus:ring-gray-400/20 text-sm"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">ทุกสถานะ</option>
-                <option value="BORROWED">กำลังยืม</option>
-                <option value="OVERDUE">เกินกำหนด</option>
-                <option value="RETURNED">คืนแล้ว</option>
-              </select>
-              <button
-                onClick={fetchLoans}
-                className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <RefreshCw size={18} />
-              </button>
-            </div>
 
-            {/* Mobile Card View */}
-            <div className="lg:hidden divide-y divide-gray-100">
-              {filteredLoans.map((loan) => (
-                <div
-                  key={loan.id}
-                  className="p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="max-w-[70%]">
-                      <h3 className="font-bold text-black text-sm md:text-base truncate">{loan.itemName}</h3>
-                      <p className="text-[10px] md:text-xs text-gray-500 mt-0.5 line-clamp-1">
-                        {loan.description || "ไม่มีรายละเอียด"}
-                      </p>
-                    </div>
-                    <StatusBadge status={loan.status} />
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                  <User size={12} className="text-gray-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] md:text-sm font-semibold text-gray-700 leading-tight">
+                    {loan.borrowerName}
+                  </span>
+                  <span className="text-[9px] md:text-xs text-gray-400">
+                    {loan.borrowerDepartment || "ไม่ระบุแผนก"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-3 bg-gray-50/80 px-3 py-2.5 rounded-xl border border-gray-100">
+                <div className="text-[9px] md:text-xs text-gray-500 space-y-0.5">
+                  <div className="flex items-center gap-1">
+                    <Calendar size={10} className="text-gray-400" />
+                    <span>
+                      คืน: {safeFormat(loan.expectedReturnDate, "dd MMM yy")}
+                    </span>
                   </div>
+                  <div className="flex items-center gap-1">
+                    <Clock size={10} className="text-gray-400" />
+                    <span>ยืม: {safeFormat(loan.borrowDate, "dd/MM/yy")}</span>
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => {
+                      setSelectedLoan(loan);
+                      setShowDetailModal(true);
+                    }}
+                    className="p-2 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm active:scale-95 transition-transform"
+                  >
+                    <FileText size={14} />
+                  </button>
+                  {loan.status !== "RETURNED" && (
+                    <button
+                      onClick={() => handleReturnItem(loan.id)}
+                      className="p-2 bg-black text-white rounded-lg shadow-sm active:scale-95 transition-transform"
+                    >
+                      <Check size={14} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteLoan(loan.id)}
+                    className="p-2 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm active:scale-95 transition-transform"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {filteredLoans.length === 0 && <EmptyState />}
+        </div>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-                      <User size={12} className="text-gray-400" />
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+                  อุปกรณ์
+                </th>
+                <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+                  ผู้รับผิดชอบ
+                </th>
+                <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+                  กำหนดคืน
+                </th>
+                <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
+                  สถานะ
+                </th>
+                <th className="px-6 py-3 border-b border-gray-100"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredLoans.map((loan) => (
+                <tr
+                  key={loan.id}
+                  className="hover:bg-gray-50/50 transition-colors group"
+                >
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-semibold text-black">
+                      {loan.itemName}
                     </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {loan.description || "ไม่มีรายละเอียด"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-[11px] md:text-sm font-semibold text-gray-700 leading-tight">
+                      <span className="text-sm font-medium text-black flex items-center gap-2">
+                        <User size={14} className="text-gray-400" />{" "}
                         {loan.borrowerName}
                       </span>
-                      <span className="text-[9px] md:text-xs text-gray-400">
-                        {loan.borrowerDepartment || "ไม่ระบุแผนก"}
+                      <span className="text-xs text-gray-500 flex items-center gap-2 mt-1.5">
+                        <Building2 size={12} className="text-gray-400" />{" "}
+                        {loan.borrowerDepartment || "-"}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-3 bg-gray-50/80 px-3 py-2.5 rounded-xl border border-gray-100">
-                    <div className="text-[9px] md:text-xs text-gray-500 space-y-0.5">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={10} className="text-gray-400" />
-                        <span>คืน: {safeFormat(loan.expectedReturnDate, "dd MMM yy")}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock size={10} className="text-gray-400" />
-                        <span>ยืม: {safeFormat(loan.borrowDate, "dd/MM/yy")}</span>
-                      </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-black">
+                      {safeFormat(loan.expectedReturnDate, "dd MMM yyyy")}
                     </div>
-                    <div className="flex gap-1.5">
+                    <div className="text-xs text-gray-500 mt-1">
+                      ยืมเมื่อ: {safeFormat(loan.borrowDate, "dd/MM/yy")}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <StatusBadge status={loan.status} />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
                           setSelectedLoan(loan);
                           setShowDetailModal(true);
                         }}
-                        className="p-2 bg-white border border-gray-200 text-gray-600 rounded-lg shadow-sm active:scale-95 transition-transform"
+                        className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
+                        title="ดูรายละเอียด"
                       >
-                        <FileText size={14} />
+                        <FileText size={16} strokeWidth={2} />
                       </button>
                       {loan.status !== "RETURNED" && (
                         <button
                           onClick={() => handleReturnItem(loan.id)}
-                          className="p-2 bg-black text-white rounded-lg shadow-sm active:scale-95 transition-transform"
+                          className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-black hover:text-white transition-all"
+                          title="รับคืน"
                         >
-                          <Check size={14} />
+                          <Check size={16} strokeWidth={2} />
                         </button>
                       )}
                       <button
                         onClick={() => handleDeleteLoan(loan.id)}
-                        className="p-2 bg-white border border-red-100 text-red-600 rounded-lg shadow-sm active:scale-95 transition-transform"
+                        className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={16} />
                       </button>
                     </div>
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))}
-              {filteredLoans.length === 0 && <EmptyState />}
-            </div>
-
-            {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      อุปกรณ์
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      ผู้รับผิดชอบ
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      กำหนดคืน
-                    </th>
-                    <th className="px-6 py-3 text-xs font-bold text-black uppercase border-b border-gray-100">
-                      สถานะ
-                    </th>
-                    <th className="px-6 py-3 border-b border-gray-100"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredLoans.map((loan) => (
-                    <tr
-                      key={loan.id}
-                      className="hover:bg-gray-50/50 transition-colors group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-semibold text-black">
-                          {loan.itemName}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {loan.description || "ไม่มีรายละเอียด"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-black flex items-center gap-2">
-                            <User size={14} className="text-gray-400" />{" "}
-                            {loan.borrowerName}
-                          </span>
-                          <span className="text-xs text-gray-500 flex items-center gap-2 mt-1.5">
-                            <Building2 size={12} className="text-gray-400" />{" "}
-                            {loan.borrowerDepartment || "-"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-black">
-                          {safeFormat(loan.expectedReturnDate, "dd MMM yyyy")}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          ยืมเมื่อ:{" "}
-                          {safeFormat(loan.borrowDate, "dd/MM/yy")}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={loan.status} />
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setSelectedLoan(loan);
-                              setShowDetailModal(true);
-                            }}
-                            className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-blue-600 hover:text-white transition-all"
-                            title="ดูรายละเอียด"
-                          >
-                            <FileText size={16} strokeWidth={2} />
-                          </button>
-                          {loan.status !== "RETURNED" && (
-                            <button
-                              onClick={() => handleReturnItem(loan.id)}
-                              className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-black hover:text-white transition-all"
-                              title="รับคืน"
-                            >
-                              <Check size={16} strokeWidth={2} />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteLoan(loan.id)}
-                            className="bg-gray-100 text-gray-700 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredLoans.length === 0 && <EmptyState />}
-            </div>
-          </div>
+            </tbody>
+          </table>
+          {filteredLoans.length === 0 && <EmptyState />}
+        </div>
+      </div>
 
       {/* Detail Modal */}
       {showDetailModal && selectedLoan && (
@@ -579,7 +579,10 @@ export default function ITLoansPage() {
                     <div>
                       <p className="text-xs text-gray-500 mb-1">วันคืนต้อง</p>
                       <p className="font-medium text-black">
-                        {safeFormat(selectedLoan.expectedReturnDate, "dd MMM yyyy")}
+                        {safeFormat(
+                          selectedLoan.expectedReturnDate,
+                          "dd MMM yyyy",
+                        )}
                       </p>
                     </div>
                     {selectedLoan.returnDate && (

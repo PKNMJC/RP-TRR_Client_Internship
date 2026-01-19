@@ -1,22 +1,30 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { User, Mail, Building, Shield, Edit2, Save, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import {
+  User,
+  Mail,
+  Building,
+  Shield,
+  Edit2,
+  Save,
+  LogOut,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface UserProfile {
   id: number;
   name: string;
   email: string;
-  role: 'USER' | 'IT' | 'ADMIN';
+  role: "USER" | "IT" | "ADMIN";
   department?: string;
   createdAt: string;
 }
 
 const roleLabels = {
-  USER: { label: 'ผู้ใช้ทั่วไป', color: 'bg-blue-100 text-blue-700' },
-  IT: { label: 'IT Support', color: 'bg-orange-100 text-orange-700' },
-  ADMIN: { label: 'Admin', color: 'bg-red-100 text-red-700' },
+  USER: { label: "ผู้ใช้ทั่วไป", color: "bg-blue-100 text-blue-700" },
+  IT: { label: "IT Support", color: "bg-orange-100 text-orange-700" },
+  ADMIN: { label: "Admin", color: "bg-red-100 text-red-700" },
 };
 
 export default function ProfilePage() {
@@ -25,8 +33,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    name: '',
-    department: '',
+    name: "",
+    department: "",
   });
 
   useEffect(() => {
@@ -35,8 +43,8 @@ export default function ProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/profile', {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/auth/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -45,11 +53,11 @@ export default function ProfilePage() {
         setProfile(data);
         setEditData({
           name: data.name,
-          department: data.department || '',
+          department: data.department || "",
         });
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      console.error("Failed to fetch profile:", error);
     } finally {
       setLoading(false);
     }
@@ -57,11 +65,11 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/profile', {
-        method: 'PATCH',
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/auth/profile", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(editData),
@@ -73,15 +81,15 @@ export default function ProfilePage() {
         setIsEditing(false);
       }
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error("Failed to update profile:", error);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
-    router.push('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("role");
+    router.push("/login/admin");
   };
 
   if (loading) {
@@ -189,7 +197,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg">
                   <Building size={20} className="text-gray-600" />
                   <span className="text-gray-900">
-                    {profile.department || 'ไม่ระบุ'}
+                    {profile.department || "ไม่ระบุ"}
                   </span>
                 </div>
               )}
@@ -240,7 +248,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <span className="text-gray-700">วันที่สร้างบัญชี</span>
               <span className="font-medium text-gray-900">
-                {new Date(profile.createdAt).toLocaleString('th-TH')}
+                {new Date(profile.createdAt).toLocaleString("th-TH")}
               </span>
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -256,9 +264,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gray-900">ออกจากระบบ</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                ออกจากบัญชีปัจจุบัน
-              </p>
+              <p className="text-sm text-gray-600 mt-1">ออกจากบัญชีปัจจุบัน</p>
             </div>
             <button
               onClick={handleLogout}

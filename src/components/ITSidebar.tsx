@@ -55,7 +55,7 @@ export default function ITSidebar() {
 
   const handleLogout = async () => {
     localStorage.clear();
-    router.push("/login");
+    router.push("/login/admin");
   };
 
   return (

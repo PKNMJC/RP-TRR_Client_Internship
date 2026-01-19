@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { AuthService } from '@/lib/authService';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { AuthService } from "@/lib/authService";
 
 export function useAuth() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState('USER');
+  const [role, setRole] = useState("USER");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,8 +23,8 @@ export function useAuth() {
   const logout = () => {
     AuthService.logout();
     setIsAuthenticated(false);
-    setRole('USER');
-    router.push('/login');
+    setRole("USER");
+    router.push("/login/admin");
   };
 
   return { isAuthenticated, role, isLoading, logout };
@@ -48,17 +48,17 @@ export function ProtectedRoute({
       const userRole = AuthService.getRole();
 
       if (!isAuth) {
-        router.push('/login');
+        router.push("/login/admin");
         return;
       }
 
-      if (requireAdmin && userRole !== 'ADMIN') {
-        router.push('/tickets');
+      if (requireAdmin && userRole !== "ADMIN") {
+        router.push("/tickets");
         return;
       }
 
-      if (requireIT && userRole !== 'IT' && userRole !== 'ADMIN') {
-        router.push('/tickets');
+      if (requireIT && userRole !== "IT" && userRole !== "ADMIN") {
+        router.push("/tickets");
         return;
       }
 

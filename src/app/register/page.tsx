@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import InputField from '@/components/InputField';
-import Button from '@/components/Button';
-import Card from '@/components/Card';
-import Alert from '@/components/Alert';
-import FormDivider from '@/components/FormDivider';
-import { AuthService } from '@/lib/authService';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import InputField from "@/components/InputField";
+import Button from "@/components/Button";
+import Card from "@/components/Card";
+import Alert from "@/components/Alert";
+import FormDivider from "@/components/FormDivider";
+import { AuthService } from "@/lib/authService";
 
 interface FormErrors {
   name?: string;
@@ -23,65 +23,67 @@ interface FormErrors {
 export default function Register() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    department: '',
-    phoneNumber: '',
-    lineId: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    department: "",
+    phoneNumber: "",
+    lineId: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+      newErrors.name = "Name must be at least 2 characters";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = "Invalid email format";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     } else if (!/(?=.*[a-z])/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one lowercase letter';
+      newErrors.password =
+        "Password must contain at least one lowercase letter";
     } else if (!/(?=.*[A-Z])/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter';
+      newErrors.password =
+        "Password must contain at least one uppercase letter";
     } else if (!/(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one number';
+      newErrors.password = "Password must contain at least one number";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (!formData.department.trim()) {
-      newErrors.department = 'Department is required';
+      newErrors.department = "Department is required";
     }
 
     if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10,}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
-      newErrors.phoneNumber = 'Phone number must be at least 10 digits';
+      newErrors.phoneNumber = "Phone number is required";
+    } else if (!/^\d{10,}$/.test(formData.phoneNumber.replace(/\D/g, ""))) {
+      newErrors.phoneNumber = "Phone number must be at least 10 digits";
     }
 
     if (!formData.lineId.trim()) {
-      newErrors.lineId = 'Line ID is required';
+      newErrors.lineId = "Line ID is required";
     }
 
     setErrors(newErrors);
@@ -104,15 +106,15 @@ export default function Register() {
     e.preventDefault();
 
     if (!agreedToTerms) {
-      setErrorMessage('Please agree to the terms and conditions');
+      setErrorMessage("Please agree to the terms and conditions");
       return;
     }
 
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setErrorMessage('');
-    setSuccessMessage('');
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       const response = await AuthService.register({
@@ -125,12 +127,14 @@ export default function Register() {
         lineId: formData.lineId,
       });
 
-      setSuccessMessage('Registration successful! Redirecting to login...');
+      setSuccessMessage("Registration successful! Redirecting to login...");
       setTimeout(() => {
-        router.push('/login');
+        router.push("/login/admin");
       }, 2000);
     } catch (error: any) {
-      setErrorMessage(error.message || 'Registration failed. Please try again.');
+      setErrorMessage(
+        error.message || "Registration failed. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -138,9 +142,9 @@ export default function Register() {
 
   const passwordStrength = formData.password.length;
   const getPasswordStrengthColor = () => {
-    if (passwordStrength < 6) return 'bg-red-500';
-    if (passwordStrength < 10) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (passwordStrength < 6) return "bg-red-500";
+    if (passwordStrength < 10) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   return (
@@ -156,9 +160,7 @@ export default function Register() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               สมัครสมาชิก
             </h1>
-            <p className="text-gray-600">
-              สร้างบัญชีใหม่เพื่อเริ่มต้น
-            </p>
+            <p className="text-gray-600">สร้างบัญชีใหม่เพื่อเริ่มต้น</p>
           </div>
 
           {/* Alerts */}
@@ -166,12 +168,10 @@ export default function Register() {
             <Alert
               type="error"
               message={errorMessage}
-              onClose={() => setErrorMessage('')}
+              onClose={() => setErrorMessage("")}
             />
           )}
-          {successMessage && (
-            <Alert type="success" message={successMessage} />
-          )}
+          {successMessage && <Alert type="success" message={successMessage} />}
 
           {/* Form */}
           <form onSubmit={handleRegister} className="space-y-4">
@@ -180,7 +180,7 @@ export default function Register() {
               type="text"
               placeholder="John Doe"
               value={formData.name}
-              onChange={(value) => handleInputChange('name', value)}
+              onChange={(value) => handleInputChange("name", value)}
               error={errors.name}
               required
             />
@@ -190,7 +190,7 @@ export default function Register() {
               type="email"
               placeholder="your@email.com"
               value={formData.email}
-              onChange={(value) => handleInputChange('email', value)}
+              onChange={(value) => handleInputChange("email", value)}
               error={errors.email}
               required
             />
@@ -200,7 +200,7 @@ export default function Register() {
               type="text"
               placeholder="เช่น ฝ่าย IT"
               value={formData.department}
-              onChange={(value) => handleInputChange('department', value)}
+              onChange={(value) => handleInputChange("department", value)}
               error={errors.department}
               required
             />
@@ -210,7 +210,7 @@ export default function Register() {
               type="tel"
               placeholder="เช่น 0812345678"
               value={formData.phoneNumber}
-              onChange={(value) => handleInputChange('phoneNumber', value)}
+              onChange={(value) => handleInputChange("phoneNumber", value)}
               error={errors.phoneNumber}
               required
             />
@@ -220,7 +220,7 @@ export default function Register() {
               type="text"
               placeholder="เช่น user123456"
               value={formData.lineId}
-              onChange={(value) => handleInputChange('lineId', value)}
+              onChange={(value) => handleInputChange("lineId", value)}
               error={errors.lineId}
               required
             />
@@ -231,7 +231,7 @@ export default function Register() {
                 type="password"
                 placeholder="••••••••"
                 value={formData.password}
-                onChange={(value) => handleInputChange('password', value)}
+                onChange={(value) => handleInputChange("password", value)}
                 error={errors.password}
                 required
               />
@@ -241,10 +241,10 @@ export default function Register() {
                     <span className="text-xs text-gray-600">ความแข็งแรง:</span>
                     <span className="text-xs text-gray-600">
                       {passwordStrength < 6
-                        ? 'อ่อน'
+                        ? "อ่อน"
                         : passwordStrength < 10
-                          ? 'ปานกลาง'
-                          : 'แข็งแรง'}
+                          ? "ปานกลาง"
+                          : "แข็งแรง"}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -264,12 +264,10 @@ export default function Register() {
               type="password"
               placeholder="••••••••"
               value={formData.confirmPassword}
-              onChange={(value) => handleInputChange('confirmPassword', value)}
+              onChange={(value) => handleInputChange("confirmPassword", value)}
               error={errors.confirmPassword}
               required
             />
-
-
 
             {/* Terms and Conditions */}
             <div className="flex items-start">
@@ -280,14 +278,14 @@ export default function Register() {
                 className="w-4 h-4 rounded border-gray-300 focus:ring-purple-500 mt-1"
               />
               <label className="ml-2 text-sm text-gray-600">
-                ฉันยอมรับ{' '}
+                ฉันยอมรับ{" "}
                 <Link
                   href="#"
                   className="text-purple-600 hover:text-purple-700 font-semibold"
                 >
                   เงื่อนไขการใช้บริการ
-                </Link>{' '}
-                และ{' '}
+                </Link>{" "}
+                และ{" "}
                 <Link
                   href="#"
                   className="text-purple-600 hover:text-purple-700 font-semibold"
@@ -313,9 +311,9 @@ export default function Register() {
           {/* Login link */}
           <div className="text-center">
             <p className="text-gray-600">
-              มีบัญชีอยู่แล้ว?{' '}
+              มีบัญชีอยู่แล้ว?{" "}
               <Link
-                href="/login"
+                href="/login/admin"
                 className="text-purple-600 hover:text-purple-700 font-semibold"
               >
                 เข้าสู่ระบบ

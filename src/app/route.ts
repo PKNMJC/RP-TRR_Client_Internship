@@ -63,5 +63,5 @@ export async function GET(request: NextRequest) {
 
   // Not a callback, redirect to login
   console.log('Not a LINE callback or app, redirecting to login');
-  return NextResponse.redirect(new URL('/login', request.nextUrl.origin));
+  return NextResponse.redirect(new URL('/login/admin', request.nextUrl.origin));
 }

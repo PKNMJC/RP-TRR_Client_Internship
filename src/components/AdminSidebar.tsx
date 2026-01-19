@@ -91,7 +91,7 @@ export default function AdminSidebar() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     localStorage.clear();
-    router.push("/login");
+    router.push("/login/admin");
   };
 
   return (
@@ -276,15 +276,22 @@ export default function AdminSidebar() {
               <div className="grid grid-cols-2 gap-2 mt-3">
                 <button className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white border border-zinc-200 text-zinc-500 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50/50 transition-all duration-200 shadow-sm hover:shadow group/btn">
                   <Bell size={15} />
-                  <span className="text-xs font-medium hidden group-hover/btn:inline">แจ้งเตือน</span>
+                  <span className="text-xs font-medium hidden group-hover/btn:inline">
+                    แจ้งเตือน
+                  </span>
                 </button>
                 <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
                   className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-white border border-zinc-200 text-zinc-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-all duration-200 shadow-sm hover:shadow group/btn disabled:opacity-50"
                 >
-                  <LogOut size={15} className={isLoggingOut ? "animate-spin" : ""} />
-                  <span className="text-xs font-medium hidden group-hover/btn:inline">ออกจากระบบ</span>
+                  <LogOut
+                    size={15}
+                    className={isLoggingOut ? "animate-spin" : ""}
+                  />
+                  <span className="text-xs font-medium hidden group-hover/btn:inline">
+                    ออกจากระบบ
+                  </span>
                 </button>
               </div>
             </div>
@@ -295,7 +302,9 @@ export default function AdminSidebar() {
                 <User size={18} className="text-white" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-zinc-800">Guest</span>
+                <span className="text-sm font-semibold text-zinc-800">
+                  Guest
+                </span>
                 <span className="text-xs text-zinc-400">ไม่ได้เข้าสู่ระบบ</span>
               </div>
             </div>

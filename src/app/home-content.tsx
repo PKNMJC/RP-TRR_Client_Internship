@@ -27,7 +27,7 @@ export default function HomeContent() {
       router.push(callbackUrl.toString().replace(window.location.origin, ""));
     } else {
       // Not a callback, redirect to login
-      router.push("/login");
+      router.push("/login/admin");
     }
   }, [searchParams, router]);
 

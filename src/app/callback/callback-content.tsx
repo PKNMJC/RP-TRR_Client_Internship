@@ -43,7 +43,7 @@ export default function CallbackContent() {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.message || "การยืนยันตัวตนกับ LINE ล้มเหลว"
+            errorData.message || "การยืนยันตัวตนกับ LINE ล้มเหลว",
           );
         }
 
@@ -68,9 +68,7 @@ export default function CallbackContent() {
         }
       } catch (err: unknown) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "เกิดข้อผิดพลาดในการยืนยันตัวตน";
+          err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการยืนยันตัวตน";
         setError(errorMessage);
         setIsLoading(false);
       }
@@ -103,7 +101,7 @@ export default function CallbackContent() {
           </h1>
           <p className="text-slate-500 mb-8">{error}</p>
           <Button
-            onClick={() => router.push("/login")}
+            onClick={() => router.push("/login/admin")}
             fullWidth
             className="gap-2"
           >

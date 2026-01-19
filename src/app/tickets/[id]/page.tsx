@@ -1,8 +1,8 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import { apiFetch } from '@/services/api';
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { apiFetch } from "@/services/api";
 import {
   ArrowLeft,
   Clock,
@@ -15,7 +15,7 @@ import {
   MessageSquare,
   Edit2,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface Attachment {
   id: number;
@@ -71,28 +71,28 @@ export default function TicketDetail() {
 
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTicket = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
-          router.push('/login');
+          router.push("/login/admin");
           return;
         }
 
         const data = await apiFetch(`/api/tickets/${ticketId}`).catch((err) => {
-          if (err.message.includes('401')) {
-            localStorage.removeItem('token');
-            router.push('/login');
-            throw new Error('Session expired');
+          if (err.message.includes("401")) {
+            localStorage.removeItem("token");
+            router.push("/login/admin");
+            throw new Error("Session expired");
           }
           throw err;
         });
         setTicket(data);
       } catch (err: any) {
-        setError(err.message || 'Failed to load ticket');
+        setError(err.message || "Failed to load ticket");
       } finally {
         setIsLoading(false);
       }
@@ -105,44 +105,44 @@ export default function TicketDetail() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'DONE':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case "DONE":
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      case "IN_PROGRESS":
+        return "bg-blue-100 text-blue-700 border-blue-200";
       default:
-        return 'bg-amber-100 text-amber-700 border-amber-200';
+        return "bg-amber-100 text-amber-700 border-amber-200";
     }
   };
 
   const getPriorityStyle = (priority: string) => {
     switch (priority) {
-      case 'HIGH':
-        return 'bg-red-100 text-red-700 border-red-200';
-      case 'MEDIUM':
-        return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'LOW':
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+      case "HIGH":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "MEDIUM":
+        return "bg-orange-100 text-orange-700 border-orange-200";
+      case "LOW":
+        return "bg-slate-100 text-slate-700 border-slate-200";
       default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+        return "bg-slate-100 text-slate-700 border-slate-200";
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   if (isLoading) {
@@ -232,31 +232,31 @@ export default function TicketDetail() {
           <div className="flex flex-wrap gap-3 mb-6">
             <span
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-medium text-sm ${getStatusStyle(
-                ticket.status
+                ticket.status,
               )}`}
             >
-              {ticket.status === 'DONE' ? (
+              {ticket.status === "DONE" ? (
                 <CheckCircle2 size={16} />
               ) : (
                 <Clock size={16} />
               )}
-              {ticket.status === 'DONE'
-                ? 'เสร็จสิ้น'
-                : ticket.status === 'IN_PROGRESS'
-                  ? 'กำลังดำเนินการ'
-                  : 'เปิด'}
+              {ticket.status === "DONE"
+                ? "เสร็จสิ้น"
+                : ticket.status === "IN_PROGRESS"
+                  ? "กำลังดำเนินการ"
+                  : "เปิด"}
             </span>
             <span
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border font-medium text-sm ${getPriorityStyle(
-                ticket.priority
+                ticket.priority,
               )}`}
             >
               <AlertCircle size={16} />
-              {ticket.priority === 'HIGH'
-                ? 'ด่วน'
-                : ticket.priority === 'MEDIUM'
-                  ? 'ปานกลาง'
-                  : 'ต่ำ'}
+              {ticket.priority === "HIGH"
+                ? "ด่วน"
+                : ticket.priority === "MEDIUM"
+                  ? "ปานกลาง"
+                  : "ต่ำ"}
             </span>
           </div>
 
@@ -329,8 +329,12 @@ export default function TicketDetail() {
                     <User size={16} className="inline mr-2" />
                     มอบหมายให้
                   </label>
-                  <p className="text-slate-900 font-medium">{ticket.assignee.name}</p>
-                  <p className="text-slate-500 text-sm">{ticket.assignee.email}</p>
+                  <p className="text-slate-900 font-medium">
+                    {ticket.assignee.name}
+                  </p>
+                  <p className="text-slate-500 text-sm">
+                    {ticket.assignee.email}
+                  </p>
                 </div>
               )}
               <div className="border-t border-slate-200 pt-4">
@@ -366,7 +370,10 @@ export default function TicketDetail() {
                   download
                   className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                 >
-                  <Paperclip size={20} className="text-slate-500 flex-shrink-0" />
+                  <Paperclip
+                    size={20}
+                    className="text-slate-500 flex-shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-900 truncate">
                       {attachment.filename}
