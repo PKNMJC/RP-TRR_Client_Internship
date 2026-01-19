@@ -29,6 +29,7 @@ export default function RepairLiffFormPage() {
   const [formData, setFormData] = useState({
     name: "",
     dept: "",
+    otherDept: "",
     phone: "",
     issueType: "",
     details: "",
@@ -48,9 +49,6 @@ export default function RepairLiffFormPage() {
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
             setLineUserId(profile.userId);
-          } else {
-            // For testing outside LINE or if login needed
-            // liff.login();
           }
         }
       } catch (error) {
@@ -87,20 +85,20 @@ export default function RepairLiffFormPage() {
 
       let mappedDept = "OTHER";
       const d = formData.dept;
-      if (d.includes("ACCOUNTING")) mappedDept = "ACCOUNTING";
-      else if (d.includes("SALES")) mappedDept = "SALES";
-      else if (d.includes("PRODUCTION")) mappedDept = "PRODUCTION";
-      else if (d.includes("IT")) mappedDept = "IT";
-      else if (d.includes("HR")) mappedDept = "HR";
-      else if (d.includes("MAINTENANCE")) mappedDept = "MAINTENANCE";
+      if (d === "บัญชี (ACCOUNTING)") mappedDept = "ACCOUNTING";
+      else if (d === "การขาย (SALES)") mappedDept = "SALES";
+      else if (d === "ผลิต (PRODUCTION)") mappedDept = "PRODUCTION";
+      else if (d === "ไอที (IT)") mappedDept = "IT";
+      else if (d === "บุคคล (HR)") mappedDept = "HR";
+      else if (d === "ซ่อมบำรุง (MAINTENANCE)") mappedDept = "MAINTENANCE";
 
       payload.append("reporterDepartment", mappedDept);
 
       if (mappedDept === "OTHER") {
-        payload.append("otherDepartment", formData.dept);
+        payload.append("otherDepartment", formData.otherDept || formData.dept);
       }
 
-      payload.append("reporterPhone", formData.phone);
+      payload.append("reporterPhone", formData.phone || "ไม่ระบุ");
       payload.append("problemTitle", formData.issueType); // "Issue Type" -> Title
       payload.append("problemDescription", formData.details); // "Details" -> Description
       payload.append("location", "ไม่ระบุ"); // Default as not in new form
@@ -124,6 +122,8 @@ export default function RepairLiffFormPage() {
         body: payload,
       });
 
+      setIsLoading(false);
+
       // Success Alert
       await Swal.fire({
         icon: "success",
@@ -142,6 +142,7 @@ export default function RepairLiffFormPage() {
         setFormData({
           name: "",
           dept: "",
+          otherDept: "",
           phone: "",
           issueType: "",
           details: "",
@@ -156,13 +157,12 @@ export default function RepairLiffFormPage() {
       }
     } catch (error: any) {
       console.error("Submit Error:", error);
+      setIsLoading(false);
       Swal.fire({
         icon: "error",
         title: "เกิดข้อผิดพลาด",
         text: error.message || "ไม่สามารถเชื่อมต่อ Server ได้",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -217,12 +217,25 @@ export default function RepairLiffFormPage() {
                 </option>
               ))}
             </select>
+
+            {/* Custom Dept Input */}
+            {formData.dept === "อื่นๆ" && (
+              <input
+                type="text"
+                id="otherDept"
+                value={formData.otherDept}
+                onChange={handleChange}
+                className="w-full mt-2 px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
+                placeholder="ระบุแผนก/โซนของคุณ"
+                required
+              />
+            )}
           </div>
 
           {/* Phone */}
           <div className="mb-4">
             <label className="block font-semibold text-[#333] mb-2 text-sm">
-              เบอร์ติดต่อกลับ
+              เบอร์ติดต่อกลับ (ถ้ามี)
             </label>
             <input
               type="tel"
@@ -231,7 +244,6 @@ export default function RepairLiffFormPage() {
               onChange={handleChange}
               className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
               placeholder="เช่น 0812345678"
-              required
               pattern="[0-9]*"
               inputMode="numeric"
             />
@@ -244,22 +256,21 @@ export default function RepairLiffFormPage() {
             <label className="block font-semibold text-[#333] mb-2 text-sm">
               ประเภทอาการ
             </label>
-            <select
+            <input
+              type="text"
               id="issueType"
+              list="issue-options"
               value={formData.issueType}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm bg-white"
+              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
+              placeholder="เลือกหรือพิมพ์อาการที่พบ"
               required
-            >
-              <option value="" disabled>
-                -- เลือกอาการ --
-              </option>
+            />
+            <datalist id="issue-options">
               {ISSUE_TYPES.map((t, i) => (
-                <option key={i} value={t}>
-                  {t}
-                </option>
+                <option key={i} value={t} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           {/* Details */}
