@@ -26,8 +26,20 @@ export interface User {
   };
 }
 
-export type RepairStatus = "PENDING" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
-export type RepairUrgency = "NORMAL" | "URGENT" | "CRITICAL";
+export enum RepairStatus {
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+  WAITING_PARTS = "WAITING_PARTS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+}
+
+export enum RepairUrgency {
+  NORMAL = "NORMAL",
+  URGENT = "URGENT",
+  CRITICAL = "CRITICAL",
+}
+
 
 export interface RepairTicket {
   id: number;
