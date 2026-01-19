@@ -78,7 +78,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200">
+      <div className="bg-white w-full max-w-4xl max-h-[95vh] sm:rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-slate-200">
         {/* HEADER: Minimal & Clean */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
           <div className="flex items-center gap-4">
@@ -106,7 +106,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="grid grid-cols-1 md:grid-cols-12">
             {/* MAIN CONTENT (Col: 7) */}
-            <div className="md:col-span-7 p-8 md:p-12 border-b md:border-b-0 md:border-r border-slate-100">
+            <div className="md:col-span-7 p-6 sm:p-8 md:p-12 border-b md:border-b-0 md:border-r border-slate-100">
               <div className="space-y-10">
                 {/* Title & Description */}
                 <section className="space-y-4">
@@ -165,47 +165,47 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
             </div>
 
             {/* SIDEBAR: Reporter Profile (Col: 5) */}
-            <div className="md:col-span-5 bg-neutral-50/50 dark:bg-slate-800/20 p-8 md:p-12">
+            <div className="md:col-span-5 bg-white p-6 sm:p-8 md:p-12">
               <div className="space-y-10">
                 <div className="space-y-6">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500 font-bold">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
                     ผู้แจ้งซ่อม
                   </p>
                 </div>
                 <div className="space-y-4 pt-4">
                   {/* ชื่อผู้แจ้งซ่อม */}
-                  <div className="flex items-center justify-between py-3 border-b border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400">
+                  <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                    <div className="flex items-center gap-3 text-slate-400">
                       <User size={14} strokeWidth={1.5} />
                       <span className="text-xs font-medium uppercase tracking-wider">
                         ชื่อผู้แจ้งซ่อม
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                    <span className="text-sm font-semibold text-slate-900">
                       {repair.reporterName || "-"}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between py-3 border-b border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400">
+                  <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                    <div className="flex items-center gap-3 text-slate-400">
                       <Phone size={14} strokeWidth={1.5} />
                       <span className="text-xs font-medium uppercase tracking-wider">
                         เบอร์โทรศัพท์
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                    <span className="text-sm font-semibold text-slate-900">
                       {repair.reporterPhone || "-"}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between py-3 border-b border-neutral-100 dark:border-neutral-800">
-                    <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400">
+                  <div className="flex items-center justify-between py-3 border-b border-slate-50">
+                    <div className="flex items-center gap-3 text-slate-400">
                       <Building2 size={14} strokeWidth={1.5} />
                       <span className="text-xs font-medium uppercase tracking-wider">
                         แผนก
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 text-right">
+                    <span className="text-sm font-semibold text-slate-900 text-right">
                       {translatedDepartment}
                     </span>
                   </div>
