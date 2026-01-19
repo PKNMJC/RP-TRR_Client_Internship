@@ -27,7 +27,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
       </span>
       <button
         onClick={onRefresh}
-        className="p-0.5 hover:bg-gray-200 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-black"
+        className="p-0.5 hover:bg-slate-200 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
         title="Refresh Now"
         aria-label="Refresh data now"
       >

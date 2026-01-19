@@ -35,46 +35,44 @@ export const RepairTable: React.FC<RepairTableProps> = ({
 }) => {
   if (repairs.length === 0) {
     return (
-      <div className="hidden lg:flex flex-col items-center justify-center py-20 bg-white dark:bg-black border border-dashed border-gray-200 dark:border-neutral-800 rounded-2xl">
-        <p className="text-gray-400 dark:text-neutral-600 font-medium">
-          ไม่พบข้อมูลรายการแจ้งซ่อม
-        </p>
+      <div className="hidden lg:flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-200 rounded-2xl">
+        <p className="text-slate-400 font-medium">ไม่พบข้อมูลรายการแจ้งซ่อม</p>
       </div>
     );
   }
 
   return (
-    <div className="hidden lg:block overflow-hidden bg-white dark:bg-black border border-gray-100 dark:border-neutral-900 rounded-2xl shadow-sm">
+    <div className="hidden lg:block overflow-hidden bg-white border border-slate-100 rounded-2xl shadow-sm">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="border-b border-gray-100 dark:border-neutral-900 bg-gray-50/50 dark:bg-neutral-900/50">
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-neutral-500 w-[120px]">
+          <tr className="border-b border-slate-100 bg-slate-50/50">
+            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[120px]">
               ID CODE
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-neutral-500 w-[150px]">
+            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[150px]">
               STATUS
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-neutral-500">
+            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
               PROBLEM & REPORTER
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-neutral-500 w-[180px]">
+            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[180px]">
               ASSIGNEE
             </th>
-            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-neutral-500 w-[100px] text-right">
+            <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 w-[100px] text-right">
               ACTION
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 dark:divide-neutral-900/50">
+        <tbody className="divide-y divide-slate-50">
           {repairs.map((repair) => (
             <tr
               key={repair.id}
               onClick={() => onView(repair)}
-              className="group cursor-pointer hover:bg-gray-50/80 dark:hover:bg-neutral-900/30 transition-all"
+              className="group cursor-pointer hover:bg-slate-50 transition-all"
             >
               <td className="px-6 py-5">
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold font-mono text-black dark:text-white bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded w-fit">
+                  <span className="text-[10px] font-bold font-mono text-slate-900 bg-slate-100 px-2 py-0.5 rounded w-fit">
                     #{repair.ticketCode}
                   </span>
                   <UrgencyBadge urgency={repair.urgency} />
@@ -85,16 +83,14 @@ export const RepairTable: React.FC<RepairTableProps> = ({
               </td>
               <td className="px-6 py-5">
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-bold text-black dark:text-white line-clamp-1 group-hover:translate-x-1 transition-transform">
+                  <span className="text-sm font-bold text-slate-900 line-clamp-1 group-hover:translate-x-1 transition-transform">
                     {repair.problemTitle}
                   </span>
-                  <div className="flex items-center gap-2 text-[11px] text-gray-500 dark:text-neutral-400">
-                    <span className="font-medium text-black dark:text-neutral-300">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                    <span className="font-medium text-slate-700">
                       {repair.reporterName || "Anonymous"}
                     </span>
-                    <span className="text-gray-300 dark:text-neutral-700">
-                      |
-                    </span>
+                    <span className="text-slate-300">|</span>
                     <span>
                       {DEPARTMENT_MAP[
                         repair.reporterDepartment?.toUpperCase() || ""
@@ -109,12 +105,12 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                 {repair.assignee ? (
                   <div className="flex items-center gap-2.5">
                     <Avatar name={repair.assignee.name} size="sm" />
-                    <span className="text-[11px] font-bold text-black dark:text-white">
+                    <span className="text-[11px] font-bold text-slate-900">
                       {repair.assignee.name}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-[10px] text-gray-400 dark:text-neutral-600 italic font-medium">
+                  <span className="text-[10px] text-slate-400 italic font-medium">
                     รอมอบหมายงาน
                   </span>
                 )}
@@ -128,12 +124,12 @@ export const RepairTable: React.FC<RepairTableProps> = ({
                         onAccept(repair.id);
                       }}
                       disabled={submitting}
-                      className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 transition-all disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/5 active:scale-[0.98]"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-[0.98]"
                     >
                       รับเรื่อง
                     </button>
                   )}
-                  <div className="p-2 rounded-full border border-gray-100 dark:border-neutral-800 text-gray-300 dark:text-neutral-700 group-hover:text-black dark:group-hover:text-white group-hover:border-black dark:group-hover:border-white transition-all">
+                  <div className="p-2 rounded-full border border-slate-100 text-slate-300 group-hover:text-blue-600 group-hover:border-blue-600 transition-all">
                     <ArrowRight size={14} />
                   </div>
                 </div>

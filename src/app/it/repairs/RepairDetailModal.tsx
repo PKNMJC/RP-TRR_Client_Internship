@@ -75,21 +75,21 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-neutral-200 dark:border-neutral-800">
+      <div className="bg-white w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200">
         {/* HEADER: Minimal & Clean */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs font-medium tracking-widest text-neutral-400 dark:text-neutral-500 uppercase">
+            <span className="font-mono text-xs font-medium tracking-widest text-slate-400 uppercase">
               รหัสรายการ: {repair.ticketCode}
             </span>
             <div
               className={`text-[10px] px-2 py-0.5 border font-bold uppercase tracking-wider ${
                 repair.status === "COMPLETED"
-                  ? "bg-black dark:bg-white text-white dark:text-black border-black dark:border-white"
-                  : "border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "border-slate-200 text-slate-500"
               }`}
             >
               {translatedStatus}
@@ -97,7 +97,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="hover:rotate-90 transition-transform duration-200 text-neutral-400 hover:text-black dark:hover:text-white"
+            className="hover:rotate-90 transition-transform duration-200 text-slate-400 hover:text-slate-900"
           >
             <X size={24} strokeWidth={1.5} />
           </button>
@@ -106,14 +106,14 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="grid grid-cols-1 md:grid-cols-12">
             {/* MAIN CONTENT (Col: 7) */}
-            <div className="md:col-span-7 p-8 md:p-12 border-b md:border-b-0 md:border-r border-neutral-100 dark:border-neutral-800">
+            <div className="md:col-span-7 p-8 md:p-12 border-b md:border-b-0 md:border-r border-slate-100">
               <div className="space-y-10">
                 {/* Title & Description */}
                 <section className="space-y-4">
-                  <h1 className="text-3xl md:text-4xl font-light text-neutral-900 dark:text-white leading-tight tracking-tight">
+                  <h1 className="text-3xl md:text-4xl font-light text-slate-900 leading-tight tracking-tight">
                     {repair.problemTitle}
                   </h1>
-                  <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed text-lg font-light">
+                  <p className="text-slate-500 leading-relaxed text-lg font-light">
                     {repair.problemDescription || "ไม่มีคำอธิบายเพิ่มเติม"}
                   </p>
                 </section>
@@ -121,14 +121,11 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-2 gap-y-8 pt-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500 font-bold">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
                       สถานที่แจ้ง
                     </p>
-                    <div className="flex items-center gap-2 text-neutral-800 dark:text-neutral-200">
-                      <MapPin
-                        size={14}
-                        className="text-neutral-300 dark:text-neutral-600"
-                      />
+                    <div className="flex items-center gap-2 text-slate-800">
+                      <MapPin size={14} className="text-slate-300" />
                       <span className="text-sm font-medium">
                         {repair.location || "สำนักงาน"}
                       </span>
@@ -137,28 +134,25 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                 </div>
 
                 {/* Timeline Simple */}
-                <div className="pt-8 border-t border-neutral-100 dark:border-neutral-800 space-y-4">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500 font-bold">
+                <div className="pt-8 border-t border-slate-100 space-y-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
                     ไทม์ไลน์
                   </p>
                   <div className="flex items-center gap-8">
                     <div className="flex flex-col">
-                      <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                      <span className="text-[11px] text-slate-400">
                         วันที่สร้าง
                       </span>
-                      <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <span className="text-sm text-slate-700">
                         {safeFormat(repair.createdAt, "dd MMM yyyy · HH:mm")}
                       </span>
                     </div>
-                    <ArrowRight
-                      size={16}
-                      className="text-neutral-200 dark:text-neutral-700"
-                    />
+                    <ArrowRight size={16} className="text-slate-200" />
                     <div className="flex flex-col">
-                      <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
+                      <span className="text-[11px] text-slate-400">
                         กิจกรรมล่าสุด
                       </span>
-                      <span className="text-sm text-neutral-700 dark:text-neutral-300">
+                      <span className="text-sm text-slate-700">
                         {safeFormat(
                           repair.updatedAt || repair.createdAt,
                           "dd MMM yyyy · HH:mm",
@@ -222,19 +216,19 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
         </div>
 
         {/* FOOTER: Actions */}
-        <div className="p-6 border-t border-neutral-100 dark:border-neutral-800 bg-white dark:bg-slate-900 flex flex-col sm:flex-row gap-3 justify-end items-center">
+        <div className="p-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row gap-3 justify-end items-center">
           {repair.status !== "COMPLETED" ? (
             <>
               <button
                 onClick={onEdit}
-                className="w-full sm:w-auto px-8 py-3 bg-white dark:bg-slate-900 border border-neutral-200 dark:border-neutral-700 text-black dark:text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3 bg-white border border-slate-200 text-slate-900 text-xs font-bold uppercase tracking-[0.2em] hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
               >
                 <Edit3 size={14} /> แก้ไขข้อมูล
               </button>
               <button
                 onClick={() => onComplete(repair.id)}
                 disabled={submitting}
-                className="w-full sm:w-auto px-10 py-3 bg-black dark:bg-white text-white dark:text-black text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 dark:hover:bg-neutral-100 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-10 py-3 bg-blue-600 text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-blue-700 disabled:bg-slate-300 transition-all flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   "กำลังดำเนินการ..."
@@ -248,7 +242,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="px-10 py-3 border border-neutral-900 dark:border-white text-black dark:text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black transition-all"
+              className="px-10 py-3 border border-slate-900 text-slate-900 text-xs font-bold uppercase tracking-[0.2em] hover:bg-slate-900 hover:text-white transition-all"
             >
               ปิดหน้าต่าง
             </button>

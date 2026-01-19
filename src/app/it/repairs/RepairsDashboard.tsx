@@ -88,11 +88,11 @@ export function RepairsDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 dark:border-neutral-900 pb-5 md:pb-6">
         <div className="flex-1">
-          <h1 className="text-xl md:text-3xl font-bold text-black dark:text-white tracking-tight">
+          <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">
             แจ้งซ่อมทั้งหมด
           </h1>
           <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1.5 md:mt-2">
-            <p className="text-[10px] md:text-base text-gray-600 dark:text-gray-400 font-medium leading-relaxed">
+            <p className="text-[10px] md:text-base text-slate-500 font-medium leading-relaxed">
               จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
             </p>
             <StatusIndicator
@@ -130,7 +130,7 @@ export function RepairsDashboard() {
       />
 
       {/* Mobile Card View */}
-      <div className="lg:hidden divide-y divide-gray-100 dark:divide-neutral-900">
+      <div className="lg:hidden divide-y divide-gray-100">
         {filteredRepairs.map((repair) => (
           <RepairCard
             key={repair.id}

@@ -25,17 +25,17 @@ export const RepairCard: React.FC<RepairCardProps> = ({
   return (
     <div
       onClick={() => onView(repair)}
-      className="p-4 bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-neutral-900/40 transition-colors border-b border-gray-100 dark:border-neutral-900 last:border-b-0 cursor-pointer group/card"
+      className="p-4 bg-white hover:bg-slate-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer group/card"
     >
       <div className="flex justify-between items-start mb-3">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-bold font-mono text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-neutral-900 px-1.5 py-0.5 rounded border border-gray-100 dark:border-neutral-800">
+            <span className="text-[9px] font-bold font-mono text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
               #{repair.ticketCode}
             </span>
             <UrgencyBadge urgency={repair.urgency} />
           </div>
-          <h4 className="font-bold text-black dark:text-white text-sm group-hover/card:translate-x-1 transition-transform">
+          <h4 className="font-bold text-slate-900 text-sm group-hover/card:translate-x-1 transition-transform">
             {repair.problemTitle}
           </h4>
         </div>
@@ -47,12 +47,12 @@ export const RepairCard: React.FC<RepairCardProps> = ({
           {repair.assignee?.name ? (
             <div className="flex items-center gap-2">
               <Avatar name={repair.assignee.name} size="sm" />
-              <span className="text-[11px] font-bold text-black dark:text-white">
+              <span className="text-[11px] font-bold text-slate-900">
                 {repair.assignee.name}
               </span>
             </div>
           ) : (
-            <span className="text-[10px] text-gray-400 dark:text-gray-600 italic">
+            <span className="text-[10px] text-slate-400 italic">
               ยังไม่มีผู้รับผิดชอบ
             </span>
           )}
@@ -65,12 +65,12 @@ export const RepairCard: React.FC<RepairCardProps> = ({
                 onAccept(repair.id);
               }}
               disabled={submitting}
-              className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-xl hover:bg-gray-900 dark:hover:bg-gray-100 transition-all disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-black/5 active:scale-[0.98]"
+              className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-[0.98]"
             >
               รับเรื่อง
             </button>
           )}
-          <div className="p-2 rounded-full border border-gray-100 dark:border-neutral-800 text-gray-300 dark:text-neutral-700 group-hover/card:text-black dark:group-hover/card:text-white group-hover/card:border-black dark:group-hover/card:border-white transition-all">
+          <div className="p-2 rounded-full border border-slate-100 text-slate-300 group-hover/card:text-blue-600 group-hover/card:border-blue-600 transition-all">
             <ArrowRight size={14} />
           </div>
         </div>

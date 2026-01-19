@@ -20,21 +20,11 @@
 
 :root {
   /* Dynamic Backgrounds */
-  --background: #ffffff;
-  --foreground: #111111;
+  --background: #f8fafc; /* slate-50 for a slightly softer white than pure #fff */
+  --foreground: #0f172a; /* slate-900 */
 
   --card-bg: #ffffff;
-  --card-border: #e5e7eb; /* gray-200 */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ffffff;
-
-    --card-bg: #0a0a0a;
-    --card-border: #1a1a1a;
-  }
+  --card-border: #e2e8f0; /* slate-200 */
 }
 
 body {

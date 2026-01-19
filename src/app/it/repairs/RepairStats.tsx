@@ -9,18 +9,18 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ label, count, icon }) => (
-  <div className="bg-white dark:bg-neutral-900/50 p-4 md:p-6 rounded-3xl border border-gray-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-all group">
+  <div className="bg-white p-4 md:p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all group">
     <div className="flex justify-between items-start mb-4">
-      <div className="p-3 bg-gray-50 dark:bg-neutral-800 rounded-2xl group-hover:bg-black dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-black transition-all">
+      <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all">
         {icon}
       </div>
-      <span className="text-2xl md:text-3xl font-black text-black dark:text-white tracking-tighter">
+      <span className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
         {count}
       </span>
     </div>
     <div className="flex items-center gap-2">
-      <div className="w-1 h-3 bg-black dark:bg-white rounded-full"></div>
-      <p className="text-[10px] md:text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest leading-none">
+      <div className="w-1 h-3 bg-blue-600 rounded-full"></div>
+      <p className="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">
         {label}
       </p>
     </div>
