@@ -1,17 +1,18 @@
 import React from "react";
 import {
   X,
-  Wrench,
-  FileText,
   MapPin,
+  Tag,
   Calendar,
-  Clock,
   User,
   Phone,
-  Building2,
   MessageCircle,
+  Building2,
+  ArrowRight,
+  Check,
+  Edit3,
 } from "lucide-react";
-import { RepairTicket } from "./types/repair.types";
+import { RepairTicket, RepairStatus } from "./types/repair.types";
 import { Avatar } from "./ui/Avatar";
 import { safeFormat } from "@/lib/date-utils";
 
@@ -23,6 +24,22 @@ interface RepairDetailModalProps {
   submitting: boolean;
 }
 
+const STATUS_MAP: Record<RepairStatus, string> = {
+  PENDING: "รอดำเนินการ",
+  IN_PROGRESS: "กำลังดำเนินการ",
+  WAITING_PARTS: "รออะไหล่",
+  COMPLETED: "เสร็จสิ้น",
+  CANCELLED: "ยกเลิก",
+};
+
+const CATEGORY_MAP: Record<string, string> = {
+  HARDWARE: "ฮาร์ดแวร์",
+  SOFTWARE: "ซอฟต์แวร์",
+  NETWORK: "เครือข่าย",
+  OTHER: "อื่นๆ",
+  GENERAL: "ทั่วไป",
+};
+
 export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
   repair,
   onClose,
@@ -32,174 +49,211 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
 }) => {
   if (!repair) return null;
 
+  const translatedStatus = STATUS_MAP[repair.status] || repair.status;
+  const translatedCategory =
+    CATEGORY_MAP[repair.problemCategory?.toUpperCase() || ""] ||
+    repair.problemCategory ||
+    "ทั่วไป";
+
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-md transition-all duration-500"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-neutral-100 animate-in fade-in zoom-in duration-300">
-        {/* TOP NAV */}
-        <div className="px-6 md:px-10 py-6 md:py-8 flex justify-between items-center bg-white border-b border-neutral-50 shrink-0">
-          <div className="flex items-center gap-4 md:gap-6">
-            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-black items-center justify-center shadow-2xl rotate-3">
-              <Wrench className="text-white" size={28} />
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-[10px] md:text-[11px] font-mono font-black bg-neutral-100 text-neutral-500 px-3 py-1 rounded-full uppercase tracking-tighter">
-                  #{repair.ticketCode}
-                </span>
-                <div
-                  className={`px-3 py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border ${
-                    repair.status === "COMPLETED"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-black border-neutral-200"
-                  }`}
-                >
-                  {repair.status}
-                </div>
-              </div>
-              <h2 className="text-xl md:text-2xl font-black text-black tracking-tight">
-                Case Overview
-              </h2>
+      <div className="bg-white w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-neutral-200">
+        {/* HEADER: Minimal & Clean */}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-neutral-100">
+          <div className="flex items-center gap-4">
+            <span className="font-mono text-xs font-medium tracking-widest text-neutral-400 uppercase">
+              รหัสรายการ: {repair.ticketCode}
+            </span>
+            <div
+              className={`text-[10px] px-2 py-0.5 border font-bold uppercase tracking-wider ${
+                repair.status === "COMPLETED"
+                  ? "bg-black text-white border-black"
+                  : "border-neutral-200 text-neutral-500"
+              }`}
+            >
+              {translatedStatus}
             </div>
           </div>
           <button
             onClick={onClose}
-            className="group w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-neutral-50 hover:bg-black transition-all duration-300"
+            className="hover:rotate-90 transition-transform duration-200 text-neutral-400 hover:text-black"
           >
-            <X
-              size={20}
-              className="text-neutral-400 group-hover:text-white transition-colors"
-            />
+            <X size={24} strokeWidth={1.5} />
           </button>
         </div>
 
-        {/* MAIN CONTENT AREA */}
-        <div className="flex-1 overflow-y-auto no-scrollbar p-6 md:p-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
-            {/* LEFT: Core Problem */}
-            <div className="lg:col-span-7 space-y-8 md:space-y-12">
-              <section className="space-y-6 text-center lg:text-left">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black text-neutral-300 uppercase tracking-[0.3em]">
-                    Subject
-                  </p>
-                  <h3 className="text-3xl md:text-4xl font-black text-black leading-[1.1] tracking-tight">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-12">
+            {/* MAIN CONTENT (Col: 7) */}
+            <div className="md:col-span-7 p-8 md:p-12 border-b md:border-b-0 md:border-r border-neutral-100">
+              <div className="space-y-10">
+                {/* Title & Description */}
+                <section className="space-y-4">
+                  <h1 className="text-3xl md:text-4xl font-light text-neutral-900 leading-tight tracking-tight">
                     {repair.problemTitle}
-                  </h3>
-                </div>
-
-                <div className="p-6 md:p-8 bg-neutral-50 rounded-[2.5rem] border border-neutral-100/50">
-                  <p className="text-[10px] font-black text-neutral-300 uppercase tracking-[0.3em] mb-4 text-center">
-                    รายละเอียด
+                  </h1>
+                  <p className="text-neutral-500 leading-relaxed text-lg font-light">
+                    {repair.problemDescription || "ไม่มีคำอธิบายเพิ่มเติม"}
                   </p>
-                  <p className="text-base md:text-lg text-neutral-600 leading-relaxed font-medium italic text-center">
-                    "{repair.problemDescription || "ไม่มีคำอธิบายเพิ่มเติม"}"
-                  </p>
-                </div>
+                </section>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 md:p-6 border border-neutral-100 rounded-[2rem] flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-neutral-300 uppercase tracking-widest">
-                      ประเภท
-                    </span>
-                    <div className="flex items-center gap-2 font-bold text-black text-xs md:text-sm">
-                      <FileText size={14} />{" "}
-                      {repair.problemCategory || "General"}
-                    </div>
-                  </div>
-                  <div className="p-4 md:p-6 border border-neutral-100 rounded-[2rem] flex flex-col gap-1">
-                    <span className="text-[9px] font-black text-neutral-300 uppercase tracking-widest">
-                      Location
-                    </span>
-                    <div className="flex items-center gap-2 font-bold text-black text-xs md:text-sm">
-                      <MapPin size={14} /> {repair.location || "Office"}
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* Action Tabs for Tech */}
-              {repair.status !== "COMPLETED" && (
-                <div className="flex gap-4 p-4 bg-neutral-900 rounded-[2.5rem] shadow-2xl">
-                  <button
-                    onClick={onEdit}
-                    className="flex-1 bg-white text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-200 transition-all active:scale-95"
-                  >
-                    Update Case
-                  </button>
-                  <button
-                    onClick={() => onComplete(repair.id)}
-                    disabled={submitting}
-                    className="flex-1 bg-black text-white border border-neutral-700 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 transition-all disabled:opacity-50 active:scale-95"
-                  >
-                    Finalize Job
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT: Reporter & Metadata */}
-            <div className="lg:col-span-5 space-y-6 md:space-y-8">
-              {/* Reporter Card */}
-              <div className="p-6 md:p-8 rounded-[2.5rem] border-2 border-neutral-50 space-y-6 bg-white/50">
-                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.3em]">
-                  Reporter Profile
-                </p>
-                <div className="flex items-center gap-6">
-                  <Avatar
-                    name={repair.reporterName}
-                    pictureUrl={repair.user?.lineOALink?.pictureUrl}
-                    size="lg"
-                  />
-                  <div>
-                    <h4 className="text-xl font-black text-black">
-                      {repair.reporterName || "Unknown"}
-                    </h4>
-                    <p className="text-xs font-bold text-neutral-400">
-                      {repair.reporterDepartment || "N/A"}
+                {/* Metadata Grid */}
+                <div className="grid grid-cols-2 gap-y-8 pt-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
+                      หมวดหมู่
                     </p>
+                    <div className="flex items-center gap-2 text-neutral-800">
+                      <Tag size={14} className="text-neutral-300" />
+                      <span className="text-sm font-medium">
+                        {translatedCategory}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
+                      สถานที่แจ้ง
+                    </p>
+                    <div className="flex items-center gap-2 text-neutral-800">
+                      <MapPin size={14} className="text-neutral-300" />
+                      <span className="text-sm font-medium">
+                        {repair.location || "สำนักงาน"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex items-center gap-4 text-xs font-bold text-neutral-600 bg-neutral-50/50 p-4 rounded-2xl">
-                    <Phone size={14} /> {repair.reporterPhone || "-"}
-                  </div>
-                  <div className="flex items-center gap-4 text-xs font-bold text-neutral-600 bg-neutral-50/50 p-4 rounded-2xl">
-                    <MessageCircle size={14} /> {repair.reporterLineId || "-"}
-                  </div>
-                  <div className="flex items-center gap-4 text-xs font-bold text-neutral-600 bg-neutral-50/50 p-4 rounded-2xl">
-                    <Building2 size={14} /> {repair.reporterDepartment || "-"}
+                {/* Timeline Simple */}
+                <div className="pt-8 border-t border-neutral-100 space-y-4">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
+                    ไทม์ไลน์
+                  </p>
+                  <div className="flex items-center gap-8">
+                    <div className="flex flex-col">
+                      <span className="text-[11px] text-neutral-400">
+                        วันที่สร้าง
+                      </span>
+                      <span className="text-sm text-neutral-700">
+                        {safeFormat(repair.createdAt, "dd MMM yyyy · HH:mm")}
+                      </span>
+                    </div>
+                    <ArrowRight size={16} className="text-neutral-200" />
+                    <div className="flex flex-col">
+                      <span className="text-[11px] text-neutral-400">
+                        กิจกรรมล่าสุด
+                      </span>
+                      <span className="text-sm text-neutral-700">
+                        {safeFormat(
+                          repair.updatedAt || repair.createdAt,
+                          "dd MMM yyyy · HH:mm",
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Timeline Info */}
-              <div className="px-8 space-y-6">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-black text-neutral-300 uppercase tracking-widest">
-                    Reported
-                  </span>
-                  <span className="font-bold text-neutral-600">
-                    {safeFormat(repair.createdAt, "MMM dd, HH:mm")}
-                  </span>
+            {/* SIDEBAR: Reporter Profile (Col: 5) */}
+            <div className="md:col-span-5 bg-neutral-50/50 p-8 md:p-12">
+              <div className="space-y-10">
+                <div className="space-y-6">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">
+                    ผู้แจ้งซ่อม
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <Avatar
+                      name={repair.reporterName}
+                      pictureUrl={repair.user?.lineOALink?.pictureUrl}
+                      size="xl"
+                      className="rounded-none border border-neutral-200 grayscale shadow-sm"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold text-neutral-900">
+                        {repair.reporterName}
+                      </h3>
+                      <p className="text-xs text-neutral-500 uppercase tracking-wider">
+                        {repair.reporterDepartment}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-black text-neutral-300 uppercase tracking-widest">
-                    Last Activity
-                  </span>
-                  <span className="font-bold text-neutral-600">
-                    {safeFormat(
-                      repair.updatedAt || repair.createdAt,
-                      "MMM dd, HH:mm",
-                    )}
-                  </span>
+
+                <div className="space-y-4 pt-4">
+                  <div className="flex items-center justify-between py-3 border-b border-neutral-100">
+                    <div className="flex items-center gap-3 text-neutral-500">
+                      <Phone size={14} strokeWidth={1.5} />
+                      <span className="text-xs font-medium uppercase tracking-wider">
+                        เบอร์โทรศัพท์
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-800">
+                      {repair.reporterPhone || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-neutral-100">
+                    <div className="flex items-center gap-3 text-neutral-500">
+                      <MessageCircle size={14} strokeWidth={1.5} />
+                      <span className="text-xs font-medium uppercase tracking-wider">
+                        Line ID
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-800">
+                      {repair.reporterLineId || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-neutral-100">
+                    <div className="flex items-center gap-3 text-neutral-500">
+                      <Building2 size={14} strokeWidth={1.5} />
+                      <span className="text-xs font-medium uppercase tracking-wider">
+                        แผนก
+                      </span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-800 text-right">
+                      {repair.reporterDepartment || "-"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* FOOTER: Actions */}
+        <div className="p-6 border-t border-neutral-100 bg-white flex flex-col sm:flex-row gap-3 justify-end items-center">
+          {repair.status !== "COMPLETED" ? (
+            <>
+              <button
+                onClick={onEdit}
+                className="w-full sm:w-auto px-8 py-3 bg-white border border-neutral-200 text-black text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <Edit3 size={14} /> แก้ไขข้อมูล
+              </button>
+              <button
+                onClick={() => onComplete(repair.id)}
+                disabled={submitting}
+                className="w-full sm:w-auto px-10 py-3 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 disabled:bg-neutral-300 transition-all flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  "กำลังดำเนินการ..."
+                ) : (
+                  <>
+                    <Check size={16} /> แก้ไขเสร็จสิ้น
+                  </>
+                )}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onClose}
+              className="px-10 py-3 border border-neutral-900 text-black text-xs font-bold uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all"
+            >
+              ปิดหน้าต่าง
+            </button>
+          )}
         </div>
       </div>
     </div>
