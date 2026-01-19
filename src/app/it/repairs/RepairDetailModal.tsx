@@ -196,17 +196,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                       {repair.reporterPhone || "-"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between py-3 border-b border-neutral-100">
-                    <div className="flex items-center gap-3 text-neutral-500">
-                      <MessageCircle size={14} strokeWidth={1.5} />
-                      <span className="text-xs font-medium uppercase tracking-wider">
-                        Line ID
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold text-neutral-800">
-                      {repair.reporterLineId || "-"}
-                    </span>
-                  </div>
+                 
                   <div className="flex items-center justify-between py-3 border-b border-neutral-100">
                     <div className="flex items-center gap-3 text-neutral-500">
                       <Building2 size={14} strokeWidth={1.5} />

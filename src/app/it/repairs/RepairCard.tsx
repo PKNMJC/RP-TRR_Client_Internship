@@ -23,7 +23,10 @@ export const RepairCard: React.FC<RepairCardProps> = ({
   submitting,
 }) => {
   return (
-    <div className="p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+    <div
+      onClick={() => onView(repair)}
+      className="p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer group/card"
+    >
       <div className="flex justify-between items-start mb-3">
         <div className="max-w-[70%]">
           <div className="flex items-center gap-1.5 mb-1.5">
@@ -61,25 +64,45 @@ export const RepairCard: React.FC<RepairCardProps> = ({
 
       <div className="flex items-center gap-2">
         {activeTab === "available" ? (
-          <button
-            onClick={() => onAccept(repair.id)}
-            disabled={submitting}
-            className="flex-1 py-2 bg-black text-white rounded-xl hover:bg-gray-900 transition-all disabled:opacity-50 text-[11px] font-bold shadow-lg shadow-black/5 active:scale-[0.98]"
-          >
-            รับเรื่องดูแล
-          </button>
+          <div className="flex-1 flex gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAccept(repair.id);
+              }}
+              disabled={submitting}
+              className="flex-1 py-2 bg-black text-white rounded-xl hover:bg-gray-900 transition-all disabled:opacity-50 text-[11px] font-bold shadow-lg shadow-black/5 active:scale-[0.98]"
+            >
+              รับเรื่องดูแล
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(repair);
+              }}
+              className="px-4 py-2 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-sm hover:bg-gray-50 transition-all text-[11px] font-bold active:scale-[0.98]"
+            >
+              รายละเอียด
+            </button>
+          </div>
         ) : (
           <>
             {repair.status !== "COMPLETED" && (
               <button
-                onClick={() => onTransfer(repair)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTransfer(repair);
+                }}
                 className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all text-[11px] font-bold active:scale-[0.98]"
               >
                 โอนงาน
               </button>
             )}
             <button
-              onClick={() => onView(repair)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(repair);
+              }}
               className="flex-1 py-2 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-sm hover:bg-gray-50 transition-all text-[11px] font-bold active:scale-[0.98]"
             >
               รายละเอียด
