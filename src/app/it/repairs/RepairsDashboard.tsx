@@ -131,22 +131,7 @@ export function RepairsDashboard() {
         setFilterPriority={setFilterPriority}
       />
 
-      {/* Mobile Card View */}
-      <div className="lg:hidden divide-y divide-gray-100">
-        {filteredRepairs.map((repair) => (
-          <RepairCard
-            key={repair.id}
-            repair={repair}
-            activeTab={activeTab}
-            onAccept={(id) => handleAcceptRepair(id, currentUser)}
-            onTransfer={setSelectionForTransfer}
-            onView={setSelectedRepair}
-            submitting={submitting}
-          />
-        ))}
-      </div>
-
-      {/* Desktop Table View */}
+      {/* Repair Data View (Handles Mobile/Desktop internally) */}
       <RepairTable
         repairs={filteredRepairs}
         activeTab={activeTab}
