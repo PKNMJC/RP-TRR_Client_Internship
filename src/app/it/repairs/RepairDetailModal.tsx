@@ -152,7 +152,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-sm">
                   <MapPin size={14} className="text-slate-300" />
-                  {repair.location && ` · ${repair.location}`}
+                  {repair.location}
                 </div>
               </div>
             
