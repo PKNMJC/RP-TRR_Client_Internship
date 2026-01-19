@@ -46,6 +46,8 @@ export function RepairsDashboard() {
     priority: "NORMAL",
     description: "",
     assigneeId: "",
+    location: "",
+    problemCategory: "OTHER",
   });
 
   const {
@@ -72,6 +74,8 @@ export function RepairsDashboard() {
         priority: selectedRepair.urgency,
         description: selectedRepair.problemDescription || "",
         assigneeId: selectedRepair.assignee?.id.toString() || "",
+        location: selectedRepair.location || "",
+        problemCategory: selectedRepair.problemCategory || "OTHER",
       });
       setShowEditModal(true);
     }

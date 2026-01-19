@@ -11,6 +11,8 @@ interface RepairEditModalProps {
     description: string;
     priority: string;
     assigneeId: string;
+    location: string;
+    problemCategory: string;
   };
   setEditForm: (form: any) => void;
   itStaff: User[];
@@ -71,6 +73,41 @@ export const RepairEditModal: React.FC<RepairEditModalProps> = ({
               <option value="URGENT">ด่วน (Urgent)</option>
               <option value="NORMAL">ปกติ (Normal)</option>
             </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+              หมวดหมู่ปัญหา
+            </label>
+            <select
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black outline-none font-bold appearance-none"
+              value={editForm.problemCategory}
+              onChange={(e) =>
+                setEditForm({ ...editForm, problemCategory: e.target.value })
+              }
+            >
+              <option value="GENERAL">ทั่วไป (General)</option>
+              <option value="HARDWARE">ฮาร์ดแวร์ (Hardware)</option>
+              <option value="SOFTWARE">ซอฟต์แวร์ (Software)</option>
+              <option value="NETWORK">เครือข่าย/อินเทอร์เน็ต (Network)</option>
+              <option value="PERIPHERAL">อุปกรณ์ต่อพ่วง (Peripheral)</option>
+              <option value="EMAIL_OFFICE365">Email / Office 365</option>
+              <option value="ACCOUNT_PASSWORD">Account / Password</option>
+              <option value="OTHER">อื่นๆ (Other)</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+              สถานที่แจ้ง
+            </label>
+            <input
+              type="text"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-black outline-none font-bold"
+              value={editForm.location}
+              onChange={(e) =>
+                setEditForm({ ...editForm, location: e.target.value })
+              }
+              placeholder="เช่น ชั้น 2, ห้อง IT"
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">

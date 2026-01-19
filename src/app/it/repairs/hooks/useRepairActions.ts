@@ -47,7 +47,7 @@ export const useRepairActions = (onSuccess: () => void) => {
     }
   };
 
-  const handleSaveEdit = async (id: number, form: { title: string; description: string; priority: string; assigneeId: string }) => {
+  const handleSaveEdit = async (id: number, form: { title: string; description: string; priority: string; assigneeId: string; location: string; problemCategory: string }) => {
     if (!form.title.trim()) {
       alert("กรุณากรอกหัวข้อแจ้งซ่อม");
       return;
@@ -61,6 +61,8 @@ export const useRepairActions = (onSuccess: () => void) => {
           problemTitle: form.title,
           problemDescription: form.description,
           urgency: form.priority,
+          location: form.location,
+          problemCategory: form.problemCategory,
           assignedTo: form.assigneeId ? parseInt(form.assigneeId) : null,
         }),
       });

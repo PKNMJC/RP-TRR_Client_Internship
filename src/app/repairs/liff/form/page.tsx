@@ -51,6 +51,8 @@ function RepairFormContent() {
     issueType: "",
     details: "",
     urgency: "ปกติ",
+    location: "",
+    problemCategory: "OTHER",
   });
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -141,8 +143,8 @@ function RepairFormContent() {
       payload.append("reporterPhone", formData.phone || "ไม่ระบุ");
       payload.append("problemTitle", formData.issueType);
       payload.append("problemDescription", formData.details);
-      payload.append("location", "ไม่ระบุ");
-      payload.append("problemCategory", "OTHER");
+      payload.append("location", formData.location || "ไม่ได้ระบุ");
+      payload.append("problemCategory", formData.problemCategory);
 
       const urgencyMap: Record<string, string> = {
         ปกติ: "NORMAL",
@@ -376,6 +378,56 @@ function RepairFormContent() {
                   className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold resize-none"
                   placeholder="รายละเอียดเพิ่มเติม หรือจุดสังเกต..."
                 ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">
+                  สถานที่ / โซนที่เกิดปัญหา
+                </label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    id="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold"
+                    placeholder="เช่น ชั้น 2, ห้องสมุด, โต๊ะทำงาน A1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">
+                  หมวดหมู่ปัญหา
+                </label>
+                <div className="relative group">
+                  <select
+                    id="problemCategory"
+                    value={formData.problemCategory}
+                    onChange={handleChange}
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all text-[15px] font-bold appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="GENERAL">ทั่วไป (General)</option>
+                    <option value="HARDWARE">ฮาร์ดแวร์ (Hardware)</option>
+                    <option value="SOFTWARE">ซอฟต์แวร์ (Software)</option>
+                    <option value="NETWORK">
+                      เครือข่าย/อินเทอร์เน็ต (Network)
+                    </option>
+                    <option value="PERIPHERAL">
+                      อุปกรณ์ต่อพ่วง (Peripheral)
+                    </option>
+                    <option value="EMAIL_OFFICE365">Email / Office 365</option>
+                    <option value="ACCOUNT_PASSWORD">Account / Password</option>
+                    <option value="OTHER">อื่นๆ (Other)</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <ChevronDown className="w-5 h-5" />
+                  </div>
+                </div>
               </div>
 
               <div>

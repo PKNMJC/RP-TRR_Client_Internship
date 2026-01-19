@@ -36,6 +36,9 @@ const CATEGORY_MAP: Record<string, string> = {
   HARDWARE: "ฮาร์ดแวร์",
   SOFTWARE: "ซอฟต์แวร์",
   NETWORK: "เครือข่าย",
+  PERIPHERAL: "อุปกรณ์ต่อพ่วง",
+  EMAIL_OFFICE365: "Email / Office 365",
+  ACCOUNT_PASSWORD: "Account / Password",
   OTHER: "อื่นๆ",
   GENERAL: "ทั่วไป",
 };
