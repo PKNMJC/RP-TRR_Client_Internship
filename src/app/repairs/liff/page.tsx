@@ -140,10 +140,14 @@ function RepairLiffContent() {
 
   useEffect(() => {
     if (!lineUserId || isInitializing) return;
+    if (action === "create") {
+      router.push(`/repairs/liff/form?lineUserId=${lineUserId}`);
+      return;
+    }
     if (action === "status") fetchTickets();
     else if (action === "history" && ticketIdFromParam)
       fetchTicketDetail(ticketIdFromParam);
-  }, [action, lineUserId, isInitializing, ticketIdFromParam]);
+  }, [action, lineUserId, isInitializing, ticketIdFromParam, router]);
 
   const fetchTickets = async () => {
     setLoading(true);
@@ -772,6 +776,14 @@ function RepairLiffContent() {
             <LayoutDashboard className="w-4 h-4" /> กลับสู่แดชบอร์ด
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (action === "create") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full"></div>
       </div>
     );
   }
