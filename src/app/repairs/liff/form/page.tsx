@@ -167,22 +167,22 @@ export default function RepairLiffFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] font-sans p-5 flex items-center justify-center">
-      <div className="w-full max-w-[500px] bg-white p-[30px] rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/50 dark:from-slate-950 dark:to-indigo-950/30 font-sans p-4 sm:p-8 flex items-center justify-center">
+      <div className="w-full max-w-[500px] glass p-6 sm:p-10 rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-500">
         {/* Header */}
-        <div className="text-center mb-6">
-          <h3 className="text-2xl font-bold text-[#0d6efd] mb-1">
+        <div className="text-center mb-8">
+          <h3 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
             แจ้งซ่อมออนไลน์
           </h3>
-          <p className="text-[#6c757d] text-sm">
-            กรอกรายละเอียดเพื่อแจ้งเจ้าหน้าที่
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+            กรอกรายละเอียดเพื่อให้เจ้าหน้าที่เข้าดำเนินการ
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
-          <div className="mb-4">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               ชื่อผู้แจ้ง
             </label>
             <input
@@ -190,29 +190,29 @@ export default function RepairLiffFormPage() {
               id="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
-              placeholder="ระบุชื่อเล่น หรือชื่อจริง"
+              className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base placeholder:text-slate-400"
+              placeholder="ระบุชื่อผู้แจ้ง"
               required
             />
           </div>
 
           {/* Department */}
-          <div className="mb-4">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               แผนก/โซน
             </label>
             <select
               id="dept"
               value={formData.dept}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm bg-white"
+              className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base appearance-none cursor-pointer"
               required
             >
-              <option value="" disabled>
+              <option value="" disabled className="text-slate-400">
                 -- เลือกแผนก --
               </option>
               {DEPARTMENTS.map((d, i) => (
-                <option key={i} value={d}>
+                <option key={i} value={d} className="text-slate-900">
                   {d}
                 </option>
               ))}
@@ -225,7 +225,7 @@ export default function RepairLiffFormPage() {
                 id="otherDept"
                 value={formData.otherDept}
                 onChange={handleChange}
-                className="w-full mt-2 px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
+                className="w-full mt-3 px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base animate-in slide-in-from-top-2 duration-300"
                 placeholder="ระบุแผนก/โซนของคุณ"
                 required
               />
@@ -233,8 +233,8 @@ export default function RepairLiffFormPage() {
           </div>
 
           {/* Phone */}
-          <div className="mb-4">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               เบอร์ติดต่อกลับ (ถ้ามี)
             </label>
             <input
@@ -242,40 +242,44 @@ export default function RepairLiffFormPage() {
               id="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
-              placeholder="เช่น 0812345678"
+              className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base placeholder:text-slate-400"
+              placeholder="08X-XXX-XXXX"
               pattern="[0-9]*"
               inputMode="numeric"
             />
           </div>
 
-          <hr className="my-6 border-t border-[#dee2e6]" />
+          <div className="py-2">
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent"></div>
+          </div>
 
           {/* Issue Type */}
-          <div className="mb-4">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               ประเภทอาการ
             </label>
-            <input
-              type="text"
-              id="issueType"
-              list="issue-options"
-              value={formData.issueType}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
-              placeholder="เลือกหรือพิมพ์อาการที่พบ"
-              required
-            />
-            <datalist id="issue-options">
-              {ISSUE_TYPES.map((t, i) => (
-                <option key={i} value={t} />
-              ))}
-            </datalist>
+            <div className="relative">
+              <input
+                type="text"
+                id="issueType"
+                list="issue-options"
+                value={formData.issueType}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base placeholder:text-slate-400"
+                placeholder="คลิกเพื่อเลือกหรือพิมพ์อาการ"
+                required
+              />
+              <datalist id="issue-options">
+                {ISSUE_TYPES.map((t, i) => (
+                  <option key={i} value={t} />
+                ))}
+              </datalist>
+            </div>
           </div>
 
           {/* Details */}
-          <div className="mb-4">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               รายละเอียดเพิ่มเติม
             </label>
             <textarea
@@ -283,59 +287,90 @@ export default function RepairLiffFormPage() {
               value={formData.details}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm"
-              placeholder="ระบุอาการเสีย หรือจุดสังเกตเพิ่มเติม"
+              className="w-full px-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white text-base placeholder:text-slate-400 resize-none"
+              placeholder="เช่น หมายเลขเครื่อง หรือ จุดสังเกตอาการเสีย"
             ></textarea>
           </div>
 
           {/* Urgency */}
-          <div className="mb-4">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               ความเร่งด่วน
             </label>
-            <select
-              id="urgency"
-              value={formData.urgency}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md focus:outline-none focus:border-[#86b7fe] focus:ring-4 focus:ring-[#0d6efd]/25 transition-all text-sm bg-white"
-            >
-              <option value="ปกติ">ปกติ</option>
-              <option value="ด่วน">ด่วน</option>
-              <option value="ด่วนที่สุด">ด่วนที่สุด</option>
-            </select>
+            <div className="grid grid-cols-3 gap-2">
+              {["ปกติ", "ด่วน", "ด่วนที่สุด"].map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, urgency: level }))
+                  }
+                  className={`py-2 text-sm font-bold rounded-lg transition-all border ${
+                    formData.urgency === level
+                      ? level === "ปกติ"
+                        ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20"
+                        : level === "ด่วน"
+                          ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20"
+                          : "bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20"
+                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-blue-500"
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Image */}
-          <div className="mb-6">
-            <label className="block font-semibold text-[#333] mb-2 text-sm">
+          <div className="mb-4">
+            <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1.5 text-sm ml-1">
               รูปภาพประกอบ (ถ้ามี)
             </label>
-            <input
-              type="file"
-              id="imageFile"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="w-full px-3 py-2 border border-[#dee2e6] rounded-md text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#e9ecef] file:text-[#495057] hover:file:bg-[#dee2e6]"
-            />
+            <div className="relative group">
+              <input
+                type="file"
+                id="imageFile"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <label
+                htmlFor="imageFile"
+                className="flex items-center justify-center w-full px-4 py-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group"
+              >
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-blue-600">
+                    {file ? file.name : "เลือกรูปภาพ หรือ ถ่ายรูป"}
+                  </span>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-[#06C755] hover:bg-[#05a546] text-white rounded-full font-bold shadow-sm transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-green-500/20 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed mt-4"
           >
-            {isLoading ? "กำลังบันทึกข้อมูล..." : "ยืนยันแจ้งซ่อม"}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>กำลังบันทึก...</span>
+              </div>
+            ) : (
+              "ส่งข้อมูลแจ้งซ่อม"
+            )}
           </button>
         </form>
       </div>
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="fixed inset-0 bg-white/80 z-[9999] flex flex-col items-center justify-center">
-          <div className="w-12 h-12 border-4 border-[#0d6efd] border-t-transparent rounded-full animate-spin"></div>
-          <div className="mt-3 text-[#6c757d] font-bold">
-            กำลังบันทึกข้อมูล...
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin shadow-2xl shadow-blue-500/50"></div>
+          <div className="mt-6 text-white text-xl font-black tracking-wider">
+            ระบบกำลังประมวลผล...
           </div>
         </div>
       )}
