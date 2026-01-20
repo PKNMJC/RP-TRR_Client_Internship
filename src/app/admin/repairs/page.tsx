@@ -136,7 +136,7 @@ export default function AdminRepairsPage() {
   if (loading)
     return (
       <div className="h-screen flex items-center justify-center text-zinc-400 animate-pulse">
-        Loading System...
+        กำลังโหลดข้อมูล...
       </div>
     );
 

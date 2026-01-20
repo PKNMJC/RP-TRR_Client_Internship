@@ -15,7 +15,7 @@ export const LoadingState: React.FC = () => (
         <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
       <p className="text-sm font-bold text-slate-900 animate-pulse uppercase tracking-widest">
-        Loading System...
+        กำลังโหลดข้อมูล...
       </p>
     </div>
   </div>
