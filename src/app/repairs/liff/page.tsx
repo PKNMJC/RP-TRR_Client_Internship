@@ -312,28 +312,28 @@ function RepairLiffContent() {
 
         {/* Calendar */}
         <div className="px-4 mb-4">
-          <div className="bg-white rounded-lg border p-4">
+          <div className="bg-white rounded-lg border p-3">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-4 h-4 text-gray-500" />
-                <span className="font-medium text-gray-900">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <CalendarIcon className="w-3.5 h-3.5 text-gray-500" />
+                <span className="font-medium text-gray-900 text-sm">
                   {currentMonth.toLocaleDateString("th-TH", {
                     month: "long",
                     year: "numeric",
                   })}
                 </span>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-0.5">
                 <button
                   onClick={prevMonth}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4 text-gray-600" />
                 </button>
                 <button
                   onClick={nextMonth}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
                 >
                   <ChevronRight className="w-4 h-4 text-gray-600" />
                 </button>
@@ -341,11 +341,11 @@ function RepairLiffContent() {
             </div>
 
             {/* Day Names */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
               {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((name) => (
                 <div
                   key={name}
-                  className="text-center text-xs text-gray-400 font-medium py-1"
+                  className="text-center text-[10px] text-gray-400 font-medium py-0.5"
                 >
                   {name}
                 </div>
@@ -353,9 +353,9 @@ function RepairLiffContent() {
             </div>
 
             {/* Calendar Grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 gap-0.5">
               {calendarDays.map((day, idx) => (
-                <div key={idx} className="aspect-square">
+                <div key={idx} className="h-8">
                   {day && (
                     <button
                       onClick={() =>
@@ -363,29 +363,27 @@ function RepairLiffContent() {
                           selectedDate === day.dateStr ? null : day.dateStr,
                         )
                       }
-                      className={`w-full h-full flex flex-col items-center justify-center rounded-lg text-sm transition-all relative
+                      className={`w-full h-full flex flex-col items-center justify-center rounded text-xs transition-all relative
                         ${
                           selectedDate === day.dateStr
                             ? "bg-blue-600 text-white"
                             : day.ticketCount > 0
-                              ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                              : "text-gray-700 hover:bg-gray-100"
+                              ? "bg-blue-50 text-blue-700"
+                              : "text-gray-700 hover:bg-gray-50"
                         }
                       `}
                     >
-                      <span className="font-medium">{day.day}</span>
+                      <span className="font-medium text-xs">{day.day}</span>
                       {day.ticketCount > 0 && (
-                        <div className="flex gap-0.5 mt-0.5">
-                          <div
-                            className={`w-1 h-1 rounded-full ${
-                              selectedDate === day.dateStr
-                                ? "bg-white"
-                                : day.hasCompleted
-                                  ? "bg-green-500"
-                                  : "bg-blue-500"
-                            }`}
-                          />
-                        </div>
+                        <div
+                          className={`w-1 h-1 rounded-full absolute bottom-1 ${
+                            selectedDate === day.dateStr
+                              ? "bg-white"
+                              : day.hasCompleted
+                                ? "bg-green-500"
+                                : "bg-blue-500"
+                          }`}
+                        />
                       )}
                     </button>
                   )}
