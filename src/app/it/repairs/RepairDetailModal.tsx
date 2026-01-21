@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Check,
   Edit3,
+  Image as ImageIcon,
 } from "lucide-react";
 import { RepairTicket, RepairStatus } from "./types/repair.types";
 import { safeFormat } from "@/lib/date-utils";
@@ -178,6 +179,37 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                 </p>
               </div>
             </section>
+
+            {repair.attachments && repair.attachments.length > 0 && (
+              <section className="space-y-4">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold flex items-center gap-2">
+                  <ImageIcon size={14} />
+                  รูปภาพประกอบ ({repair.attachments.length})
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {repair.attachments.map((attachment) => (
+                    <a
+                      key={attachment.id}
+                      href={attachment.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative aspect-square bg-slate-50 rounded-lg overflow-hidden border border-slate-100 hover:border-blue-200 transition-all"
+                    >
+                      <img
+                        src={attachment.fileUrl}
+                        alt={attachment.filename}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-bold text-slate-900 shadow-sm transition-opacity">
+                          ดูรูปขยาย
+                        </span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* SIDEBAR */}
