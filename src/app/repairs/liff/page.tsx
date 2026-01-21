@@ -103,10 +103,21 @@ function RepairLiffContent() {
         // Import dynamically to avoid SSR/Hydration issues
         const liff = (await import("@line/liff")).default;
 
-        await liff.init({
-          liffId,
-          withLoginOnExternalBrowser: true,
-        });
+        if (!liff.id) {
+          // Use a timeout to prevent permanent hang in LINE app
+          const initPromise = liff.init({
+            liffId,
+            withLoginOnExternalBrowser: true,
+          });
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("LIFF initialization timeout")),
+              10000,
+            ),
+          );
+
+          await Promise.race([initPromise, timeoutPromise]);
+        }
 
         if (!liff.isLoggedIn()) {
           liff.login();
@@ -125,7 +136,9 @@ function RepairLiffContent() {
 
           // Execute primary action based on initial state
           if (action === "create") {
-            router.push(`/repairs/liff/form?lineUserId=${userId}`);
+            // Use window.location for hard redirect to ensure LIFF SDK clean state on target page
+            window.location.href = `/repairs/liff/form?lineUserId=${userId}`;
+            return; // Exit early as we are redirecting
           } else if (action === "status") {
             // Internal function fetchTickets uses the latest state or we can call it here manually
             // But we'll let the second effect handle it or call it here
@@ -156,6 +169,10 @@ function RepairLiffContent() {
         }
       } catch (err) {
         console.error("LIFF Init Error:", err);
+        if (isMounted) {
+          // Show error but allow internal navigation check if possible
+          setIsInitializing(false);
+        }
       } finally {
         if (isMounted) {
           setIsInitializing(false);
@@ -453,7 +470,7 @@ function RepairLiffContent() {
         <div className="px-4 mb-4">
           <button
             onClick={() =>
-              router.push(`/repairs/liff/form?lineUserId=${lineUserId}`)
+              (window.location.href = `/repairs/liff/form?lineUserId=${lineUserId}`)
             }
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-[0.98] transition-all"
           >

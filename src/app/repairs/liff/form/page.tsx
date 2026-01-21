@@ -77,7 +77,19 @@ function RepairFormContent() {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
         if (liffId) {
           const liff = (await import("@line/liff")).default;
-          await liff.init({ liffId });
+          // Check if already initialized to avoid re-init error
+          if (!liff.id) {
+            // Use a timeout to prevent permanent hang in LINE app
+            const initPromise = liff.init({ liffId });
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(
+                () => reject(new Error("LIFF initialization timeout")),
+                10000,
+              ),
+            );
+
+            await Promise.race([initPromise, timeoutPromise]);
+          }
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
             if (isMounted) {
@@ -90,6 +102,13 @@ function RepairFormContent() {
         }
       } catch (error) {
         console.error("LIFF Init Error:", error);
+        if (isMounted) {
+          await showAlert({
+            icon: "error",
+            title: "การเชื่อมต่อล้มเหลว",
+            text: "ไม่สามารถเชื่อมต่อกับ LINE ได้ กรุณาลองใหม่อีกครั้งหรือเปิดผ่านเบราว์เซอร์ปกติ",
+          });
+        }
       }
     };
     initLiff();
@@ -168,7 +187,7 @@ function RepairFormContent() {
         confirmButtonColor: "#374151",
       });
 
-      router.push(`/repairs/liff?action=status&lineUserId=${lineUserId}`);
+      window.location.href = `/repairs/liff?action=status&lineUserId=${lineUserId}`;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "กรุณาลองใหม่อีกครั้ง";
