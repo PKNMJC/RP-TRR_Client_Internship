@@ -67,6 +67,7 @@ function RepairFormContent() {
   const [lineUserId, setLineUserId] = useState(
     searchParams.get("lineUserId") || "",
   );
+  const [lineDisplayName, setLineDisplayName] = useState("");
 
   // Initialize LIFF lazily
   useEffect(() => {
@@ -79,7 +80,7 @@ function RepairFormContent() {
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
             setLineUserId(profile.userId);
-            setFormData((prev) => ({ ...prev, name: profile.displayName }));
+            setLineDisplayName(profile.displayName);
           } else {
             liff.login();
           }
@@ -135,7 +136,10 @@ function RepairFormContent() {
     setIsLoading(true);
     try {
       const payload = new FormData();
-      payload.append("reporterName", formData.name);
+      payload.append(
+        "reporterName",
+        formData.name.trim() || lineDisplayName || "ไม่ระบุชื่อ",
+      );
       payload.append("reporterLineId", lineUserId || "Guest");
       payload.append("reporterDepartment", formData.dept);
       payload.append("reporterPhone", formData.phone || "-");
@@ -203,7 +207,7 @@ function RepairFormContent() {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                  ชื่อผู้แจ้ง<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -211,7 +215,7 @@ function RepairFormContent() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="กรอกชื่อ-นามสกุล"
+                  placeholder="ชื่อผู้แจ้ง"
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                 />
               </div>
@@ -232,7 +236,7 @@ function RepairFormContent() {
                       value={formData.dept}
                       onChange={handleChange}
                       required
-                      placeholder="เช่น บัญชี, IT"
+                      placeholder=""
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                     />
                   </div>
@@ -243,7 +247,7 @@ function RepairFormContent() {
                     htmlFor="phone"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    เบอร์โทร
+                    เบอร์โทรศัพท์
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -252,7 +256,7 @@ function RepairFormContent() {
                       id="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="08X-XXX-XXXX"
+                      placeholder=""
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                     />
                   </div>
