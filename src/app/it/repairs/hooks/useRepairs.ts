@@ -68,6 +68,6 @@ export const useRepairs = () => {
     lastUpdated,
     isAutoRefresh,
     setIsAutoRefresh,
-    refresh: () => fetchRepairs(false),
+    refresh: (isBackground = false) => fetchRepairs(isBackground),
   };
 };

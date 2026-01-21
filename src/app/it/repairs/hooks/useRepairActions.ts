@@ -2,8 +2,16 @@ import { useState } from "react";
 import { apiFetch } from "@/services/api";
 import { RepairTicket, User } from "../types/repair.types";
 
-export const useRepairActions = (onSuccess: () => void) => {
+export const useRepairActions = (onSuccess: (isBackground?: boolean) => void) => {
   const [submitting, setSubmitting] = useState(false);
+  const [successModal, setSuccessModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description?: string;
+  }>({
+    isOpen: false,
+    title: "",
+  });
 
   const handleAcceptRepair = async (id: number, currentUser: User | null) => {
     if (!currentUser) {
@@ -20,7 +28,12 @@ export const useRepairActions = (onSuccess: () => void) => {
           assignedTo: currentUser.id,
         }),
       });
-      onSuccess();
+      onSuccess(true); // Background refresh
+      setSuccessModal({
+        isOpen: true,
+        title: "รับเรื่องสำเร็จ",
+        description: `รายการ #${id} ได้ถูกตอบรับแล้ว`,
+      });
     } catch (err) {
       alert("เกิดข้อผิดพลาดในการรับเรื่อง");
     } finally {
@@ -44,7 +57,12 @@ export const useRepairActions = (onSuccess: () => void) => {
           completedAt: new Date().toISOString(),
         }),
       });
-      onSuccess();
+      onSuccess(true); // Background refresh
+      setSuccessModal({
+        isOpen: true,
+        title: "ปิดงานสำเร็จ",
+        description: `จบงานรายการ #${repair.ticketCode} เรียบร้อยแล้ว`,
+      });
     } catch (err) {
       alert("เกิดข้อผิดพลาดในการบันทึกงานเสร็จสิ้น");
     } finally {
@@ -71,7 +89,12 @@ export const useRepairActions = (onSuccess: () => void) => {
           assignedTo: form.assigneeId ? parseInt(form.assigneeId) : null,
         }),
       });
-      onSuccess();
+      onSuccess(true); // Background refresh
+      setSuccessModal({
+        isOpen: true,
+        title: "บันทึกข้อมูลสำเร็จ",
+        description: `แก้ไขข้อมูลรายการเรียบร้อยแล้ว`,
+      });
     } catch (err) {
       alert("เกิดข้อผิดพลาดในการแก้ไข");
     } finally {
@@ -88,7 +111,12 @@ export const useRepairActions = (onSuccess: () => void) => {
           assignedTo: newAssigneeId,
         }),
       });
-      onSuccess();
+      onSuccess(true); // Background refresh
+      setSuccessModal({
+        isOpen: true,
+        title: "โอนงานสำเร็จ",
+        description: `ได้เปลี่ยนผู้รับผิดชอบรายการแล้ว`,
+      });
     } catch (err) {
       alert("เกิดข้อผิดพลาดในการโอนงาน");
     } finally {
@@ -98,6 +126,8 @@ export const useRepairActions = (onSuccess: () => void) => {
 
   return {
     submitting,
+    successModal,
+    setSuccessModal,
     handleAcceptRepair,
     handleCompleteRepair,
     handleSaveEdit,

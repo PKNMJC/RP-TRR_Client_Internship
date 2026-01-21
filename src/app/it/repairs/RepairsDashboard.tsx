@@ -15,6 +15,7 @@ import { RepairCard } from "./RepairCard";
 import { RepairDetailModal } from "./RepairDetailModal";
 import { RepairEditModal } from "./RepairEditModal";
 import { RepairTransferModal } from "./RepairTransferModal";
+import SuccessModal from "@/components/SuccessModal";
 import { RepairTicket } from "./types/repair.types";
 
 export function RepairsDashboard() {
@@ -52,6 +53,8 @@ export function RepairsDashboard() {
 
   const {
     submitting,
+    successModal,
+    setSuccessModal,
     handleAcceptRepair,
     handleCompleteRepair,
     handleSaveEdit,
@@ -81,65 +84,69 @@ export function RepairsDashboard() {
     }
   };
 
-  if (loading) return <LoadingState />;
-
   return (
     <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 dark:border-neutral-900 pb-5 md:pb-6">
-        <div className="flex-1">
-          <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            แจ้งซ่อมทั้งหมด
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1.5 md:mt-2">
-            <p className="text-[10px] md:text-base text-slate-500 font-medium leading-relaxed">
-              จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
-            </p>
-            <StatusIndicator
-              isAutoRefresh={isAutoRefresh}
-              lastUpdated={lastUpdated}
-              loading={loading}
-              onRefresh={refresh}
-            />
+      {loading ? (
+        <LoadingState />
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 dark:border-neutral-900 pb-5 md:pb-6">
+            <div className="flex-1">
+              <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                แจ้งซ่อมทั้งหมด
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-1.5 md:mt-2">
+                <p className="text-[10px] md:text-base text-slate-500 font-medium leading-relaxed">
+                  จัดการคำขอรับบริการและการซ่อมบำรุงในระบบทั้งหมด
+                </p>
+                <StatusIndicator
+                  isAutoRefresh={isAutoRefresh}
+                  lastUpdated={lastUpdated}
+                  loading={loading}
+                  onRefresh={refresh}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Stats Grid */}
-      <RepairStats
-        stats={stats}
-        activeTab={activeTab}
-        totalThisWeek={repairs.length}
-      />
+          {/* Stats Grid */}
+          <RepairStats
+            stats={stats}
+            activeTab={activeTab}
+            totalThisWeek={repairs.length}
+          />
 
-      {/* Tab Navigation */}
-      <RepairTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        stats={stats}
-      />
+          {/* Tab Navigation */}
+          <RepairTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            stats={stats}
+          />
 
-      {/* Filters & Search */}
-      <RepairFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        filterPriority={filterPriority}
-        setFilterPriority={setFilterPriority}
-      />
+          {/* Filters & Search */}
+          <RepairFilters
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterPriority={filterPriority}
+            setFilterPriority={setFilterPriority}
+          />
 
-      {/* Repair Data View (Handles Mobile/Desktop internally) */}
-      <RepairTable
-        repairs={filteredRepairs}
-        activeTab={activeTab}
-        onAccept={(id) => handleAcceptRepair(id, currentUser)}
-        onTransfer={setSelectionForTransfer}
-        onView={setSelectedRepair}
-        submitting={submitting}
-      />
+          {/* Repair Data View (Handles Mobile/Desktop internally) */}
+          <RepairTable
+            repairs={filteredRepairs}
+            activeTab={activeTab}
+            onAccept={(id) => handleAcceptRepair(id, currentUser)}
+            onTransfer={setSelectionForTransfer}
+            onView={setSelectedRepair}
+            submitting={submitting}
+          />
+        </>
+      )}
 
-      {/* Modals */}
+      {/* Modals - Always rendered to preserve state/animations */}
       <RepairDetailModal
         repair={selectedRepair}
         onClose={() => setSelectedRepair(null)}
@@ -164,6 +171,13 @@ export function RepairsDashboard() {
         onTransfer={(id, staffId) => handleTransferRepair(id, staffId)}
         itStaff={itStaff}
         submitting={submitting}
+      />
+
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal((prev) => ({ ...prev, isOpen: false }))}
+        title={successModal.title}
+        description={successModal.description}
       />
     </div>
   );
