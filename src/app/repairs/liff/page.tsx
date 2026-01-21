@@ -193,6 +193,59 @@ function RepairLiffContent() {
     });
   };
 
+  // Calendar logic (must be at top level - React Hooks rule)
+  const calendarDays = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days: (null | {
+      day: number;
+      dateStr: string;
+      ticketCount: number;
+      hasCompleted: boolean;
+    })[] = [];
+
+    // Empty slots for days before the 1st
+    for (let i = 0; i < firstDay.getDay(); i++) {
+      days.push(null);
+    }
+
+    // Days of the month
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const dayTickets = tickets.filter(
+        (t) => new Date(t.createdAt).toISOString().split("T")[0] === dateStr,
+      );
+      days.push({
+        day: d,
+        dateStr,
+        ticketCount: dayTickets.length,
+        hasCompleted: dayTickets.some((t) => t.status === "COMPLETED"),
+      });
+    }
+    return days;
+  }, [currentMonth, tickets]);
+
+  const filteredTickets = selectedDate
+    ? tickets.filter(
+        (t) =>
+          new Date(t.createdAt).toISOString().split("T")[0] === selectedDate,
+      )
+    : tickets;
+
+  const prevMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
+    );
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
+    );
+  };
+
   // Loading Screen
   if (isInitializing) {
     return (
@@ -213,59 +266,6 @@ function RepairLiffContent() {
     const completedCount = tickets.filter(
       (t) => t.status === "COMPLETED",
     ).length;
-
-    // Calendar logic
-    const calendarDays = useMemo(() => {
-      const year = currentMonth.getFullYear();
-      const month = currentMonth.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const days: (null | {
-        day: number;
-        dateStr: string;
-        ticketCount: number;
-        hasCompleted: boolean;
-      })[] = [];
-
-      // Empty slots for days before the 1st
-      for (let i = 0; i < firstDay.getDay(); i++) {
-        days.push(null);
-      }
-
-      // Days of the month
-      for (let d = 1; d <= lastDay.getDate(); d++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-        const dayTickets = tickets.filter(
-          (t) => new Date(t.createdAt).toISOString().split("T")[0] === dateStr,
-        );
-        days.push({
-          day: d,
-          dateStr,
-          ticketCount: dayTickets.length,
-          hasCompleted: dayTickets.some((t) => t.status === "COMPLETED"),
-        });
-      }
-      return days;
-    }, [currentMonth, tickets]);
-
-    const filteredTickets = selectedDate
-      ? tickets.filter(
-          (t) =>
-            new Date(t.createdAt).toISOString().split("T")[0] === selectedDate,
-        )
-      : tickets;
-
-    const prevMonth = () => {
-      setCurrentMonth(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
-      );
-    };
-
-    const nextMonth = () => {
-      setCurrentMonth(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
-      );
-    };
 
     return (
       <div className="min-h-screen bg-gray-50">
