@@ -71,6 +71,7 @@ function RepairFormContent() {
 
   // Initialize LIFF lazily
   useEffect(() => {
+    let isMounted = true;
     const initLiff = async () => {
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
@@ -79,8 +80,10 @@ function RepairFormContent() {
           await liff.init({ liffId });
           if (liff.isLoggedIn()) {
             const profile = await liff.getProfile();
-            setLineUserId(profile.userId);
-            setLineDisplayName(profile.displayName);
+            if (isMounted) {
+              setLineUserId(profile.userId);
+              setLineDisplayName(profile.displayName);
+            }
           } else {
             liff.login();
           }
@@ -90,6 +93,9 @@ function RepairFormContent() {
       }
     };
     initLiff();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleChange = useCallback(

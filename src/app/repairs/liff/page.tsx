@@ -18,7 +18,7 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
-import liff from "@line/liff";
+// import liff from "@line/liff"; // Moved to dynamic import inside useEffect
 
 export const dynamic = "force-dynamic";
 
@@ -87,54 +87,90 @@ function RepairLiffContent() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  // LIFF Init
+  // LIFF Init & Data Fetch logic
   useEffect(() => {
+    let isMounted = true;
+
     const initLiff = async () => {
-      if (lineUserId && liff.isLoggedIn()) {
-        try {
-          const profile = await liff.getProfile();
+      try {
+        const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
+        if (!liffId) {
+          console.error("LIFF ID not found");
+          if (isMounted) setIsInitializing(false);
+          return;
+        }
+
+        // Import dynamically to avoid SSR/Hydration issues
+        const liff = (await import("@line/liff")).default;
+
+        await liff.init({
+          liffId,
+          withLoginOnExternalBrowser: true,
+        });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return; // Redirecting to login
+        }
+
+        const profile = await liff.getProfile();
+        const userId = profile.userId;
+
+        if (isMounted) {
+          setLineUserId(userId);
           setUserProfile({
             displayName: profile.displayName,
             pictureUrl: profile.pictureUrl,
           });
-        } catch (err) {
-          console.error("Profile Error:", err);
+
+          // Execute primary action based on initial state
+          if (action === "create") {
+            router.push(`/repairs/liff/form?lineUserId=${userId}`);
+          } else if (action === "status") {
+            // Internal function fetchTickets uses the latest state or we can call it here manually
+            // But we'll let the second effect handle it or call it here
+            setLoading(true);
+            try {
+              const data = await apiFetch(
+                `/api/repairs/liff/my-tickets?lineUserId=${userId}`,
+              );
+              setTickets(data || []);
+            } catch (error) {
+              console.error(error);
+            } finally {
+              setLoading(false);
+            }
+          } else if (action === "history" && ticketIdFromParam) {
+            setLoading(true);
+            try {
+              const data = await apiFetch(
+                `/api/repairs/liff/ticket/${ticketIdFromParam}?lineUserId=${userId}`,
+              );
+              setTicketDetail(data);
+            } catch (error) {
+              console.error(error);
+            } finally {
+              setLoading(false);
+            }
+          }
         }
-        setIsInitializing(false);
-        return;
-      }
-      try {
-        const liffId = process.env.NEXT_PUBLIC_LIFF_ID || "";
-        await liff.init({ liffId, withLoginOnExternalBrowser: true });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
-        const profile = await liff.getProfile();
-        setLineUserId(profile.userId);
-        setUserProfile({
-          displayName: profile.displayName,
-          pictureUrl: profile.pictureUrl,
-        });
       } catch (err) {
-        console.error("LIFF Error:", err);
+        console.error("LIFF Init Error:", err);
       } finally {
-        setIsInitializing(false);
+        if (isMounted) {
+          setIsInitializing(false);
+        }
       }
     };
-    initLiff();
-  }, [lineUserId]);
 
-  useEffect(() => {
-    if (!lineUserId || isInitializing) return;
-    if (action === "create") {
-      router.push(`/repairs/liff/form?lineUserId=${lineUserId}`);
-      return;
-    }
-    if (action === "status") fetchTickets();
-    else if (action === "history" && ticketIdFromParam)
-      fetchTicketDetail(ticketIdFromParam);
-  }, [action, lineUserId, isInitializing, ticketIdFromParam, router]);
+    initLiff();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [action, ticketIdFromParam, router]);
+
+  // Removed old effects that were redundant or caused loops
 
   const fetchTickets = async () => {
     setLoading(true);
