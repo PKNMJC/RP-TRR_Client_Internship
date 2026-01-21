@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -9,11 +9,13 @@ import {
   ArrowLeft,
   Wrench,
   ChevronRight,
+  ChevronLeft,
   AlertTriangle,
   MapPin,
   User,
   Image as ImageIcon,
   Plus,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 import liff from "@line/liff";
@@ -82,6 +84,8 @@ function RepairLiffContent() {
     !searchParams.get("lineUserId"),
   );
   const [ticketDetail, setTicketDetail] = useState<Ticket | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // LIFF Init
   useEffect(() => {
@@ -210,6 +214,59 @@ function RepairLiffContent() {
       (t) => t.status === "COMPLETED",
     ).length;
 
+    // Calendar logic
+    const calendarDays = useMemo(() => {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const days: (null | {
+        day: number;
+        dateStr: string;
+        ticketCount: number;
+        hasCompleted: boolean;
+      })[] = [];
+
+      // Empty slots for days before the 1st
+      for (let i = 0; i < firstDay.getDay(); i++) {
+        days.push(null);
+      }
+
+      // Days of the month
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        const dayTickets = tickets.filter(
+          (t) => new Date(t.createdAt).toISOString().split("T")[0] === dateStr,
+        );
+        days.push({
+          day: d,
+          dateStr,
+          ticketCount: dayTickets.length,
+          hasCompleted: dayTickets.some((t) => t.status === "COMPLETED"),
+        });
+      }
+      return days;
+    }, [currentMonth, tickets]);
+
+    const filteredTickets = selectedDate
+      ? tickets.filter(
+          (t) =>
+            new Date(t.createdAt).toISOString().split("T")[0] === selectedDate,
+        )
+      : tickets;
+
+    const prevMonth = () => {
+      setCurrentMonth(
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
+      );
+    };
+
+    const nextMonth = () => {
+      setCurrentMonth(
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
+      );
+    };
+
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
@@ -253,6 +310,111 @@ function RepairLiffContent() {
           </div>
         </div>
 
+        {/* Calendar */}
+        <div className="px-4 mb-4">
+          <div className="bg-white rounded-lg border p-4">
+            {/* Calendar Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-gray-500" />
+                <span className="font-medium text-gray-900">
+                  {currentMonth.toLocaleDateString("th-TH", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={prevMonth}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={nextMonth}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
+            </div>
+
+            {/* Day Names */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((name) => (
+                <div
+                  key={name}
+                  className="text-center text-xs text-gray-400 font-medium py-1"
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {calendarDays.map((day, idx) => (
+                <div key={idx} className="aspect-square">
+                  {day && (
+                    <button
+                      onClick={() =>
+                        setSelectedDate(
+                          selectedDate === day.dateStr ? null : day.dateStr,
+                        )
+                      }
+                      className={`w-full h-full flex flex-col items-center justify-center rounded-lg text-sm transition-all relative
+                        ${
+                          selectedDate === day.dateStr
+                            ? "bg-blue-600 text-white"
+                            : day.ticketCount > 0
+                              ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                              : "text-gray-700 hover:bg-gray-100"
+                        }
+                      `}
+                    >
+                      <span className="font-medium">{day.day}</span>
+                      {day.ticketCount > 0 && (
+                        <div className="flex gap-0.5 mt-0.5">
+                          <div
+                            className={`w-1 h-1 rounded-full ${
+                              selectedDate === day.dateStr
+                                ? "bg-white"
+                                : day.hasCompleted
+                                  ? "bg-green-500"
+                                  : "bg-blue-500"
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Selected Date Info */}
+            {selectedDate && (
+              <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                <span className="text-sm text-gray-600">
+                  วันที่{" "}
+                  {new Date(selectedDate).toLocaleDateString("th-TH", {
+                    day: "numeric",
+                    month: "long",
+                  })}
+                  : {filteredTickets.length} รายการ
+                </span>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs text-blue-600 font-medium hover:underline"
+                >
+                  ดูทั้งหมด
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* New Repair Button */}
         <div className="px-4 mb-4">
           <button
@@ -269,7 +431,9 @@ function RepairLiffContent() {
         {/* Ticket List */}
         <div className="px-4 pb-6">
           <h2 className="text-sm font-medium text-gray-700 mb-3">
-            รายการแจ้งซ่อมของคุณ
+            {selectedDate
+              ? `รายการแจ้งซ่อมวันที่ ${new Date(selectedDate).toLocaleDateString("th-TH", { day: "numeric", month: "short" })}`
+              : "รายการแจ้งซ่อมของคุณ"}
           </h2>
 
           {loading ? (
@@ -285,19 +449,23 @@ function RepairLiffContent() {
                 </div>
               ))}
             </div>
-          ) : tickets.length === 0 ? (
+          ) : filteredTickets.length === 0 ? (
             <div className="bg-white rounded-lg p-8 text-center border">
               <Wrench className="w-12 h-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">
-                ยังไม่มีรายการแจ้งซ่อม
+                {selectedDate
+                  ? "ไม่มีรายการแจ้งซ่อมในวันนี้"
+                  : "ยังไม่มีรายการแจ้งซ่อม"}
               </p>
               <p className="text-gray-400 text-sm mt-1">
-                กดปุ่มด้านบนเพื่อแจ้งซ่อมใหม่
+                {selectedDate
+                  ? "ลองเลือกวันอื่น หรือกดปุ่มแจ้งซ่อมใหม่"
+                  : "กดปุ่มด้านบนเพื่อแจ้งซ่อมใหม่"}
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {tickets.map((ticket) => (
+              {filteredTickets.map((ticket) => (
                 <div
                   key={ticket.id}
                   onClick={() =>
