@@ -28,11 +28,16 @@ export const useRepairActions = (onSuccess: () => void) => {
     }
   };
 
-  const handleCompleteRepair = async (id: number) => {
+  const handleCompleteRepair = async (repair: RepairTicket) => {
+    if (!repair.assignee) {
+      alert("ไม่สามารถจบงานได้ เนื่องจากยังไม่มีผู้รับผิดชอบ\nกรุณามอบหมายงานก่อนปิดงาน");
+      return;
+    }
+
     if (!confirm("ยืนยันการเสร็จสิ้นงานซ่อมนี้?")) return;
     try {
       setSubmitting(true);
-      await apiFetch(`/api/repairs/${id}`, {
+      await apiFetch(`/api/repairs/${repair.id}`, {
         method: "PUT",
         body: JSON.stringify({
           status: "COMPLETED",

@@ -77,7 +77,7 @@ interface RepairDetailModalProps {
   repair: RepairTicket | null;
   onClose: () => void;
   onEdit: () => void;
-  onComplete: (id: number) => void;
+  onComplete: (repair: RepairTicket) => void;
   submitting: boolean;
 }
 
@@ -215,7 +215,7 @@ export const RepairDetailModal: React.FC<RepairDetailModalProps> = ({
                 แก้ไข
               </button>
               <button
-                onClick={() => onComplete(repair.id)}
+                onClick={() => onComplete(repair)}
                 disabled={submitting}
                 className="px-10 py-3 bg-blue-600 text-white text-xs font-bold tracking-widest disabled:bg-slate-300"
               >
