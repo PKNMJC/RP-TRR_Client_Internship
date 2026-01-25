@@ -254,14 +254,14 @@ function RepairFormContent() {
                     แผนก <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  {/* <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
                     <input
                       type="text"
                       id="dept"
                       value={formData.dept}
                       onChange={handleChange}
                       required
-                      placeholder=""
+                      placeholder="แผนก"
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                     />
                   </div>
@@ -275,13 +275,13 @@ function RepairFormContent() {
                     เบอร์โทรศัพท์
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    {/* <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
                     <input
                       type="tel"
                       id="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder=""
+                      placeholder="เบอร์โทรศัพท์"
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                     />
                   </div>
@@ -324,7 +324,7 @@ function RepairFormContent() {
                   สถานที่ <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  {/* <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
                   <input
                     type="text"
                     id="location"
