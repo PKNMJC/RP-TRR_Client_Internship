@@ -184,10 +184,12 @@ function RepairFormContent() {
         icon: "success",
         title: "ส่งข้อมูลสำเร็จ",
         text: `รหัสรายการ: ${response.ticketCode}`,
-        confirmButtonColor: "#374151",
+        confirmButtonColor: "#3b82f6",
       });
 
-      window.location.href = `/repairs/liff?action=status&lineUserId=${lineUserId}`;
+      // Close LIFF window and return to LINE chat
+      const liff = (await import("@line/liff")).default;
+      liff.closeWindow();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "กรุณาลองใหม่อีกครั้ง";
@@ -249,7 +251,7 @@ function RepairFormContent() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  placeholder="ระบุชื่อ-นามสกุล"
+                  placeholder="ระบุชื่อผู้แจ้งซ่อม"
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
               </div>
