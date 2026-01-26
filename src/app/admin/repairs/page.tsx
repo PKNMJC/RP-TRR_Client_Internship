@@ -92,11 +92,18 @@ export default function AdminRepairsPage() {
   const [filteredRepairs, setFilteredRepairs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || "all",
-  );
+  const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status) {
+      setFilterStatus(status);
+    } else {
+      setFilterStatus("all");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchRepairs = async (isBackground = false) => {

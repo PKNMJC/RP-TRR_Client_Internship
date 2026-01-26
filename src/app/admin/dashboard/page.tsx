@@ -8,6 +8,9 @@ import {
   CheckCircle,
   AlertCircle,
   Users,
+  Activity,
+  ArrowRight,
+  Package,
 } from "lucide-react";
 import {
   getDashboardStats,
@@ -50,8 +53,6 @@ export default function AdminDashboard() {
           setError(null);
         }
 
-        if (!isBackground) console.log("Fetching dashboard data...");
-
         const [dashboardStats, monthlyData, activities, distribution] =
           await Promise.all([
             getDashboardStats(),
@@ -59,12 +60,6 @@ export default function AdminDashboard() {
             getRecentActivities(),
             getStatusDistribution(),
           ]);
-
-        if (!isBackground) {
-          console.log("Dashboard stats received:", dashboardStats);
-          console.log("Chart data received:", monthlyData);
-          console.log("Activities received:", activities);
-        }
 
         setStats(dashboardStats);
         setChartData(monthlyData);
@@ -97,29 +92,59 @@ export default function AdminDashboard() {
     icon: Icon,
     label,
     value,
-    bgColor,
+    trend,
+    colorFrom,
+    colorTo,
+    iconColor,
+    textColor,
   }: {
-    icon: React.ReactNode;
+    icon: React.ComponentType<{ size: number; className?: string }>;
     label: string;
     value: number | string;
-    bgColor: string;
+    trend?: string;
+    colorFrom: string;
+    colorTo: string;
+    iconColor: string;
+    textColor: string;
   }) => (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600 text-sm font-medium">{label}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+    <div className="relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all group">
+      <div
+        className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${colorFrom} ${colorTo} opacity-10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110`}
+      />
+
+      <div className="relative">
+        <div className="flex items-center justify-between mb-4">
+          <div
+            className={`p-3 rounded-xl bg-gradient-to-br ${colorFrom} ${colorTo} shadow-inner`}
+          >
+            <Icon size={24} className="text-white" />
+          </div>
+          {trend && (
+            <span className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+              <TrendingUp size={12} className="mr-1" />
+              {trend}
+            </span>
+          )}
         </div>
-        <div className={`${bgColor} p-3 rounded-lg`}>{Icon}</div>
+
+        <div>
+          <p className="text-slate-500 text-sm font-medium mb-1">{label}</p>
+          <h3 className={`text-3xl font-bold ${textColor} tracking-tight`}>
+            {value}
+          </h3>
+        </div>
       </div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin">
-          <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-500 font-medium animate-pulse">
+            กำลังโหลดข้อมูลแดชบอร์ด...
+          </p>
         </div>
       </div>
     );
@@ -127,223 +152,212 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded">
-          <p className="font-semibold">เกิดข้อผิดพลาด</p>
-          <p className="text-sm mt-2">{error}</p>
+      <div className="flex items-center justify-center h-[80vh]">
+        <div className="bg-white border border-rose-200 text-rose-700 px-8 py-6 rounded-2xl shadow-sm text-center max-w-md">
+          <AlertCircle
+            size={48}
+            className="mx-auto mb-4 text-rose-500 opacity-50"
+          />
+          <h3 className="font-bold text-lg mb-2">เกิดข้อผิดพลาด</h3>
+          <p className="text-sm opacity-90">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-sm font-semibold transition-colors"
+          >
+            รีโหลดหน้าเว็บ
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">แดชบอร์ด</h1>
-        <p className="text-gray-600 mt-2">ยินดีต้อนรับสู่ระบบจัดการซ่อมแซม</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-slate-500 mt-2 text-sm">
+            ภาพรวมระบบและการดำเนินงานล่าสุด
+          </p>
+        </div>
+        <div className="text-right text-xs text-slate-400 font-medium">
+          ข้อมูลอัปเดตล่าสุด: {new Date().toLocaleTimeString("th-TH")}
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <StatCard
-          icon={<BarChart3 className="w-6 h-6 text-blue-600" />}
+          icon={Activity}
           label="งานซ่อมทั้งหมด"
           value={stats.totalRepairs}
-          bgColor="bg-blue-100"
+          trend="+12% เดือนนี้"
+          colorFrom="from-slate-700"
+          colorTo="to-slate-900"
+          iconColor="text-white"
+          textColor="text-slate-900"
         />
         <StatCard
-          icon={<AlertCircle className="w-6 h-6 text-yellow-600" />}
-          label="การยืม"
-          value={stats.totalLoans}
-          bgColor="bg-yellow-100"
-        />
-        <StatCard
-          icon={<Clock className="w-6 h-6 text-orange-600" />}
+          icon={Clock}
           label="กำลังดำเนินการ"
           value={stats.inProgressRepairs}
-          bgColor="bg-orange-100"
+          colorFrom="from-amber-400"
+          colorTo="to-orange-500"
+          iconColor="text-white"
+          textColor="text-slate-900"
         />
         <StatCard
-          icon={<CheckCircle className="w-6 h-6 text-green-600" />}
-          label="เสร็จสิ้น"
+          icon={CheckCircle}
+          label="เสร็จสิ้นแล้ว"
           value={stats.completedRepairs}
-          bgColor="bg-green-100"
+          trend={`${stats.completionRate}% Success`}
+          colorFrom="from-emerald-400"
+          colorTo="to-teal-500"
+          iconColor="text-white"
+          textColor="text-slate-900"
         />
         <StatCard
-          icon={<Users className="w-6 h-6 text-purple-600" />}
-          label="ผู้ใช้งานทั้งหมด"
-          value={stats.totalUsers}
-          bgColor="bg-purple-100"
-        />
-        <StatCard
-          icon={<TrendingUp className="w-6 h-6 text-pink-600" />}
-          label="อัตราการเสร็จสิ้น"
-          value={`${stats.completionRate}%`}
-          bgColor="bg-pink-100"
+          icon={Package}
+          label="การยืมอุปกรณ์"
+          value={stats.totalLoans}
+          colorFrom="from-indigo-400"
+          colorTo="to-blue-600"
+          iconColor="text-white"
+          textColor="text-slate-900"
         />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Line Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
-            งานซ่อมรายเดือน
-          </h2>
-          <div className="h-64 flex items-end gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+        {/* Main Chart */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 flex flex-col h-[400px]">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <BarChart3 size={20} className="text-indigo-500" />
+              สถิติงานซ่อมรายเดือน
+            </h2>
+          </div>
+
+          <div className="flex items-end justify-between gap-4 flex-1 pb-2">
             {chartData.map((data, index) => {
-              const maxValue = Math.max(...chartData.map((d) => d.repairs));
+              const maxValue = Math.max(...chartData.map((d) => d.repairs), 10); // avoid div by zero
               const height = (data.repairs / maxValue) * 100;
               return (
-                <div key={index} className="flex-1 flex flex-col items-center">
-                  <div
-                    className="w-full bg-blue-200 rounded-t-lg relative group hover:bg-blue-400 transition-colors"
-                    style={{ height: `${height}%`, minHeight: "20px" }}
-                  >
-                    <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                      {data.repairs}
-                    </span>
+                <div
+                  key={index}
+                  className="flex-1 flex flex-col items-center group h-full justify-end"
+                >
+                  <div className="w-full max-w-[40px] relative flex flex-col justify-end transition-all h-[85%]">
+                    <div
+                      className="w-full bg-gradient-to-t from-indigo-500 to-indigo-400 rounded-t-lg transition-all duration-300 relative group-hover:bg-indigo-600 group-hover:scale-y-[1.02]"
+                      style={{ height: `${height}%`, minHeight: "4px" }}
+                    >
+                      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+                        {data.repairs}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-600 mt-2">{data.month}</p>
+                  <p className="text-xs font-medium text-slate-500 mt-3">
+                    {data.month}
+                  </p>
                 </div>
               );
             })}
+            {chartData.length === 0 && (
+              <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                ไม่มีข้อมูลกราฟ
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Status Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">
-            สถานะการดำเนินการ
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  เสร็จสิ้น
-                </span>
-                <span className="text-sm font-bold text-green-600">
-                  {statusDistribution.completed}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-green-600 h-3 rounded-full"
-                  style={{ width: `${statusDistribution.completed}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  กำลังดำเนินการ
-                </span>
-                <span className="text-sm font-bold text-orange-600">
-                  {statusDistribution.inProgress}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-orange-600 h-3 rounded-full"
-                  style={{ width: `${statusDistribution.inProgress}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  รอดำเนินการ
-                </span>
-                <span className="text-sm font-bold text-yellow-600">
-                  {statusDistribution.pending}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-yellow-600 h-3 rounded-full"
-                  style={{ width: `${statusDistribution.pending}%` }}
-                ></div>
-              </div>
-            </div>
+        {/* Recent Activities */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-0 flex flex-col h-[400px]">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900">กิจกรรมล่าสุด</h2>
+            <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1 transition-colors">
+              ดูทั้งหมด <ArrowRight size={12} />
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Recent Activities */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">กิจกรรมล่าสุด</h2>
-        <div className="space-y-4">
-          {recentActivities.length > 0 ? (
-            recentActivities.map((activity) => {
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            {recentActivities.map((activity) => {
               const isCompleted = activity.status === "COMPLETED";
-              const isInProgress =
-                activity.status === "IN_PROGRESS" ||
-                activity.status === "WAITING_PARTS";
+              const isPending = activity.status === "PENDING";
 
-              let statusLabel = "รอการอนุมัติ";
-              let statusColor = "bg-yellow-100 text-yellow-700";
-              let iconColor = "text-yellow-600";
-              let bgColor = "bg-yellow-100";
+              let iconBg = "bg-slate-100";
+              let iconColor = "text-slate-500";
+              let statusDot = "bg-slate-400";
 
               if (isCompleted) {
-                statusLabel = "สำเร็จ";
-                statusColor = "bg-green-100 text-green-700";
-                iconColor = "text-green-600";
-                bgColor = "bg-green-100";
-              } else if (isInProgress) {
-                statusLabel =
-                  activity.status === "WAITING_PARTS"
-                    ? "รออะไหล่"
-                    : "กำลังดำเนินการ";
-                statusColor = "bg-orange-100 text-orange-700";
-                iconColor = "text-orange-600";
-                bgColor = "bg-orange-100";
+                iconBg = "bg-emerald-100";
+                iconColor = "text-emerald-600";
+                statusDot = "bg-emerald-500";
+              } else if (activity.status === "IN_PROGRESS") {
+                iconBg = "bg-amber-100";
+                iconColor = "text-amber-600";
+                statusDot = "bg-amber-500";
               } else if (activity.status === "CANCELLED") {
-                statusLabel = "ยกเลิก";
-                statusColor = "bg-red-100 text-red-700";
-                iconColor = "text-red-600";
-                bgColor = "bg-red-100";
+                iconBg = "bg-rose-100";
+                iconColor = "text-rose-600";
+                statusDot = "bg-rose-500";
+              } else if (activity.status === "WAITING_PARTS") {
+                iconBg = "bg-orange-100";
+                iconColor = "text-orange-600";
+                statusDot = "bg-orange-500";
               }
 
               return (
                 <div
                   key={activity.id}
-                  className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0"
+                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-default"
                 >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-10 h-10 ${bgColor} rounded-full flex items-center justify-center`}
-                    >
-                      <CheckCircle className={`w-5 h-5 ${iconColor}`} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {activity.ticketCode}: {activity.title}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        เมื่อ{" "}
+                  <div
+                    className={`w-9 h-9 shrink-0 ${iconBg} rounded-full flex items-center justify-center ${iconColor}`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle size={16} />
+                    ) : (
+                      <Clock size={16} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-xs font-bold text-slate-900 font-mono">
+                        #{activity.ticketCode}
+                      </span>
+                      <span className="text-[10px] text-slate-400">
                         {new Date(activity.createdAt).toLocaleDateString(
                           "th-TH",
+                          { day: "numeric", month: "short" },
                         )}
-                      </p>
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700 font-medium truncate">
+                      {activity.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div
+                        className={`w-1.5 h-1.5 rounded-full ${statusDot}`}
+                      />
+                      <span className="text-xs text-slate-500 capitalize">
+                        {activity.status.replace("_", " ").toLowerCase()}
+                      </span>
                     </div>
                   </div>
-                  <span
-                    className={`text-xs ${statusColor} px-3 py-1 rounded-full`}
-                  >
-                    {statusLabel}
-                  </span>
                 </div>
               );
-            })
-          ) : (
-            <p className="text-sm text-gray-500 text-center py-4">
-              ไม่มีกิจกรรมล่าสุด
-            </p>
-          )}
+            })}
+            {recentActivities.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <Package size={32} className="mb-2 opacity-50" />
+                <p className="text-sm">ไม่มีกิจกรรมล่าสุด</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

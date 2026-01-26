@@ -11,9 +11,10 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronUp,
+  ChevronDown,
   User,
   Package,
+  Building2,
 } from "lucide-react";
 import { userService, User as UserType } from "../../services/userService";
 
@@ -61,6 +62,7 @@ export default function AdminSidebar() {
     fetchAdminProfile();
   }, []);
 
+  // Update menu items
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "แดชบอร์ด", href: "/admin/dashboard" },
     {
@@ -68,13 +70,14 @@ export default function AdminSidebar() {
       label: "งานซ่อมแซม",
       href: "/admin/repairs",
       subItems: [
-        { label: "งานซ่อมทั้งหมด", href: "/admin/repairs" },
+        { label: "ภาพรวมงานซ่อม", href: "/admin/repairs" },
         { label: "รอรับงาน", href: "/admin/repairs?status=PENDING" },
         { label: "กำลังซ่อม", href: "/admin/repairs?status=IN_PROGRESS" },
-        { label: "เสร็จแล้ว", href: "/admin/repairs?status=COMPLETED" },
+        { label: "เสร็จสิ้น", href: "/admin/repairs?status=COMPLETED" },
       ],
     },
-    { icon: Package, label: "ยืมของ", href: "/admin/loans" },
+    { icon: Package, label: "ยืม-คืนอุปกรณ์", href: "/admin/loans" },
+    { icon: Building2, label: "จัดการแผนก", href: "/admin/departments" },
     { icon: Users, label: "จัดการผู้ใช้", href: "/admin/users" },
   ];
 
@@ -96,235 +99,215 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-zinc-200 z-[50] px-4 sm:px-6 flex items-center justify-between shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 z-[50] px-4 flex items-center justify-between shadow-md">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <span className="font-semibold text-zinc-900 tracking-tight">
-            TRR-RP
-          </span>
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
+            TR
+          </div>
+          <span className="font-bold text-white tracking-tight">TRR Admin</span>
         </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 -mr-2 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-all"
-          aria-label={isOpen ? "ปิดเมนู" : "เปิดเมนู"}
+          className="p-2 -mr-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
         >
-          {isOpen ? <X size={22} /> : <Menu size={22} />}
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
+      {/* Sidebar Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm lg:hidden z-[55]"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-56 bg-[#fafafa] border-r border-zinc-200 transition-transform duration-300 z-[60] flex flex-col ${
+        className={`fixed left-0 top-0 h-screen w-64 bg-slate-900 border-r border-slate-800 transition-transform duration-300 z-[60] flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Branding */}
-        <div className="h-16 flex items-center px-6 border-b border-zinc-100">
-          <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-base font-semibold text-zinc-800 tracking-tight">
-              TRR-RP
-            </span>
+        <div className="h-20 flex items-center px-6 border-b border-slate-800/60">
+          <Link
+            href="/admin/dashboard"
+            className="flex items-center gap-3 group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-900/20 group-hover:scale-105 transition-transform">
+              TR
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-bold text-white tracking-tight">
+                TRR Admin
+              </span>
+              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+                Management
+              </span>
+            </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isExpanded = expandedMenu === item.label;
-            const isActive =
-              pathname === item.href ||
-              pathname.startsWith(item.href + "/") ||
-              (item.href === "/admin/repairs" &&
-                pathname.includes("/admin/repairs"));
+        <nav className="flex-1 px-3 py-6 overflow-y-auto custom-scrollbar">
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isExpanded = expandedMenu === item.label;
+              const isActive =
+                item.href !== "#" &&
+                (pathname === item.href ||
+                  (item.href !== "/admin/dashboard" &&
+                    pathname.startsWith(item.href)));
 
-            return (
-              <div key={item.label} className="mb-1">
-                {item.subItems ? (
-                  <>
-                    <button
-                      onClick={() => toggleSubMenu(item.label)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all group ${
-                        isActive
-                          ? "text-zinc-900"
-                          : "text-zinc-600 hover:text-zinc-900"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon
-                          size={18}
-                          strokeWidth={1.5}
-                          className={
-                            isActive ? "text-[#8B4513]" : "text-zinc-500"
-                          }
-                        />
-                        <span className="text-sm font-medium">
-                          {item.label}
-                        </span>
-                      </div>
-                      <ChevronUp
-                        size={16}
-                        className={`text-zinc-400 transition-transform duration-200 ${
-                          isExpanded ? "" : "rotate-180"
+              // Check if any sub-item is active
+              const hasActiveSub = item.subItems?.some(
+                (sub) =>
+                  pathname === sub.href ||
+                  pathname + window.location.search === sub.href,
+              );
+
+              return (
+                <div key={item.label} className="mb-2">
+                  {item.subItems ? (
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => toggleSubMenu(item.label)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group ${
+                          hasActiveSub || isExpanded
+                            ? "bg-slate-800/50 text-white"
+                            : "text-slate-400 hover:text-white hover:bg-slate-800/30"
                         }`}
-                      />
-                    </button>
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon
+                            size={20}
+                            className={`${
+                              hasActiveSub || isExpanded
+                                ? "text-indigo-400"
+                                : "text-slate-500 group-hover:text-slate-300"
+                            }`}
+                          />
+                          <span className="text-sm font-medium">
+                            {item.label}
+                          </span>
+                        </div>
+                        <ChevronDown
+                          size={16}
+                          className={`transition-transform duration-200 ${
+                            isExpanded
+                              ? "rotate-180 text-indigo-400"
+                              : "text-slate-600"
+                          }`}
+                        />
+                      </button>
 
-                    {/* Submenu */}
-                    <div
-                      className={`overflow-hidden transition-all duration-200 ${
-                        isExpanded
-                          ? "max-h-48 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="ml-9 mt-1 space-y-1">
-                        {item.subItems.map((sub) => {
-                          const isSubActive =
-                            pathname === sub.href ||
-                            (sub.href.includes("?") &&
-                              pathname + window.location.search === sub.href);
-                          return (
-                            <Link
-                              key={sub.label}
-                              href={sub.href}
-                              className={`block py-1.5 text-sm transition-colors ${
-                                isSubActive
-                                  ? "text-zinc-900 font-medium"
-                                  : "text-zinc-500 hover:text-zinc-900"
-                              }`}
-                            >
-                              {sub.label}
-                            </Link>
-                          );
-                        })}
+                      {/* Submenu */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isExpanded
+                            ? "max-h-96 opacity-100 mt-1"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <div className="ml-4 pl-4 border-l border-slate-800 space-y-1 py-1">
+                          {item.subItems.map((sub) => {
+                            const isSubActive =
+                              pathname === sub.href ||
+                              (sub.href.includes("?") &&
+                                pathname + window.location.search === sub.href);
+                            return (
+                              <Link
+                                key={sub.label}
+                                href={sub.href}
+                                className={`block px-3 py-2 rounded-lg text-sm transition-all ${
+                                  isSubActive
+                                    ? "bg-indigo-500/10 text-indigo-400 font-medium"
+                                    : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30"
+                                }`}
+                              >
+                                {sub.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                      isActive
-                        ? "text-zinc-900"
-                        : "text-zinc-600 hover:text-zinc-900"
-                    }`}
-                  >
-                    <Icon
-                      size={18}
-                      strokeWidth={1.5}
-                      className={isActive ? "text-[#8B4513]" : "text-zinc-500"}
-                    />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </Link>
-                )}
-              </div>
-            );
-          })}
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                        isActive
+                          ? "bg-indigo-600 shadow-md shadow-indigo-900/20 text-white"
+                          : "text-slate-400 hover:text-white hover:bg-slate-800/30"
+                      }`}
+                    >
+                      <Icon
+                        size={20}
+                        className={`${
+                          isActive
+                            ? "text-indigo-200"
+                            : "text-slate-500 group-hover:text-slate-300"
+                        }`}
+                      />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* User Profile Area - Bottom */}
-        <div className="border-t border-zinc-200 p-4 bg-white">
-          {isLoadingProfile ? (
-            <div className="animate-pulse">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-zinc-200" />
-                <div className="flex-1">
-                  <div className="h-3 bg-zinc-200 rounded w-16 mb-1.5" />
-                  <div className="h-2.5 bg-zinc-200 rounded w-24" />
+        {/* User Profile Area - Fixed Bottom */}
+        <div className="p-4 border-t border-slate-800 bg-slate-900 z-10">
+          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+            {isLoadingProfile ? (
+              <div className="animate-pulse flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-slate-700" />
+                <div className="1">
+                  <div className="h-3 bg-slate-700 rounded w-20 mb-1" />
+                  <div className="h-2 bg-slate-700 rounded w-28" />
                 </div>
               </div>
-            </div>
-          ) : adminProfile ? (
-            <div>
-              {/* Profile Info */}
-              <div className="flex items-center gap-3 mb-3">
-                {/* Avatar */}
-                {adminProfile.pictureUrl ? (
+            ) : (
+              <div className="flex items-center gap-3">
+                {adminProfile?.pictureUrl ? (
                   <Image
                     src={adminProfile.pictureUrl}
                     alt={adminProfile.name}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 rounded-full object-cover"
+                    width={36}
+                    height={36}
+                    className="w-9 h-9 rounded-full object-cover border border-slate-600"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#8B4513] flex items-center justify-center">
-                    <span className="text-white font-medium text-sm">
-                      {adminProfile.name?.charAt(0)?.toUpperCase() || "A"}
-                    </span>
+                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                    {(adminProfile?.name || "A").charAt(0).toUpperCase()}
                   </div>
                 )}
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-zinc-900 truncate">
-                      {adminProfile.name || "admin"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-zinc-500">
-                    <Users size={12} />
-                    <span className="text-xs truncate">
-                      {adminProfile.email || "admin@trr.com"}
-                    </span>
-                  </div>
+                  <p className="text-sm font-semibold text-white truncate">
+                    {adminProfile?.name || "Admin"}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {adminProfile?.role || "Administrator"}
+                  </p>
                 </div>
-              </div>
 
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all disabled:opacity-50"
-              >
-                <LogOut
-                  size={16}
-                  className={isLoggingOut ? "animate-spin" : ""}
-                />
-                <span className="text-sm">ออกจากระบบ</span>
-              </button>
-            </div>
-          ) : (
-            <div>
-              {/* Fallback Profile */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#8B4513] flex items-center justify-center">
-                  <User size={16} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium text-zinc-900">
-                    admin
-                  </span>
-                  <div className="flex items-center gap-1.5 text-zinc-500">
-                    <Users size={12} />
-                    <span className="text-xs">admin@trr.com</span>
-                  </div>
-                </div>
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-lg transition-colors"
+                  title="ออกจากระบบ"
+                >
+                  <LogOut size={16} />
+                </button>
               </div>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all disabled:opacity-50"
-              >
-                <LogOut
-                  size={16}
-                  className={isLoggingOut ? "animate-spin" : ""}
-                />
-                <span className="text-sm">ออกจากระบบ</span>
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </aside>
-
-      {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/10 backdrop-blur-[2px] lg:hidden z-[55]"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </>
   );
 }
