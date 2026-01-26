@@ -18,6 +18,9 @@ import {
   Package,
   Shield,
   Mail,
+  BarChart3,
+  FileSearch,
+  Building2,
 } from "lucide-react";
 import { userService, User as UserType } from "../../services/userService";
 
@@ -58,6 +61,7 @@ export default function AdminSidebar() {
 
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "แดชบอร์ด", href: "/admin/dashboard" },
+    { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
     {
       icon: Wrench,
       label: "งานซ่อมแซม",
@@ -71,6 +75,8 @@ export default function AdminSidebar() {
     },
     { icon: Package, label: "ระบบยืมของ", href: "/admin/loans" },
     { icon: Users, label: "จัดการผู้ใช้งาน", href: "/admin/users" },
+    { icon: Building2, label: "จัดการแผนก", href: "/admin/departments" },
+    { icon: FileSearch, label: "Audit Logs", href: "/admin/audit-logs" },
     {
       icon: Settings,
       label: "ตั้งค่าระบบ",

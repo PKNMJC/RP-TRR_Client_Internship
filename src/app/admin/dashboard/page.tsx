@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
-    []
+    [],
   );
   const [statusDistribution, setStatusDistribution] = useState({
     completed: 0,
@@ -70,9 +70,14 @@ export default function AdminDashboard() {
         setChartData(monthlyData);
         setRecentActivities(activities);
         setStatusDistribution(distribution);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error loading dashboard data:", error);
-        if (!isBackground) setError(error?.message || "ไม่สามารถโหลดข้อมูลแดชบอร์ด");
+        if (!isBackground)
+          setError(
+            error instanceof Error
+              ? error.message
+              : "ไม่สามารถโหลดข้อมูลแดชบอร์ด",
+          );
       } finally {
         if (!isBackground) setLoading(false);
       }
@@ -93,13 +98,11 @@ export default function AdminDashboard() {
     label,
     value,
     bgColor,
-    iconColor,
   }: {
     icon: React.ReactNode;
     label: string;
     value: number | string;
     bgColor: string;
-    iconColor: string;
   }) => (
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between">
@@ -148,42 +151,36 @@ export default function AdminDashboard() {
           label="งานซ่อมทั้งหมด"
           value={stats.totalRepairs}
           bgColor="bg-blue-100"
-          iconColor="text-blue-600"
         />
         <StatCard
           icon={<AlertCircle className="w-6 h-6 text-yellow-600" />}
           label="การยืม"
           value={stats.totalLoans}
           bgColor="bg-yellow-100"
-          iconColor="text-yellow-600"
         />
         <StatCard
           icon={<Clock className="w-6 h-6 text-orange-600" />}
           label="กำลังดำเนินการ"
           value={stats.inProgressRepairs}
           bgColor="bg-orange-100"
-          iconColor="text-orange-600"
         />
         <StatCard
           icon={<CheckCircle className="w-6 h-6 text-green-600" />}
           label="เสร็จสิ้น"
           value={stats.completedRepairs}
           bgColor="bg-green-100"
-          iconColor="text-green-600"
         />
         <StatCard
           icon={<Users className="w-6 h-6 text-purple-600" />}
           label="ผู้ใช้งานทั้งหมด"
           value={stats.totalUsers}
           bgColor="bg-purple-100"
-          iconColor="text-purple-600"
         />
         <StatCard
           icon={<TrendingUp className="w-6 h-6 text-pink-600" />}
           label="อัตราการเสร็จสิ้น"
           value={`${stats.completionRate}%`}
           bgColor="bg-pink-100"
-          iconColor="text-pink-600"
         />
       </div>
 
@@ -282,8 +279,10 @@ export default function AdminDashboard() {
           {recentActivities.length > 0 ? (
             recentActivities.map((activity) => {
               const isCompleted = activity.status === "COMPLETED";
-              const isInProgress = activity.status === "IN_PROGRESS" || activity.status === "WAITING_PARTS";
-              
+              const isInProgress =
+                activity.status === "IN_PROGRESS" ||
+                activity.status === "WAITING_PARTS";
+
               let statusLabel = "รอการอนุมัติ";
               let statusColor = "bg-yellow-100 text-yellow-700";
               let iconColor = "text-yellow-600";
@@ -295,7 +294,10 @@ export default function AdminDashboard() {
                 iconColor = "text-green-600";
                 bgColor = "bg-green-100";
               } else if (isInProgress) {
-                statusLabel = activity.status === "WAITING_PARTS" ? "รออะไหล่" : "กำลังดำเนินการ";
+                statusLabel =
+                  activity.status === "WAITING_PARTS"
+                    ? "รออะไหล่"
+                    : "กำลังดำเนินการ";
                 statusColor = "bg-orange-100 text-orange-700";
                 iconColor = "text-orange-600";
                 bgColor = "bg-orange-100";
@@ -324,7 +326,7 @@ export default function AdminDashboard() {
                       <p className="text-xs text-gray-500">
                         เมื่อ{" "}
                         {new Date(activity.createdAt).toLocaleDateString(
-                          "th-TH"
+                          "th-TH",
                         )}
                       </p>
                     </div>

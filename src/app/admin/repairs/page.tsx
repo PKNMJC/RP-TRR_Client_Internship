@@ -4,18 +4,9 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
-  Filter,
-  Eye,
   Trash2,
-  Plus,
-  Calendar,
-  User,
   Wrench,
-  AlertCircle,
-  Clock,
-  CheckCircle,
-  RefreshCw,
-  MoreVertical,
+  User,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -70,12 +61,14 @@ const urgencyLabels = {
 export default function AdminRepairsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [repairs, setRepairs] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [filteredRepairs, setFilteredRepairs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState(
-    searchParams.get("status") || "all"
+    searchParams.get("status") || "all",
   );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
@@ -86,14 +79,15 @@ export default function AdminRepairsPage() {
         if (!isBackground) setLoading(true);
         // Changed endpoint to /api/repairs
         const data = await apiFetch("/api/repairs");
-        setRepairs(data || []);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setRepairs((data as any[]) || []);
       } catch (err) {
-        console.error('Error fetching repairs:', err);
+        console.error("Error fetching repairs:", err);
       } finally {
         if (!isBackground) setLoading(false);
       }
     };
-    
+
     // Initial fetch
     fetchRepairs();
 
@@ -122,10 +116,11 @@ export default function AdminRepairsPage() {
   };
 
   useEffect(() => {
-    let filtered = repairs.filter((item) => {
+    const filtered = repairs.filter((item) => {
       const matchesSearch =
         item.ticketCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.problemTitle && item.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()));
+        (item.problemTitle &&
+          item.problemTitle.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesStatus =
         filterStatus === "all" || item.status === filterStatus;
       return matchesSearch && matchesStatus;
@@ -146,7 +141,9 @@ export default function AdminRepairsPage() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">งานซ่อมแซม</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">
+              งานซ่อมแซม
+            </h1>
             <p className="text-sm text-zinc-500 mt-2">
               จัดการและติดตามสถานะงานซ่อมบำรุงทั้งหมดในระบบ
             </p>
@@ -168,7 +165,6 @@ export default function AdminRepairsPage() {
             {
               label: "เสร็จสิ้น",
               value: repairs.filter((r) => r.status === "COMPLETED").length,
-            
             },
           ].map((stat, i) => (
             <div
@@ -223,7 +219,7 @@ export default function AdminRepairsPage() {
               count: repairs.filter((r) => r.status === "COMPLETED").length,
               color: "text-green-600",
             },
-             {
+            {
               key: "CANCELLED",
               label: "ยกเลิก",
               count: repairs.filter((r) => r.status === "CANCELLED").length,
@@ -289,7 +285,7 @@ export default function AdminRepairsPage() {
               {filteredRepairs
                 .slice(
                   (currentPage - 1) * itemsPerPage,
-                  currentPage * itemsPerPage
+                  currentPage * itemsPerPage,
                 )
                 .map((repair) => (
                   <tr
@@ -319,19 +315,21 @@ export default function AdminRepairsPage() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold ${
-                           statusLabels[repair.status as keyof typeof statusLabels]?.bg || 'bg-zinc-50 text-zinc-700'
+                          statusLabels[
+                            repair.status as keyof typeof statusLabels
+                          ]?.bg || "bg-zinc-50 text-zinc-700"
                         }`}
                       >
                         <span
                           className={`w-2 h-2 rounded-full ${
-                             statusLabels[repair.status as keyof typeof statusLabels]?.dotColor || 'bg-zinc-500'
+                            statusLabels[
+                              repair.status as keyof typeof statusLabels
+                            ]?.dotColor || "bg-zinc-500"
                           }`}
                         />
-                        {
-                          statusLabels[
-                            repair.status as keyof typeof statusLabels
-                          ]?.label || repair.status
-                        }
+                        {statusLabels[
+                          repair.status as keyof typeof statusLabels
+                        ]?.label || repair.status}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -392,10 +390,7 @@ export default function AdminRepairsPage() {
         {/* Mobile Card View */}
         <div className="md:hidden space-y-4">
           {filteredRepairs
-            .slice(
-              (currentPage - 1) * itemsPerPage,
-              currentPage * itemsPerPage
-            )
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
             .map((repair) => (
               <div
                 key={repair.id}
@@ -408,19 +403,19 @@ export default function AdminRepairsPage() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold ${
-                         statusLabels[repair.status as keyof typeof statusLabels]?.bg || 'bg-zinc-50 text-zinc-700'
+                        statusLabels[repair.status as keyof typeof statusLabels]
+                          ?.bg || "bg-zinc-50 text-zinc-700"
                       }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full ${
-                           statusLabels[repair.status as keyof typeof statusLabels]?.dotColor || 'bg-zinc-500'
+                          statusLabels[
+                            repair.status as keyof typeof statusLabels
+                          ]?.dotColor || "bg-zinc-500"
                         }`}
                       />
-                      {
-                        statusLabels[
-                          repair.status as keyof typeof statusLabels
-                        ]?.label || repair.status
-                      }
+                      {statusLabels[repair.status as keyof typeof statusLabels]
+                        ?.label || repair.status}
                     </span>
                   </div>
                 </div>
@@ -441,52 +436,48 @@ export default function AdminRepairsPage() {
                   </div>
                 </div>
 
-                 <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          urgencyLabels[
-                            repair.urgency as keyof typeof urgencyLabels
-                          ]?.dot
-                        }`}
-                      />
-                      <span className="text-xs font-medium text-zinc-600">
-                        {
-                          urgencyLabels[
-                            repair.urgency as keyof typeof urgencyLabels
-                          ]?.label
-                        }
-                      </span>
-                    </div>
-                   
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          router.push(`/admin/repairs/${repair.id}`)
-                        }
-                        className="p-2 text-zinc-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      >
-                         <ChevronRight size={18} />
-                      </button>
-                         <button
-                          onClick={() =>
-                            handleDelete(repair.id, repair.ticketCode)
-                          }
-                          className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                    </div>
-                 </div>
+                <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        urgencyLabels[
+                          repair.urgency as keyof typeof urgencyLabels
+                        ]?.dot
+                      }`}
+                    />
+                    <span className="text-xs font-medium text-zinc-600">
+                      {
+                        urgencyLabels[
+                          repair.urgency as keyof typeof urgencyLabels
+                        ]?.label
+                      }
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => router.push(`/admin/repairs/${repair.id}`)}
+                      className="p-2 text-zinc-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(repair.id, repair.ticketCode)}
+                      className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
-             {filteredRepairs.length === 0 && (
-              <div className="py-12 text-center bg-white rounded-lg border border-zinc-200">
-                <p className="text-zinc-400 text-sm">
-                  ไม่พบรายการที่ตรงกับการค้นหา
-                </p>
-              </div>
-            )}
+          {filteredRepairs.length === 0 && (
+            <div className="py-12 text-center bg-white rounded-lg border border-zinc-200">
+              <p className="text-zinc-400 text-sm">
+                ไม่พบรายการที่ตรงกับการค้นหา
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Pagination - Responsive */}
@@ -514,7 +505,9 @@ export default function AdminRepairsPage() {
                 <ChevronLeft size={16} className="text-zinc-600" />
               </button>
               <span className="text-sm font-medium text-zinc-600 px-2 sm:px-3 whitespace-nowrap">
-                <span className="hidden sm:inline">หน้า </span>{currentPage} / {Math.ceil(filteredRepairs.length / itemsPerPage)}
+                <span className="hidden sm:inline">หน้า </span>
+                {currentPage} /{" "}
+                {Math.ceil(filteredRepairs.length / itemsPerPage)}
               </span>
               <button
                 disabled={

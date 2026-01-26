@@ -8,17 +8,14 @@ import {
   UserPlus,
   AlertCircle,
   CheckCircle2,
-  MoreVertical,
   Shield,
   Trash2,
   Edit2,
-  Filter,
   RefreshCw,
-  MessageCircle,
   Mail,
   Phone,
   User as UserIcon,
-  Users
+  Users,
 } from "lucide-react";
 import UserModal from "@/components/UserModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -64,8 +61,11 @@ export default function AdminUsersPage() {
       setTotalPages(response.pagination.totalPages);
       setTotalUsers(response.pagination.total);
       setCurrentPage(response.pagination.page);
-    } catch (err: any) {
-      showNotification("error", err.message || "ไม่สามารถโหลดข้อมูลผู้ใช้ได้");
+    } catch (err: unknown) {
+      showNotification(
+        "error",
+        err instanceof Error ? err.message : "ไม่สามารถโหลดข้อมูลผู้ใช้ได้",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -80,23 +80,24 @@ export default function AdminUsersPage() {
       const matchesSearch =
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.lineUserId && user.lineUserId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (user.displayName && user.displayName.toLowerCase().includes(searchQuery.toLowerCase()));
+        (user.lineUserId &&
+          user.lineUserId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (user.displayName &&
+          user.displayName.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesRole = roleFilter === "all" || user.role === roleFilter;
       return matchesSearch && matchesRole;
     });
   }, [users, searchQuery, roleFilter]);
 
   const handleSaveUser = async (data: Partial<User>) => {
-
     try {
       const { password, ...userDataWithoutPassword } = data;
 
       if (!selectedUser) {
         // Create new user
         if (!password) {
-           showNotification("error", "กรุณาระบุรหัสผ่านสำหรับผู้ใช้ใหม่");
-           return;
+          showNotification("error", "กรุณาระบุรหัสผ่านสำหรับผู้ใช้ใหม่");
+          return;
         }
         await userService.createUser({ ...userDataWithoutPassword, password });
         showNotification("success", "เพิ่มผู้ใช้งานใหม่เรียบร้อยแล้ว");
@@ -111,8 +112,11 @@ export default function AdminUsersPage() {
       }
       fetchUsers(currentPage);
       setIsModalOpen(false);
-    } catch (err: any) {
-      showNotification("error", err.message || "ไม่สามารถบันทึกข้อมูลได้");
+    } catch (err: unknown) {
+      showNotification(
+        "error",
+        err instanceof Error ? err.message : "ไม่สามารถบันทึกข้อมูลได้",
+      );
       throw err;
     }
   };
@@ -125,7 +129,7 @@ export default function AdminUsersPage() {
       showNotification("success", "ลบผู้ใช้งานสำเร็จ");
       fetchUsers(currentPage);
       setDeleteUser(null);
-    } catch (err: any) {
+    } catch {
       showNotification("error", "เกิดข้อผิดพลาดในการลบ");
     } finally {
       setIsDeleting(false);
@@ -177,19 +181,19 @@ export default function AdminUsersPage() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex gap-3">
-             <button
-                onClick={() => {
-                  setSelectedUser(null);
-                  setIsViewOnly(false);
-                  setIsModalOpen(true);
-                }}
-                className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95"
-              >
-                <UserPlus size={20} />
-                เพิ่มผู้ใช้งาน
-              </button>
+            <button
+              onClick={() => {
+                setSelectedUser(null);
+                setIsViewOnly(false);
+                setIsModalOpen(true);
+              }}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95"
+            >
+              <UserPlus size={20} />
+              เพิ่มผู้ใช้งาน
+            </button>
           </div>
         </div>
 
@@ -212,7 +216,9 @@ export default function AdminUsersPage() {
               </div>
             )}
             <div>
-              <p className="font-semibold text-sm">{notification.type === "success" ? "สำเร็จ" : "ข้อผิดพลาด"}</p>
+              <p className="font-semibold text-sm">
+                {notification.type === "success" ? "สำเร็จ" : "ข้อผิดพลาด"}
+              </p>
               <p className="text-xs opacity-90">{notification.message}</p>
             </div>
           </div>
@@ -257,7 +263,7 @@ export default function AdminUsersPage() {
                   </button>
                 ))}
               </div>
-              
+
               <div className="h-8 w-px bg-slate-200 mx-1 hidden md:block"></div>
 
               <button
@@ -278,7 +284,10 @@ export default function AdminUsersPage() {
         <div className="md:hidden space-y-3">
           {isLoading ? (
             [...Array(5)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4 animate-pulse">
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-slate-200 p-4 animate-pulse"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-slate-100 rounded-2xl"></div>
                   <div className="flex-1 space-y-2">
@@ -293,26 +302,40 @@ export default function AdminUsersPage() {
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
                 <UserIcon className="text-slate-300" size={32} />
               </div>
-              <h3 className="text-slate-900 font-medium">ไม่พบข้อมูลผู้ใช้งาน</h3>
-              <p className="text-slate-500 text-sm mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+              <h3 className="text-slate-900 font-medium">
+                ไม่พบข้อมูลผู้ใช้งาน
+              </h3>
+              <p className="text-slate-500 text-sm mt-1">
+                ลองเปลี่ยนคำค้นหาหรือตัวกรอง
+              </p>
             </div>
           ) : (
             filteredUsers.map((user) => (
-              <div 
-                key={user.id} 
+              <div
+                key={user.id}
                 className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
               >
                 <div className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm
-                      ${user.role === 'ADMIN' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600' : 
-                        user.role === 'IT' ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600' : 
-                        'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600'}`}>
-                      {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                    <div
+                      className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm
+                      ${
+                        user.role === "ADMIN"
+                          ? "bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600"
+                          : user.role === "IT"
+                            ? "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600"
+                            : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600"
+                      }`}
+                    >
+                      {(user.displayName || user.name || "?")
+                        .charAt(0)
+                        .toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-slate-900">{user.displayName || user.name}</span>
+                        <span className="font-bold text-slate-900">
+                          {user.displayName || user.name}
+                        </span>
                         {getRoleBadge(user.role)}
                       </div>
                       {user.department && (
@@ -327,12 +350,17 @@ export default function AdminUsersPage() {
                         </div>
                         {user.phoneNumber && (
                           <div className="flex items-center gap-1.5">
-                            <Phone size={12} className="text-slate-400 shrink-0" />
+                            <Phone
+                              size={12}
+                              className="text-slate-400 shrink-0"
+                            />
                             <span>{user.phoneNumber}</span>
                           </div>
                         )}
                         {user.displayName && user.name !== user.displayName && (
-                          <div className="text-slate-400">ชื่อระบบ: {user.name}</div>
+                          <div className="text-slate-400">
+                            ชื่อระบบ: {user.name}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -369,18 +397,28 @@ export default function AdminUsersPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider font-semibold">
-                  <th className="px-6 py-4 rounded-tl-2xl w-full">ชื่อผู้แจ้ง (Name)</th>
+                  <th className="px-6 py-4 rounded-tl-2xl w-full">
+                    ชื่อผู้แจ้ง (Name)
+                  </th>
                   <th className="px-6 py-4 whitespace-nowrap">สถานะ</th>
-                   <th className="px-6 py-4 text-right rounded-tr-2xl whitespace-nowrap">จัดการ</th>
+                  <th className="px-6 py-4 text-right rounded-tr-2xl whitespace-nowrap">
+                    จัดการ
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {isLoading ? (
                   [...Array(5)].map((_, i) => (
                     <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4"><div className="h-12 w-64 bg-slate-100 rounded-lg"></div></td>
-                      <td className="px-6 py-4"><div className="h-6 w-20 bg-slate-100 rounded-full"></div></td>
-                      <td className="px-6 py-4"><div className="h-8 w-16 bg-slate-100 rounded ml-auto"></div></td>
+                      <td className="px-6 py-4">
+                        <div className="h-12 w-64 bg-slate-100 rounded-lg"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-20 bg-slate-100 rounded-full"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-8 w-16 bg-slate-100 rounded ml-auto"></div>
+                      </td>
                     </tr>
                   ))
                 ) : filteredUsers.length === 0 ? (
@@ -389,52 +427,69 @@ export default function AdminUsersPage() {
                       <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <UserIcon className="text-slate-300" size={40} />
                       </div>
-                      <h3 className="text-slate-900 font-medium text-lg">ไม่พบข้อมูลผู้ใช้งาน</h3>
-                      <p className="text-slate-500 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+                      <h3 className="text-slate-900 font-medium text-lg">
+                        ไม่พบข้อมูลผู้ใช้งาน
+                      </h3>
+                      <p className="text-slate-500 mt-1">
+                        ลองเปลี่ยนคำค้นหาหรือตัวกรอง
+                      </p>
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr 
-                      key={user.id} 
+                    <tr
+                      key={user.id}
                       className="group hover:bg-slate-50/80 transition-colors duration-150"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm ring-4 ring-white
-                            ${user.role === 'ADMIN' ? 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600' : 
-                              user.role === 'IT' ? 'bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600' : 
-                              'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600'}`}>
-                            {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                          <div
+                            className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm ring-4 ring-white
+                            ${
+                              user.role === "ADMIN"
+                                ? "bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600"
+                                : user.role === "IT"
+                                  ? "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-600"
+                                  : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600"
+                            }`}
+                          >
+                            {(user.displayName || user.name || "?")
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-900 text-base">{user.displayName || user.name}</span>
-                                {user.department && (
-                                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-500 border border-slate-200">
-                                        {user.department}
-                                    </span>
-                                )}
-                            </div>
-                            
-                            <div className="flex items-center gap-3 text-xs text-slate-500">
-                                <span className="flex items-center gap-1.5 ">
-                                    <Mail size={12} className="text-slate-400" />
-                                    {user.email}
+                              <span className="font-bold text-slate-900 text-base">
+                                {user.displayName || user.name}
+                              </span>
+                              {user.department && (
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-500 border border-slate-200">
+                                  {user.department}
                                 </span>
-                                {user.phoneNumber && (
-                                    <span className="flex items-center gap-1.5 opacity-75">
-                                        <Phone size={12} className="text-slate-400" />
-                                        {user.phoneNumber}
-                                    </span>
-                                )}
+                              )}
                             </div>
 
-                            {user.displayName && user.name !== user.displayName && (
+                            <div className="flex items-center gap-3 text-xs text-slate-500">
+                              <span className="flex items-center gap-1.5 ">
+                                <Mail size={12} className="text-slate-400" />
+                                {user.email}
+                              </span>
+                              {user.phoneNumber && (
+                                <span className="flex items-center gap-1.5 opacity-75">
+                                  <Phone size={12} className="text-slate-400" />
+                                  {user.phoneNumber}
+                                </span>
+                              )}
+                            </div>
+
+                            {user.displayName &&
+                              user.name !== user.displayName && (
                                 <div className="flex items-center gap-1.5 mt-1">
-                                    <span className="text-xs text-slate-400">ชื่อระบบ: {user.name}</span>
+                                  <span className="text-xs text-slate-400">
+                                    ชื่อระบบ: {user.name}
+                                  </span>
                                 </div>
-                            )}
+                              )}
                           </div>
                         </div>
                       </td>
@@ -443,24 +498,24 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <button
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setIsViewOnly(false);
-                                  setIsModalOpen(true);
-                                }}
-                                className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                                title="แก้ไข"
-                              >
-                                <Edit2 size={18} />
-                              </button>
-                              <button
-                                onClick={() => setDeleteUser(user)}
-                                className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                                title="ลบ"
-                              >
-                                <Trash2 size={18} />
-                              </button>
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setIsViewOnly(false);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                            title="แก้ไข"
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteUser(user)}
+                            className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            title="ลบ"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -475,10 +530,14 @@ export default function AdminUsersPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 md:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
           <div className="text-slate-500 text-center sm:text-left">
             <span className="hidden sm:inline">แสดง </span>
-            <span className="font-medium text-slate-900">{(currentPage - 1) * LIMIT + 1}</span>
+            <span className="font-medium text-slate-900">
+              {(currentPage - 1) * LIMIT + 1}
+            </span>
             <span className="hidden sm:inline"> ถึง </span>
             <span className="sm:hidden">-</span>
-            <span className="font-medium text-slate-900">{Math.min(currentPage * LIMIT, totalUsers)}</span>
+            <span className="font-medium text-slate-900">
+              {Math.min(currentPage * LIMIT, totalUsers)}
+            </span>
             <span className="hidden sm:inline"> จาก </span>
             <span className="sm:hidden"> / </span>
             <span className="font-medium text-slate-900">{totalUsers}</span>
@@ -493,15 +552,15 @@ export default function AdminUsersPage() {
               <ChevronLeft size={18} />
             </button>
             <div className="flex items-center gap-1">
-               {/* Show fewer page buttons on mobile */}
-               {[...Array(Math.min(3, totalPages))].map((_, i) => {
-                  let pageNum = i + 1;
-                  if(totalPages > 3 && currentPage > 2) {
-                     pageNum = currentPage - 1 + i;
-                     if (pageNum > totalPages) pageNum = totalPages - (3 - i - 1);
-                  }
-                  
-                  return (
+              {/* Show fewer page buttons on mobile */}
+              {[...Array(Math.min(3, totalPages))].map((_, i) => {
+                let pageNum = i + 1;
+                if (totalPages > 3 && currentPage > 2) {
+                  pageNum = currentPage - 1 + i;
+                  if (pageNum > totalPages) pageNum = totalPages - (3 - i - 1);
+                }
+
+                return (
                   <button
                     key={i}
                     onClick={() => setCurrentPage(pageNum)}
@@ -513,17 +572,17 @@ export default function AdminUsersPage() {
                   >
                     {pageNum}
                   </button>
-                  )
-               })}
-               {/* Show more page buttons on desktop */}
-               {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                  let pageNum = i + 1;
-                  if(totalPages > 5 && currentPage > 3) {
-                     pageNum = currentPage - 3 + i;
-                     if (pageNum > totalPages) pageNum = totalPages - (5 - i - 1);
-                  }
-                  
-                  return (
+                );
+              })}
+              {/* Show more page buttons on desktop */}
+              {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                let pageNum = i + 1;
+                if (totalPages > 5 && currentPage > 3) {
+                  pageNum = currentPage - 3 + i;
+                  if (pageNum > totalPages) pageNum = totalPages - (5 - i - 1);
+                }
+
+                return (
                   <button
                     key={i}
                     onClick={() => setCurrentPage(pageNum)}
@@ -535,8 +594,8 @@ export default function AdminUsersPage() {
                   >
                     {pageNum}
                   </button>
-                  )
-               })}
+                );
+              })}
             </div>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}

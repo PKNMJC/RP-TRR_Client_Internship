@@ -38,7 +38,10 @@ export default function AdminSettingsPage() {
     smsNotifications: false,
   });
 
-  const handleChange = (field: keyof SystemSettings, value: any) => {
+  const handleChange = (
+    field: keyof SystemSettings,
+    value: string | number | boolean,
+  ) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
