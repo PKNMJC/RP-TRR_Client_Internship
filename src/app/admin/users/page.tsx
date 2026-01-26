@@ -17,7 +17,7 @@ import {
   User as UserIcon,
   Users,
 } from "lucide-react";
-import UserModal from "@/components/UserModal";
+import AdminUserModal from "@/components/modals/AdminUserModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { userService, User } from "@/services/userService";
 
@@ -608,10 +608,9 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Modals */}
-        <UserModal
+        <AdminUserModal
           user={selectedUser}
           isOpen={isModalOpen}
-          isViewOnly={isViewOnly}
           onClose={() => {
             setIsModalOpen(false);
             setSelectedUser(null);

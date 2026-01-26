@@ -16,6 +16,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import { useCurrentRole } from "@/hooks/useRoleAccess";
 
 // Config labels for RepairTicketStatus
 const statusLabels = {
@@ -86,6 +87,8 @@ const urgencyLabels = {
 export default function AdminRepairsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { role } = useCurrentRole();
+  const isAdmin = role === "ADMIN";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [repairs, setRepairs] = useState<any[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -596,16 +599,18 @@ export default function AdminRepairsPage() {
                         >
                           <ChevronRight size={18} />
                         </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(repair.id, repair.ticketCode);
-                          }}
-                          className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="ลบรายการ"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(repair.id, repair.ticketCode);
+                            }}
+                            className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="ลบรายการ"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
