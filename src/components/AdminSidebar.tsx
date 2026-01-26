@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard,
   Wrench,
@@ -42,6 +42,7 @@ export default function AdminSidebar() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // Fetch admin profile on mount
   useEffect(() => {
@@ -84,7 +85,7 @@ export default function AdminSidebar() {
   // Close sidebar on route change (mobile)
   useEffect(() => {
     setIsOpen(false);
-  }, [pathname]);
+  }, [pathname, searchParams]); // Also close on params change if needed
 
   const toggleSubMenu = useCallback((label: string) => {
     setExpandedMenu((prev) => (prev === label ? null : label));
@@ -94,6 +95,27 @@ export default function AdminSidebar() {
     setIsLoggingOut(true);
     localStorage.clear();
     router.push("/login/admin");
+  };
+
+  const isLinkActive = (href: string) => {
+    // Check if href has params
+    if (href.includes("?")) {
+      const [path, query] = href.split("?");
+      if (pathname !== path) return false;
+      const params = new URLSearchParams(query);
+      // Check if all params match
+      for (const [key, value] of params.entries()) {
+        if (searchParams.get(key) !== value) return false;
+      }
+      return true;
+    }
+    // Exact match for base paths or subpaths
+    return (
+      pathname === href ||
+      (href !== "/admin/dashboard" &&
+        pathname.startsWith(href) &&
+        !searchParams.toString())
+    );
   };
 
   return (
@@ -154,17 +176,11 @@ export default function AdminSidebar() {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isExpanded = expandedMenu === item.label;
-              const isActive =
-                item.href !== "#" &&
-                (pathname === item.href ||
-                  (item.href !== "/admin/dashboard" &&
-                    pathname.startsWith(item.href)));
+              const isActive = isLinkActive(item.href);
 
               // Check if any sub-item is active
-              const hasActiveSub = item.subItems?.some(
-                (sub) =>
-                  pathname === sub.href ||
-                  pathname + window.location.search === sub.href,
+              const hasActiveSub = item.subItems?.some((sub) =>
+                isLinkActive(sub.href),
               );
 
               return (
@@ -212,10 +228,7 @@ export default function AdminSidebar() {
                       >
                         <div className="ml-4 pl-4 border-l border-slate-800 space-y-1 py-1">
                           {item.subItems.map((sub) => {
-                            const isSubActive =
-                              pathname === sub.href ||
-                              (sub.href.includes("?") &&
-                                pathname + window.location.search === sub.href);
+                            const isSubActive = isLinkActive(sub.href);
                             return (
                               <Link
                                 key={sub.label}

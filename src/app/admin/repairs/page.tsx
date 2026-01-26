@@ -92,17 +92,20 @@ export default function AdminRepairsPage() {
   const [filteredRepairs, setFilteredRepairs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
+    // Set initial status from params
     const status = searchParams.get("status");
     if (status) {
       setFilterStatus(status);
     } else {
       setFilterStatus("all");
     }
+    setHasInitialized(true);
   }, [searchParams]);
 
   useEffect(() => {
@@ -130,6 +133,29 @@ export default function AdminRepairsPage() {
 
     return () => clearInterval(intervalId);
   }, []);
+
+  const handleStatusUpdate = async (
+    id: string,
+    newStatus: string,
+    e: React.MouseEvent,
+  ) => {
+    e.stopPropagation();
+    if (!confirm("คุณต้องการเปลี่ยนสถานะงานซ่อมใช่หรือไม่?")) return;
+
+    try {
+      await apiFetch(`/api/repairs/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      });
+      // Update local state
+      setRepairs(
+        repairs.map((r) => (r.id === id ? { ...r, status: newStatus } : r)),
+      );
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      alert("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+    }
+  };
 
   const handleDelete = async (id: string, ticketCode: string) => {
     if (!window.confirm(`คุณแน่ใจหรือว่าต้องการลบงานซ่อมแซม #${ticketCode}?`)) {
@@ -208,53 +234,124 @@ export default function AdminRepairsPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] pt-6 pb-12">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
-            งานซ่อมแซม
-          </h1>
-          <p className="text-zinc-500 text-sm mt-1">
-            จัดการคำขอแจ้งซ่อมทั้งหมดในระบบ
-          </p>
+        {/* Dynamic Header */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              {filterStatus === "PENDING" && (
+                <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                  <Clock size={24} />
+                </div>
+              )}
+              {filterStatus === "IN_PROGRESS" && (
+                <div className="p-2 rounded-lg bg-amber-100 text-amber-600">
+                  <Wrench size={24} />
+                </div>
+              )}
+              {filterStatus === "COMPLETED" && (
+                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600">
+                  <CheckCircle2 size={24} />
+                </div>
+              )}
+              {(filterStatus === "all" ||
+                filterStatus === "CANCELLED" ||
+                filterStatus === "WAITING_PARTS") && (
+                <div className="p-2 rounded-lg bg-zinc-100 text-zinc-900">
+                  <LayoutDashboard size={24} />
+                </div>
+              )}
+
+              <h1 className="text-3xl font-bold text-zinc-900 tracking-tight">
+                {filterStatus === "PENDING"
+                  ? "งานรอรับดำเนินการ"
+                  : filterStatus === "IN_PROGRESS"
+                    ? "งานกำลังซ่อม"
+                    : filterStatus === "COMPLETED"
+                      ? "งานที่เสร็จสิ้น"
+                      : filterStatus === "WAITING_PARTS"
+                        ? "งานรออะไหล่"
+                        : "ภาพรวมงานซ่อม"}
+              </h1>
+            </div>
+            <p className="text-zinc-500 text-sm ml-1">
+              {filterStatus === "PENDING"
+                ? "รายการแจ้งซ่อมที่รอเจ้าหน้าที่กดรับงานเพื่อเริ่มดำเนินการ"
+                : filterStatus === "IN_PROGRESS"
+                  ? "รายการที่กำลังดำเนินการซ่อมแซมอยู่ในขณะนี้"
+                  : filterStatus === "COMPLETED"
+                    ? "รายการซ่อมที่ดำเนินการเสร็จสิ้นและส่งมอบงานเรียบร้อยแล้ว"
+                    : "จัดการและติดตามสถานะงานซ่อมทั้งหมดในระบบ"}
+            </p>
+          </div>
+
+          {/* Quick Actions based on status */}
+          <div className="flex gap-3">
+            {filterStatus === "PENDING" &&
+              repairs.some((r) => r.status === "PENDING") && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 text-sm font-semibold rounded-lg border border-blue-100">
+                  <span className="relative flex h-2 w-2 mr-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                  </span>
+                  รอรับงาน{" "}
+                  {repairs.filter((r) => r.status === "PENDING").length} รายการ
+                </div>
+              )}
+            {filterStatus === "IN_PROGRESS" && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 text-sm font-semibold rounded-lg border border-amber-100">
+                <Wrench size={16} />
+                กำลังซ่อม{" "}
+                {repairs.filter((r) => r.status === "IN_PROGRESS").length}{" "}
+                รายการ
+              </div>
+            )}
+            {filterStatus === "COMPLETED" && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 text-sm font-semibold rounded-lg border border-emerald-100">
+                <CheckCircle2 size={16} />
+                เสร็จสิ้นแล้ว{" "}
+                {repairs.filter((r) => r.status === "COMPLETED").length} รายการ
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, i) => (
-            <div
-              key={i}
-              className={`${stat.bg} p-4 rounded-xl border border-zinc-200/60 shadow-sm transition-all hover:shadow-md`}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div
-                  className={`p-2 rounded-lg bg-white shadow-sm border border-zinc-100 ${stat.color}`}
-                >
-                  {/* Using generic Icon component via lucide-react if needed, but here using specific imports */}
-                  {/* Note: In a real scenario we'd dynamic render, but hardcoding for safety with imports */}
-                  {i === 0 && <LayoutDashboard size={18} />}
-                  {i === 1 && <Clock size={18} />}
-                  {i === 2 && <Wrench size={18} />}
-                  {i === 3 && <CheckCircle2 size={18} />}
+        {/* Stats Section - Show only relevance or simplified view based on filter */}
+        {filterStatus === "all" && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {stats.map((stat, i) => (
+              <div
+                key={i}
+                className={`${stat.bg} p-4 rounded-xl border border-zinc-200/60 shadow-sm transition-all hover:shadow-md cursor-default`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div
+                    className={`p-2 rounded-lg bg-white shadow-sm border border-zinc-100 ${stat.color}`}
+                  >
+                    {i === 0 && <LayoutDashboard size={18} />}
+                    {i === 1 && <Clock size={18} />}
+                    {i === 2 && <Wrench size={18} />}
+                    {i === 3 && <CheckCircle2 size={18} />}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-2xl font-bold text-zinc-900 block">
+                    {stat.value}
+                  </span>
+                  <span className="text-xs font-medium text-zinc-500">
+                    {stat.label}
+                  </span>
                 </div>
               </div>
-              <div>
-                <span className="text-2xl font-bold text-zinc-900 block">
-                  {stat.value}
-                </span>
-                <span className="text-xs font-medium text-zinc-500">
-                  {stat.label}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Controls Bar */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-6">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-lg overflow-x-auto max-w-full no-scrollbar">
+          <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-xl shadow-sm overflow-x-auto max-w-full no-scrollbar">
             {[
-              { key: "all", label: "ทั้งหมด" },
+              { key: "all", label: "ภาพรวม" },
               { key: "PENDING", label: "รอรับงาน" },
               { key: "IN_PROGRESS", label: "กำลังซ่อม" },
               { key: "WAITING_PARTS", label: "รออะไหล่" },
@@ -262,19 +359,50 @@ export default function AdminRepairsPage() {
               { key: "CANCELLED", label: "ยกเลิก" },
             ].map((tab) => {
               const isActive = filterStatus === tab.key;
+              let activeClass = "bg-zinc-900 text-white shadow-md";
+
+              if (isActive) {
+                if (tab.key === "PENDING")
+                  activeClass =
+                    "bg-blue-600 text-white shadow-md shadow-blue-200";
+                if (tab.key === "IN_PROGRESS")
+                  activeClass =
+                    "bg-amber-500 text-white shadow-md shadow-amber-200";
+                if (tab.key === "WAITING_PARTS")
+                  activeClass =
+                    "bg-orange-500 text-white shadow-md shadow-orange-200";
+                if (tab.key === "COMPLETED")
+                  activeClass =
+                    "bg-emerald-600 text-white shadow-md shadow-emerald-200";
+                if (tab.key === "CANCELLED")
+                  activeClass =
+                    "bg-rose-600 text-white shadow-md shadow-rose-200";
+              }
+
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setFilterStatus(tab.key)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                  onClick={() => {
+                    setFilterStatus(tab.key);
+                    // Update URL without reload
+                    const url = new URL(window.location.href);
+                    if (tab.key === "all") url.searchParams.delete("status");
+                    else url.searchParams.set("status", tab.key);
+                    window.history.pushState({}, "", url.toString());
+                  }}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-2 ${
                     isActive
-                      ? "bg-zinc-900 text-white shadow-sm"
-                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                      ? activeClass
+                      : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
                   }`}
                 >
                   {tab.label}
                   <span
-                    className={`ml-1.5 opacity-60 ${isActive ? "text-white" : "text-zinc-400"}`}
+                    className={`text-[10px] py-0.5 px-1.5 rounded-full ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-zinc-100 text-zinc-400"
+                    }`}
                   >
                     {tab.key === "all"
                       ? repairs.length
@@ -436,12 +564,35 @@ export default function AdminRepairsPage() {
                         className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        {/* Status Change Quick Actions */}
+                        {repair.status === "PENDING" && (
+                          <button
+                            onClick={(e) =>
+                              handleStatusUpdate(repair.id, "IN_PROGRESS", e)
+                            }
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg shadow-sm transition-colors mr-2"
+                          >
+                            รับงาน
+                          </button>
+                        )}
+                        {repair.status === "IN_PROGRESS" && (
+                          <button
+                            onClick={(e) =>
+                              handleStatusUpdate(repair.id, "COMPLETED", e)
+                            }
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg shadow-sm transition-colors mr-2"
+                          >
+                            ปิดงาน
+                          </button>
+                        )}
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             router.push(`/admin/repairs/${repair.id}`);
                           }}
                           className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
+                          title="ดูรายละเอียด"
                         >
                           <ChevronRight size={18} />
                         </button>
@@ -451,6 +602,7 @@ export default function AdminRepairsPage() {
                             handleDelete(repair.id, repair.ticketCode);
                           }}
                           className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="ลบรายการ"
                         >
                           <Trash2 size={18} />
                         </button>
