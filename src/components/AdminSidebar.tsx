@@ -152,7 +152,7 @@ export default function AdminSidebar() {
         {/* Branding */}
         <div className="h-24 flex items-center px-8">
           <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-2xl font-medium text-zinc-800 tracking-tight">
+            <span className="text-2xl font-normal text-zinc-700 tracking-tight">
               TRR-RP
             </span>
           </Link>
@@ -298,7 +298,7 @@ export default function AdminSidebar() {
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#E0E0E0] hover:bg-[#d4d4d4] border border-zinc-400/50 rounded-lg text-zinc-700 transition-all font-medium"
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-transparent hover:bg-zinc-200/50 border border-zinc-500 rounded-lg text-zinc-700 transition-all font-medium"
           >
             <LogOut size={20} strokeWidth={1.5} />
             <span>ออกจากระบบ</span>
