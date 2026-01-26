@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Wrench,
   Users,
-  Settings,
-  LogOut,
-  ClipboardList,
+  Package,
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 
 const menuItems = [
@@ -17,149 +20,140 @@ const menuItems = [
     label: "แดชบอร์ด",
     description: "ดูสถิติและรายงานอ้างอิง",
     href: "/admin/dashboard",
-    color: "from-blue-500 to-blue-600",
+    color: "bg-blue-500",
   },
   {
     icon: Wrench,
-    label: "จัดการงานซ่อม",
+    label: "งานซ่อมแซม",
     description: "บริหารรายการงานซ่อมทั้งหมด",
     href: "/admin/repairs",
-    color: "from-orange-500 to-orange-600",
+    color: "bg-amber-600",
   },
   {
-    icon: ClipboardList,
-    label: "งานที่มอบหมาย",
-    description: "จัดการงานของผู้รับผิดชอบ",
-    href: "/admin/assigned-tasks",
-    color: "from-indigo-500 to-indigo-600",
+    icon: Package,
+    label: "ยืมของ",
+    description: "จัดการระบบยืม-คืนอุปกรณ์",
+    href: "/admin/loans",
+    color: "bg-emerald-500",
   },
   {
     icon: Users,
-    label: "จัดการผู้ใช้งาน",
+    label: "จัดการผู้ใช้",
     description: "บริหารบัญชีผู้ใช้และสิทธิ์การเข้าถึง",
     href: "/admin/users",
-    color: "from-purple-500 to-purple-600",
-  },
-  {
-    icon: Settings,
-    label: "ตั้งค่าระบบ",
-    description: "กำหนดค่าพื้นฐานและการตั้งค่า",
-    href: "/admin/settings",
-    color: "from-green-500 to-green-600",
+    color: "bg-purple-500",
   },
 ];
 
 export default function AdminHome() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("role");
-    router.push("/login/admin");
-  };
-
   return (
-    <div className="min-h-screen -to-br from-slate-50 to-slate-100">
+    <div className="min-h-full">
       {/* Header */}
-      <div className="bg-white shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Portal</h1>
-            <p className="text-gray-600 text-sm mt-1">
-              ระบบจัดการซ่อมแซมเครื่องอุปกรณ์
-            </p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-xl md:text-2xl font-bold text-zinc-900">
+          ยินดีต้อนรับ Admin
+        </h1>
+        <p className="text-sm md:text-base text-zinc-500 mt-1">
+          เลือกส่วนที่คุณต้องการจัดการ
+        </p>
+      </div>
+
+      {/* Quick Menu Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="group bg-white rounded-xl p-4 md:p-5 border border-zinc-200 hover:border-zinc-300 hover:shadow-md transition-all"
+            >
+              <div
+                className={`w-10 h-10 md:w-12 md:h-12 ${item.color} rounded-lg flex items-center justify-center mb-3 md:mb-4 group-hover:scale-105 transition-transform`}
+              >
+                <Icon size={20} className="text-white md:w-6 md:h-6" />
+              </div>
+              <h3 className="text-sm md:text-base font-semibold text-zinc-900 mb-1">
+                {item.label}
+              </h3>
+              <p className="text-xs md:text-sm text-zinc-500 line-clamp-2 hidden sm:block">
+                {item.description}
+              </p>
+              <div className="flex items-center gap-1 text-xs text-zinc-400 mt-2 group-hover:text-zinc-600 transition-colors">
+                <span className="hidden md:inline">เปิด</span>
+                <ArrowRight size={14} />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Quick Stats */}
+      <div className="bg-white rounded-xl border border-zinc-200 p-4 md:p-6">
+        <h2 className="text-base md:text-lg font-semibold text-zinc-900 mb-4">
+          สรุปภาพรวม
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Wrench size={16} className="text-blue-600" />
+              </div>
+              <span className="text-xs text-zinc-500">งานทั้งหมด</span>
+            </div>
+            <div className="text-xl md:text-2xl font-bold text-zinc-900">
+              --
+            </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
-          >
-            <LogOut size={20} />
-            <span>ออกจากระบบ</span>
-          </button>
+
+          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                <Clock size={16} className="text-amber-600" />
+              </div>
+              <span className="text-xs text-zinc-500">รอรับงาน</span>
+            </div>
+            <div className="text-xl md:text-2xl font-bold text-amber-600">
+              --
+            </div>
+          </div>
+
+          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <AlertCircle size={16} className="text-orange-600" />
+              </div>
+              <span className="text-xs text-zinc-500">กำลังซ่อม</span>
+            </div>
+            <div className="text-xl md:text-2xl font-bold text-orange-600">
+              --
+            </div>
+          </div>
+
+          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <CheckCircle size={16} className="text-emerald-600" />
+              </div>
+              <span className="text-xs text-zinc-500">เสร็จแล้ว</span>
+            </div>
+            <div className="text-xl md:text-2xl font-bold text-emerald-600">
+              --
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Welcome Message */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            ยินดีต้อนรับ Administrator
-          </h2>
-          <p className="text-gray-600">เลือกส่วนที่คุณต้องการจัดการ</p>
-        </div>
-
-        {/* Menu Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-              >
-                {/* Background gradient */}
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-90 group-hover:opacity-100 transition-opacity`}
-                ></div>
-
-                {/* Content */}
-                <div className="relative p-8 h-full flex flex-col items-start justify-between text-white">
-                  <div className="mb-4 p-3 bg-white bg-opacity-20 rounded-lg group-hover:bg-opacity-30 transition-all">
-                    <Icon size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold mb-2">{item.label}</h3>
-                    <p className="text-sm text-white text-opacity-90 group-hover:text-opacity-100">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Hover indicator */}
-                <div className="absolute inset-0 border-2 border-white opacity-0 group-hover:opacity-20 rounded-xl transition-opacity"></div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Quick Stats */}
-        <div className="mt-12 pt-12 border-t border-gray-200">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">
-            ข้อมูลอ้างอิงอย่างรวดเร็ว
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
-              <div className="text-gray-600 text-sm font-medium mb-2">
-                งานซ่อมทั้งหมด
-              </div>
-              <div className="text-3xl font-bold text-blue-600">1,935</div>
-              <p className="text-xs text-gray-500 mt-2">+12% จากเดือนที่แล้ว</p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
-              <div className="text-gray-600 text-sm font-medium mb-2">
-                กำลังดำเนินการ
-              </div>
-              <div className="text-3xl font-bold text-orange-600">50</div>
-              <p className="text-xs text-gray-500 mt-2">ต้องการความสนใจ</p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
-              <div className="text-gray-600 text-sm font-medium mb-2">
-                ผู้ใช้ทั้งหมด
-              </div>
-              <div className="text-3xl font-bold text-purple-600">156</div>
-              <p className="text-xs text-gray-500 mt-2">+5 ผู้ใช้ใหม่</p>
-            </div>
-            <div className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow">
-              <div className="text-gray-600 text-sm font-medium mb-2">
-                อัตราการเสร็จสิ้น
-              </div>
-              <div className="text-3xl font-bold text-green-600">95.5%</div>
-              <p className="text-xs text-gray-500 mt-2">ประสิทธิภาพดี</p>
-            </div>
-          </div>
+      {/* Recent Activity Placeholder */}
+      <div className="mt-6 bg-white rounded-xl border border-zinc-200 p-4 md:p-6">
+        <h2 className="text-base md:text-lg font-semibold text-zinc-900 mb-4">
+          กิจกรรมล่าสุด
+        </h2>
+        <div className="text-center py-8 text-zinc-400">
+          <Clock size={32} className="mx-auto mb-2 opacity-50" />
+          <p className="text-sm">ยังไม่มีกิจกรรมล่าสุด</p>
         </div>
       </div>
     </div>
