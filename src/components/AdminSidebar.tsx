@@ -78,7 +78,6 @@ export default function AdminSidebar() {
       ],
     },
     { icon: Package, label: "ยืม-คืนอุปกรณ์", href: "/admin/loans" },
-    { icon: Building2, label: "จัดการแผนก", href: "/admin/departments" },
     { icon: Users, label: "จัดการผู้ใช้", href: "/admin/users" },
   ];
 
@@ -167,22 +166,22 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-[#ECECEC] border-r border-zinc-200 transition-transform duration-300 z-[60] flex flex-col ${
+        className={`fixed left-0 top-0 h-screen w-56 bg-[#ECECEC] border-r border-zinc-200 transition-transform duration-300 z-[60] flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Branding */}
-        <div className="h-24 flex items-center px-8">
+        <div className="h-20 flex items-center px-6">
           <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-2xl font-normal text-zinc-700 tracking-tight">
+            <span className="text-xl font-normal text-zinc-700 tracking-tight">
               TRR-RP
             </span>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-6 py-4 overflow-y-auto custom-scrollbar">
-          <div className="space-y-4">
+        <nav className="flex-1 px-4 py-3 overflow-y-auto custom-scrollbar">
+          <div className="space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isExpanded = expandedMenu === item.label;
@@ -199,15 +198,15 @@ export default function AdminSidebar() {
                     <div className="space-y-1">
                       <button
                         onClick={() => toggleSubMenu(item.label)}
-                        className={`w-full flex items-center justify-between py-2 transition-all group ${
+                        className={`w-full flex items-center justify-between py-1.5 transition-all group ${
                           hasActiveSub || isExpanded
                             ? "text-zinc-800"
                             : "text-zinc-500 hover:text-zinc-800"
                         }`}
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           <Icon
-                            size={22}
+                            size={20}
                             strokeWidth={1.5}
                             className={`${
                               hasActiveSub || isExpanded
@@ -215,7 +214,7 @@ export default function AdminSidebar() {
                                 : "text-zinc-500 group-hover:text-zinc-700"
                             }`}
                           />
-                          <span className="text-base font-normal">
+                          <span className="text-sm font-normal">
                             {item.label}
                           </span>
                         </div>
@@ -236,7 +235,7 @@ export default function AdminSidebar() {
                             : "max-h-0 opacity-0"
                         }`}
                       >
-                        <div className="ml-10 space-y-2 py-1">
+                        <div className="ml-8 space-y-1 py-1">
                           {item.subItems.map((sub) => {
                             const isSubActive = isLinkActive(sub.href);
                             return (
@@ -259,14 +258,14 @@ export default function AdminSidebar() {
                   ) : (
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-4 py-2 transition-all group ${
+                      className={`flex items-center gap-3 py-1.5 transition-all group ${
                         isActive
                           ? "text-zinc-800"
                           : "text-zinc-500 hover:text-zinc-800"
                       }`}
                     >
                       <Icon
-                        size={22}
+                        size={20}
                         strokeWidth={1.5}
                         className={`${
                           isActive
@@ -274,9 +273,7 @@ export default function AdminSidebar() {
                             : "text-zinc-500 group-hover:text-zinc-700"
                         }`}
                       />
-                      <span className="text-base font-normal">
-                        {item.label}
-                      </span>
+                      <span className="text-sm font-normal">{item.label}</span>
                     </Link>
                   )}
                 </div>
@@ -286,26 +283,26 @@ export default function AdminSidebar() {
         </nav>
 
         {/* User Profile Area - Fixed Bottom */}
-        <div className="p-6">
-          <div className="border-t border-zinc-400/40 mb-6" />
+        <div className="p-4">
+          <div className="border-t border-zinc-400/40 mb-4" />
 
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-3 mb-4">
             {adminProfile?.pictureUrl ? (
               <Image
                 src={adminProfile.pictureUrl}
                 alt={adminProfile.name}
-                width={56}
-                height={56}
-                className="w-14 h-14 rounded-full object-cover"
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
-              <div className="w-14 h-14 rounded-full bg-[#6D4242] flex items-center justify-center shadow-sm shrink-0">
+              <div className="w-12 h-12 rounded-full bg-[#6D4242] flex items-center justify-center shadow-sm shrink-0">
                 {/* Mockup shows plain circle, maybe no text or simple text */}
               </div>
             )}
 
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-base font-normal text-zinc-800 truncate">
+            <div className="flex flex-col overflow-hidden min-w-0">
+              <span className="text-sm font-normal text-zinc-800 truncate">
                 {adminProfile?.name || "admin"}
               </span>
               <div className="flex items-center gap-1.5 text-zinc-600">
@@ -320,7 +317,7 @@ export default function AdminSidebar() {
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-transparent hover:bg-zinc-200/50 border border-zinc-500 rounded-lg text-zinc-700 transition-all font-medium"
+            className="w-full flex items-center justify-center gap-2 py-2 bg-transparent hover:bg-zinc-200/50 border border-zinc-500 rounded-lg text-zinc-700 transition-all font-medium text-sm"
           >
             <LogOut size={20} strokeWidth={1.5} />
             <span>ออกจากระบบ</span>
