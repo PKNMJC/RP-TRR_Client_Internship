@@ -2,15 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Loader,
-  AlertCircle,
-  RefreshCw,
-  ArrowRight,
-  Filter,
-  X,
-  Wrench,
-} from "lucide-react";
+import { Loader, RefreshCw, X } from "lucide-react";
 import { apiFetch } from "@/services/api";
 
 interface RepairTicket {
@@ -24,12 +16,7 @@ interface RepairTicket {
   problemDescription: string;
   location: string;
   urgency: "NORMAL" | "URGENT" | "CRITICAL";
-  status:
-    | "PENDING"
-    | "IN_PROGRESS"
-    | "WAITING_PARTS"
-    | "COMPLETED"
-    | "CANCELLED";
+  status: "PENDING" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
   createdAt: string;
   updatedAt: string;
   assignee?: {
@@ -63,7 +50,7 @@ export default function InProgressRepairsPage() {
       if (Array.isArray(response)) {
         const sortedTickets = response.sort(
           (a: any, b: any) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
         setTickets(sortedTickets);
       }
@@ -83,12 +70,10 @@ export default function InProgressRepairsPage() {
   const applyFilters = () => {
     let filtered = tickets;
 
-    // Filter by urgency
     if (filterUrgency !== "ALL") {
       filtered = filtered.filter((t) => t.urgency === filterUrgency);
     }
 
-    // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -96,32 +81,32 @@ export default function InProgressRepairsPage() {
           t.ticketCode.toLowerCase().includes(term) ||
           t.reporterName.toLowerCase().includes(term) ||
           t.problemTitle.toLowerCase().includes(term) ||
-          t.location.toLowerCase().includes(term),
+          t.location.toLowerCase().includes(term)
       );
     }
 
     setFilteredTickets(filtered);
   };
 
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyLabel = (urgency: string) => {
     switch (urgency) {
       case "CRITICAL":
-        return "bg-red-100 text-red-800 border-l-4 border-red-600";
+        return "ด่วนมาก";
       case "URGENT":
-        return "bg-yellow-100 text-yellow-800 border-l-4 border-yellow-600";
+        return "ด่วน";
       default:
-        return "bg-green-100 text-green-800 border-l-4 border-green-600";
+        return "ปกติ";
     }
   };
 
-  const getUrgencyEmoji = (urgency: string) => {
+  const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
       case "CRITICAL":
-        return "🔴";
+        return "bg-red-50 text-red-700 border border-red-200";
       case "URGENT":
-        return "🟡";
+        return "bg-orange-50 text-orange-700 border border-orange-200";
       default:
-        return "🟢";
+        return "bg-slate-50 text-slate-600 border border-slate-200";
     }
   };
 
@@ -131,98 +116,93 @@ export default function InProgressRepairsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-white p-4 md:p-8 lg:ml-56">
       {/* Header */}
-      <div className="mb-8 flex justify-between items-center">
+      <div className="mb-8 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Wrench className="text-purple-500" />
-            กำลังซ่อม
-          </h1>
-          <p className="text-gray-500 mt-2">
-            งานซ่อมที่อยู่ระหว่างการดำเนินการ ({filteredTickets.length})
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">กำลังซ่อม</h1>
+          <p className="text-gray-500 mt-2 text-sm">งานซ่อมที่อยู่ระหว่างการดำเนินการ</p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50"
+          className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-50"
+          title="รีเฟรชข้อมูล"
         >
-          <RefreshCw size={20} className={refreshing ? "animate-spin" : ""} />
+          <RefreshCw
+            size={20}
+            className={refreshing ? "animate-spin" : ""}
+          />
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="ค้นหา: รหัสงาน, ชื่อผู้แจ้ง, เรื่องซ่อม, สถานที่..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-          </div>
+      <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-3">
+        <input
+          type="text"
+          placeholder="ค้นหา: รหัสงาน, ชื่อผู้แจ้ง, เรื่องซ่อม, สถานที่..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm"
+        />
 
-          {/* Urgency Filter */}
-          <select
-            value={filterUrgency}
-            onChange={(e) => setFilterUrgency(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+        <select
+          value={filterUrgency}
+          onChange={(e) => setFilterUrgency(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm"
+        >
+          <option value="ALL">ทั้งหมด</option>
+          <option value="NORMAL">ปกติ</option>
+          <option value="URGENT">ด่วน</option>
+          <option value="CRITICAL">ด่วนมาก</option>
+        </select>
+
+        {(filterUrgency !== "ALL" || searchTerm) && (
+          <button
+            onClick={clearFilters}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2 text-sm"
           >
-            <option value="ALL">ทั้งหมด</option>
-            <option value="NORMAL">🟢 ปกติ</option>
-            <option value="URGENT">🟡 ด่วน</option>
-            <option value="CRITICAL">🔴 ด่วนมาก</option>
-          </select>
-
-          {/* Clear Filters Button */}
-          {(filterUrgency !== "ALL" || searchTerm) && (
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center gap-2"
-            >
-              <X size={16} />
-              ล้างตัวกรอง
-            </button>
-          )}
-        </div>
+            <X size={16} />
+            ล้าง
+          </button>
+        )}
       </div>
 
-      {/* Progress Stats */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 font-semibold">ทั้งหมด</p>
-          <p className="text-3xl font-bold text-purple-600 mt-2">
-            {tickets.length}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+            ทั้งหมด
           </p>
+          <p className="text-2xl font-bold text-gray-900">{tickets.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 font-semibold">ปกติ</p>
-          <p className="text-3xl font-bold text-green-600 mt-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+            ปกติ
+          </p>
+          <p className="text-2xl font-bold text-slate-700">
             {tickets.filter((t) => t.urgency === "NORMAL").length}
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <p className="text-sm text-gray-600 font-semibold">ด่วน + ด่วนมาก</p>
-          <p className="text-3xl font-bold text-red-600 mt-2">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+            ด่วน + ด่วนมาก
+          </p>
+          <p className="text-2xl font-bold text-red-700">
             {tickets.filter((t) => t.urgency !== "NORMAL").length}
           </p>
         </div>
       </div>
 
-      {/* Tickets List */}
+      {/* Tickets Grid */}
       <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <Loader size={32} className="animate-spin text-purple-500" />
+            <Loader size={32} className="animate-spin text-gray-400" />
           </div>
         ) : filteredTickets.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <Wrench size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 text-lg">
+          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+            <p className="text-gray-500">
               {tickets.length === 0
                 ? "ไม่มีงานซ่อมที่กำลังดำเนินการในขณะนี้"
                 : "ไม่พบงานซ่อมตรงกับเงื่อนไขการค้นหา"}
@@ -232,73 +212,55 @@ export default function InProgressRepairsPage() {
           filteredTickets.map((ticket) => (
             <div
               key={ticket.id}
-              className={`bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer ${getUrgencyColor(
-                ticket.urgency,
-              )}`}
               onClick={() => router.push(`/repairs/details/${ticket.id}`)}
+              className="bg-white border border-gray-200 rounded-lg p-6 hover:border-gray-400 hover:shadow-md transition-all cursor-pointer"
             >
               <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     {ticket.ticketCode}
                   </h3>
-                  <div className="text-sm text-gray-600 mt-1 space-y-1">
+                  <div className="text-sm text-gray-500 mt-1 space-y-0.5">
                     <p>
-                      เริ่มต้น:{" "}
-                      {new Date(ticket.createdAt).toLocaleDateString("th-TH", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      เริ่ม:{" "}
+                      {new Date(ticket.createdAt).toLocaleDateString("th-TH")}
                     </p>
                     <p>
                       อัปเดท:{" "}
-                      {new Date(ticket.updatedAt).toLocaleDateString("th-TH", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {new Date(ticket.updatedAt).toLocaleDateString("th-TH")}
                     </p>
                   </div>
                 </div>
-                <span className="px-3 py-1 rounded-full text-sm font-bold bg-opacity-80">
-                  {getUrgencyEmoji(ticket.urgency)} {ticket.urgency}
+                <span className={`px-3 py-1 rounded text-xs font-medium ${getUrgencyColor(ticket.urgency)}`}>
+                  {getUrgencyLabel(ticket.urgency)}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 uppercase">
+                  <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
                     ผู้แจ้ง
                   </p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-base font-medium text-gray-900">
                     {ticket.reporterName}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    {ticket.reporterDepartment}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {ticket.reporterPhone}
-                  </p>
+                  <p className="text-sm text-gray-600">{ticket.reporterDepartment}</p>
+                  <p className="text-sm text-gray-600">{ticket.reporterPhone}</p>
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 uppercase">
+                  <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
                     สถานที่
                   </p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-base font-medium text-gray-900">
                     {ticket.location}
                   </p>
                   {ticket.assignee && (
                     <div className="mt-2">
-                      <p className="text-xs font-semibold text-gray-600 uppercase">
+                      <p className="text-xs font-semibold text-gray-600 uppercase mb-0.5">
                         ผู้รับผิดชอบ
                       </p>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm text-gray-900">
                         {ticket.assignee.name}
                       </p>
                     </div>
@@ -307,16 +269,16 @@ export default function InProgressRepairsPage() {
               </div>
 
               <div className="mb-4">
-                <p className="text-xs font-semibold text-gray-600 uppercase">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
                   เรื่องซ่อม
                 </p>
-                <p className="text-base font-semibold text-gray-900 mt-1">
+                <p className="text-base text-gray-900 font-medium">
                   {ticket.problemTitle}
                 </p>
               </div>
 
               {ticket.problemDescription && (
-                <div className="mb-4 p-3 bg-white bg-opacity-50 rounded border border-gray-200">
+                <div className="p-3 bg-gray-50 rounded border border-gray-200">
                   <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
                     รายละเอียด
                   </p>
@@ -325,30 +287,14 @@ export default function InProgressRepairsPage() {
                   </p>
                 </div>
               )}
-
-              <div className="flex justify-end">
-                <button className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 font-semibold">
-                  ดูรายละเอียด
-                  <ArrowRight size={18} />
-                </button>
-              </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Summary */}
       {!loading && filteredTickets.length > 0 && (
-        <div className="mt-8 bg-white rounded-lg shadow-md p-4">
-          <p className="text-center text-gray-600">
-            แสดง{" "}
-            <span className="font-bold text-purple-600">
-              {filteredTickets.length}
-            </span>{" "}
-            จากทั้งหมด{" "}
-            <span className="font-bold text-purple-600">{tickets.length}</span>{" "}
-            รายการ
-          </p>
+        <div className="mt-6 text-center text-sm text-gray-500">
+          แสดง {filteredTickets.length} จากทั้งหมด {tickets.length} รายการ
         </div>
       )}
     </div>

@@ -69,12 +69,12 @@ export default function AdminSidebar() {
     {
       icon: Wrench,
       label: "งานซ่อมแซม",
-      href: "/admin/repairs",
+      href: "/repairs/overview",
       subItems: [
-        { label: "ภาพรวมงานซ่อม", href: "/admin/repairs" },
-        { label: "รอรับงาน", href: "/admin/repairs?status=PENDING" },
-        { label: "กำลังซ่อม", href: "/admin/repairs?status=IN_PROGRESS" },
-        { label: "เสร็จสิ้น", href: "/admin/repairs?status=COMPLETED" },
+        { label: "ภาพรวม", href: "/repairs/overview" },
+        { label: "รอรับงาน", href: "/repairs/waiting" },
+        { label: "กำลังซ่อม", href: "/repairs/in-progress" },
+        { label: "เสร็จสิ้น", href: "/repairs/completed" },
       ],
     },
     { icon: Package, label: "ยืม-คืนอุปกรณ์", href: "/admin/loans" },
