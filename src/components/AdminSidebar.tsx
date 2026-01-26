@@ -36,7 +36,7 @@ interface MenuItem {
 
 export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>("งานซ่อมแซม");
+  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [adminProfile, setAdminProfile] = useState<UserType | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -82,41 +82,63 @@ export default function AdminSidebar() {
     { icon: Users, label: "จัดการผู้ใช้", href: "/admin/users" },
   ];
 
-  // Close sidebar on route change (mobile)
+  // Helper to check link active status (moved up for use in effect)
+  const isLinkActive = useCallback(
+    (href: string) => {
+      // Check if href has params
+      if (href.includes("?")) {
+        const [path, query] = href.split("?");
+        if (pathname !== path) return false;
+        const params = new URLSearchParams(query);
+        // Check if all params match
+        for (const [key, value] of params.entries()) {
+          if (searchParams.get(key) !== value) return false;
+        }
+        return true;
+      }
+      // Exact match for base paths or subpaths
+      return (
+        pathname === href ||
+        (href !== "/admin/dashboard" &&
+          pathname.startsWith(href) &&
+          !searchParams.toString())
+      );
+    },
+    [pathname, searchParams],
+  );
+
+  // Close sidebar on route change (mobile) and handle auto-expand/collapse
   useEffect(() => {
     setIsOpen(false);
-  }, [pathname, searchParams]); // Also close on params change if needed
+
+    // Auto expand/collapse Based on current path
+    const activeItem = menuItems.find((item) =>
+      item.subItems?.some((sub) => isLinkActive(sub.href)),
+    );
+
+    if (activeItem) {
+      setExpandedMenu(activeItem.label);
+    } else {
+      // Collapse if no sub-item matches (navigating to another main page)
+      setExpandedMenu(null);
+    }
+  }, [pathname, searchParams, isLinkActive]);
 
   const toggleSubMenu = useCallback((label: string) => {
     setExpandedMenu((prev) => (prev === label ? null : label));
   }, []);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    localStorage.clear();
-    router.push("/login/admin");
-  };
-
-  const isLinkActive = (href: string) => {
-    // Check if href has params
-    if (href.includes("?")) {
-      const [path, query] = href.split("?");
-      if (pathname !== path) return false;
-      const params = new URLSearchParams(query);
-      // Check if all params match
-      for (const [key, value] of params.entries()) {
-        if (searchParams.get(key) !== value) return false;
-      }
-      return true;
+  const handleLogout = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+      localStorage.removeItem("userId");
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setIsLoggingOut(false);
     }
-    // Exact match for base paths or subpaths
-    return (
-      pathname === href ||
-      (href !== "/admin/dashboard" &&
-        pathname.startsWith(href) &&
-        !searchParams.toString())
-    );
-  };
+  }, [router]);
 
   return (
     <>
