@@ -9,6 +9,11 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
+  Clock,
+  CheckCircle2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 
@@ -16,46 +21,66 @@ import { apiFetch } from "@/services/api";
 const statusLabels = {
   PENDING: {
     label: "รอดำเนินการ",
-    color: "border-zinc-200 text-zinc-600",
-    dot: "bg-zinc-400",
-    bg: "bg-zinc-100 text-zinc-700",
-    dotColor: "bg-zinc-500",
+    icon: "Clock",
+    color: "text-blue-700",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+    dot: "bg-blue-500",
   },
   IN_PROGRESS: {
     label: "กำลังดำเนินการ",
-    color: "border-amber-200 text-amber-700",
+    icon: "Wrench",
+    color: "text-amber-700",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
     dot: "bg-amber-500",
-    bg: "bg-amber-50 text-amber-700",
-    dotColor: "bg-amber-500",
   },
   WAITING_PARTS: {
     label: "รออะไหล่",
-    color: "border-orange-200 text-orange-700",
+    icon: "Package",
+    color: "text-orange-700",
+    bg: "bg-orange-50",
+    border: "border-orange-200",
     dot: "bg-orange-500",
-    bg: "bg-orange-50 text-orange-700",
-    dotColor: "bg-orange-500",
   },
   COMPLETED: {
     label: "เสร็จสิ้น",
-    color: "border-green-200 text-green-700",
-    dot: "bg-green-500",
-    bg: "bg-green-50 text-green-700",
-    dotColor: "bg-green-500",
+    icon: "CheckCircle",
+    color: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    dot: "bg-emerald-500",
   },
   CANCELLED: {
     label: "ยกเลิก",
-    color: "border-red-200 text-red-700",
+    icon: "XCircle",
+    color: "text-red-700",
+    bg: "bg-red-50",
+    border: "border-red-200",
     dot: "bg-red-500",
-    bg: "bg-red-50 text-red-700",
-    dotColor: "bg-red-500",
   },
 };
 
 // Config labels for UrgencyLevel
 const urgencyLabels = {
-  NORMAL: { label: "ปกติ", dot: "bg-zinc-400" },
-  URGENT: { label: "ด่วน", dot: "bg-amber-500" },
-  CRITICAL: { label: "ด่วนมาก", dot: "bg-red-600" },
+  NORMAL: {
+    label: "ปกติ",
+    color: "text-slate-600",
+    bg: "bg-slate-100",
+    dot: "bg-slate-400",
+  },
+  URGENT: {
+    label: "ด่วน",
+    color: "text-amber-700",
+    bg: "bg-amber-50",
+    dot: "bg-amber-500",
+  },
+  CRITICAL: {
+    label: "ด่วนมาก",
+    color: "text-rose-700",
+    bg: "bg-rose-50",
+    dot: "bg-rose-600",
+  },
 };
 
 export default function AdminRepairsPage() {
@@ -126,162 +151,183 @@ export default function AdminRepairsPage() {
       return matchesSearch && matchesStatus;
     });
     setFilteredRepairs(filtered);
+    setCurrentPage(1); // Reset to first page on filter change
   }, [repairs, searchTerm, filterStatus]);
 
-  if (loading)
+  if (loading && repairs.length === 0)
     return (
-      <div className="h-screen flex items-center justify-center text-zinc-400 animate-pulse">
-        กำลังโหลดข้อมูล...
+      <div className="h-screen flex items-center justify-center bg-zinc-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+          <p className="text-zinc-500 text-sm font-medium animate-pulse">
+            กำลังโหลดข้อมูล...
+          </p>
+        </div>
       </div>
     );
 
+  // Calculate stats
+  const stats = [
+    {
+      label: "งานทั้งหมด",
+      value: repairs.length,
+      icon: LayoutDashboard,
+      color: "text-zinc-700",
+      bg: "bg-white",
+    },
+    {
+      label: "รอดำเนินการ",
+      value: repairs.filter((r) => r.status === "PENDING").length,
+      icon: Clock,
+      color: "text-blue-600",
+      bg: "bg-blue-50/50",
+    },
+    {
+      label: "กำลังซ่อม",
+      value: repairs.filter((r) => r.status === "IN_PROGRESS").length,
+      icon: Wrench,
+      color: "text-amber-600",
+      bg: "bg-amber-50/50",
+    },
+    {
+      label: "เสร็จสิ้น",
+      value: repairs.filter((r) => r.status === "COMPLETED").length,
+      icon: CheckCircle2,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50/50",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-zinc-50 pt-6 pb-12">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-6">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">
-              งานซ่อมแซม
-            </h1>
-            <p className="text-sm text-zinc-500 mt-2">
-              จัดการและติดตามสถานะงานซ่อมบำรุงทั้งหมดในระบบ
-            </p>
-          </div>
+    <div className="min-h-screen bg-[#fafafa] pt-6 pb-12">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+            งานซ่อมแซม
+          </h1>
+          <p className="text-zinc-500 text-sm mt-1">
+            จัดการคำขอแจ้งซ่อมทั้งหมดในระบบ
+          </p>
         </div>
 
-        {/* Mini Stats (Clean) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-8">
-          {[
-            { label: "งานทั้งหมด", value: repairs.length },
-            {
-              label: "รอดำเนินการ",
-              value: repairs.filter((r) => r.status === "PENDING").length,
-            },
-            {
-              label: "กำลังดำเนินการ",
-              value: repairs.filter((r) => r.status === "IN_PROGRESS").length,
-            },
-            {
-              label: "เสร็จสิ้น",
-              value: repairs.filter((r) => r.status === "COMPLETED").length,
-            },
-          ].map((stat, i) => (
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {stats.map((stat, i) => (
             <div
               key={i}
-              className="bg-white border border-zinc-200 p-4 rounded-lg hover:border-zinc-300 transition-all"
+              className={`${stat.bg} p-4 rounded-xl border border-zinc-200/60 shadow-sm transition-all hover:shadow-md`}
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-zinc-500 font-medium mb-2">
-                    {stat.label}
-                  </p>
-                  <p className="text-2xl font-bold text-zinc-900">
-                    {stat.value}
-                  </p>
+              <div className="flex items-center justify-between mb-3">
+                <div
+                  className={`p-2 rounded-lg bg-white shadow-sm border border-zinc-100 ${stat.color}`}
+                >
+                  {/* Using generic Icon component via lucide-react if needed, but here using specific imports */}
+                  {/* Note: In a real scenario we'd dynamic render, but hardcoding for safety with imports */}
+                  {i === 0 && <LayoutDashboard size={18} />}
+                  {i === 1 && <Clock size={18} />}
+                  {i === 2 && <Wrench size={18} />}
+                  {i === 3 && <CheckCircle2 size={18} />}
                 </div>
-                <span className="text-xl"></span>
+              </div>
+              <div>
+                <span className="text-2xl font-bold text-zinc-900 block">
+                  {stat.value}
+                </span>
+                <span className="text-xs font-medium text-zinc-500">
+                  {stat.label}
+                </span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Status Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6 pb-4 border-b border-zinc-200 overflow-x-auto">
-          {[
-            {
-              key: "all",
-              label: "ทุกสถานะ",
-              count: repairs.length,
-              color: "text-zinc-600",
-            },
-            {
-              key: "PENDING",
-              label: "รอดำเนินการ",
-              count: repairs.filter((r) => r.status === "PENDING").length,
-              color: "text-zinc-600",
-            },
-            {
-              key: "IN_PROGRESS",
-              label: "กำลังดำเนินการ",
-              count: repairs.filter((r) => r.status === "IN_PROGRESS").length,
-              color: "text-amber-600",
-            },
-            {
-              key: "WAITING_PARTS",
-              label: "รออะไหล่",
-              count: repairs.filter((r) => r.status === "WAITING_PARTS").length,
-              color: "text-orange-600",
-            },
-            {
-              key: "COMPLETED",
-              label: "เสร็จสิ้น",
-              count: repairs.filter((r) => r.status === "COMPLETED").length,
-              color: "text-green-600",
-            },
-            {
-              key: "CANCELLED",
-              label: "ยกเลิก",
-              count: repairs.filter((r) => r.status === "CANCELLED").length,
-              color: "text-red-600",
-            },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilterStatus(tab.key)}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 ${
-                filterStatus === tab.key
-                  ? `${tab.color} bg-opacity-10 border-b-2 border-current`
-                  : "text-zinc-500 hover:text-zinc-600"
-              }`}
-            >
-              {tab.label}{" "}
-              <span className={`${tab.color} font-bold`}>({tab.count})</span>
-            </button>
-          ))}
-        </div>
+        {/* Controls Bar */}
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-6">
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1 p-1 bg-white border border-zinc-200 rounded-lg overflow-x-auto max-w-full no-scrollbar">
+            {[
+              { key: "all", label: "ทั้งหมด" },
+              { key: "PENDING", label: "รอรับงาน" },
+              { key: "IN_PROGRESS", label: "กำลังซ่อม" },
+              { key: "WAITING_PARTS", label: "รออะไหล่" },
+              { key: "COMPLETED", label: "เสร็จสิ้น" },
+              { key: "CANCELLED", label: "ยกเลิก" },
+            ].map((tab) => {
+              const isActive = filterStatus === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilterStatus(tab.key)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-zinc-900 text-white shadow-sm"
+                      : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                  }`}
+                >
+                  {tab.label}
+                  <span
+                    className={`ml-1.5 opacity-60 ${isActive ? "text-white" : "text-zinc-400"}`}
+                  >
+                    {tab.key === "all"
+                      ? repairs.length
+                      : repairs.filter((r) => r.status === tab.key).length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Filter & Search Bar */}
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
-          <div className="relative flex-grow">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400"
-              size={18}
-              strokeWidth={1.5}
-            />
+          {/* Search */}
+          <div className="relative w-full xl:w-72">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-zinc-400" />
+            </div>
             <input
               type="text"
-              placeholder="ค้นหาเลขตั๋ว หรือชื่อเรื่อง..."
+              placeholder="ค้นหาเลขตั๋ว, ปัญหา..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-2.5 border border-zinc-200 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 transition-all text-sm"
+              className="block w-full pl-9 pr-3 py-2 border border-zinc-200 rounded-lg leading-5 bg-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 sm:text-sm transition-all hover:border-zinc-300"
             />
           </div>
         </div>
 
-        {/* Desktop Table View */}
-        <div className="hidden md:block bg-white border border-zinc-200 rounded-lg overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-100/50">
-                <th className="px-6 py-4 text-xs font-bold text-zinc-600">
-                  เลขตั๋ว
+        {/* Content Table (Desktop) */}
+        <div className="hidden md:block bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+          <table className="min-w-full divide-y divide-zinc-100">
+            <thead className="bg-[#fcfcfc]">
+              <tr>
+                <th
+                  scope="col"
+                  className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider"
+                >
+                  เลขใบงาน / วันที่
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-600">
-                  รายละเอียด
+                <th
+                  scope="col"
+                  className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider"
+                >
+                  ปัญหา
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-600">
+                <th
+                  scope="col"
+                  className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider"
+                >
+                  สถานที่ / ผู้แจ้ง
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider"
+                >
                   สถานะ
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-600">
-                  ความเร่งด่วน
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-zinc-600">
-                  การกระทำ
+                <th scope="col" className="relative px-6 py-4">
+                  <span className="sr-only">Actions</span>
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="bg-white divide-y divide-zinc-100">
               {filteredRepairs
                 .slice(
                   (currentPage - 1) * itemsPerPage,
@@ -290,41 +336,87 @@ export default function AdminRepairsPage() {
                 .map((repair) => (
                   <tr
                     key={repair.id}
-                    className="hover:bg-zinc-50/50 transition-colors group"
+                    className="hover:bg-zinc-50/50 transition-colors group cursor-pointer"
+                    onClick={() => router.push(`/admin/repairs/${repair.id}`)}
                   >
-                    <td className="px-6 py-4 font-mono text-xs font-bold text-zinc-500">
-                      #{repair.ticketCode}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-semibold text-zinc-900">
-                        {repair.problemTitle}
-                      </div>
-                      <div className="text-xs text-zinc-500 mt-1.5 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Wrench size={13} className="text-zinc-400" />
-                          <span>{repair.problemCategory}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User size={13} className="text-zinc-400" />
-                          <span>{repair.reporterName}</span>
-                          <span className="text-zinc-300">|</span>
-                          <span>{repair.assignee?.name || "ยังไม่กำหนด"}</span>
-                        </div>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-zinc-900 font-mono">
+                          #{repair.ticketCode}
+                        </span>
+                        <span className="text-xs text-zinc-500 mt-1">
+                          {new Date(repair.createdAt).toLocaleDateString(
+                            "th-TH",
+                          )}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      <div className="flex flex-col max-w-sm">
+                        <span className="text-sm font-medium text-zinc-900 line-clamp-1">
+                          {repair.problemTitle}
+                        </span>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-zinc-100 bg-zinc-50 text-[10px] font-medium text-zinc-500">
+                            <Wrench size={10} />
+                            {repair.problemCategory}
+                          </span>
+                          {/* Urgency Badge */}
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                              urgencyLabels[
+                                repair.urgency as keyof typeof urgencyLabels
+                              ]?.bg
+                            } ${
+                              urgencyLabels[
+                                repair.urgency as keyof typeof urgencyLabels
+                              ]?.color
+                            }`}
+                          >
+                            <div
+                              className={`w-1 h-1 rounded-full ${urgencyLabels[repair.urgency as keyof typeof urgencyLabels]?.dot}`}
+                            />
+                            {
+                              urgencyLabels[
+                                repair.urgency as keyof typeof urgencyLabels
+                              ]?.label
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-zinc-700">
+                          {repair.location}
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-zinc-500">
+                          <User size={12} />
+                          {repair.reporterName}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
                           statusLabels[
                             repair.status as keyof typeof statusLabels
-                          ]?.bg || "bg-zinc-50 text-zinc-700"
+                          ]?.bg || "bg-zinc-100"
+                        } ${
+                          statusLabels[
+                            repair.status as keyof typeof statusLabels
+                          ]?.color || "text-zinc-700"
+                        } ${
+                          statusLabels[
+                            repair.status as keyof typeof statusLabels
+                          ]?.border || "border-zinc-200"
                         }`}
                       >
                         <span
-                          className={`w-2 h-2 rounded-full ${
+                          className={`flex h-1.5 w-1.5 rounded-full ${
                             statusLabels[
                               repair.status as keyof typeof statusLabels
-                            ]?.dotColor || "bg-zinc-500"
+                            ]?.dot || "bg-zinc-400"
                           }`}
                         />
                         {statusLabels[
@@ -332,43 +424,28 @@ export default function AdminRepairsPage() {
                         ]?.label || repair.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            urgencyLabels[
-                              repair.urgency as keyof typeof urgencyLabels
-                            ]?.dot
-                          }`}
-                        />
-                        <span className="text-xs font-medium text-zinc-600">
-                          {
-                            urgencyLabels[
-                              repair.urgency as keyof typeof urgencyLabels
-                            ]?.label
-                          }
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div
+                        className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
-                          onClick={() =>
-                            router.push(`/admin/repairs/${repair.id}`)
-                          }
-                          className="p-2.5 text-zinc-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 hover:shadow-sm"
-                          title="ดู & แก้ไข"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/admin/repairs/${repair.id}`);
+                          }}
+                          className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-lg transition-colors"
                         >
-                          <ChevronRight size={18} strokeWidth={1.5} />
+                          <ChevronRight size={18} />
                         </button>
                         <button
-                          onClick={() =>
-                            handleDelete(repair.id, repair.ticketCode)
-                          }
-                          className="p-2.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:shadow-sm"
-                          title="ลบ"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(repair.id, repair.ticketCode);
+                          }}
+                          className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
-                          <Trash2 size={18} strokeWidth={1.5} />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </td>
@@ -377,147 +454,105 @@ export default function AdminRepairsPage() {
             </tbody>
           </table>
 
-          {/* Empty State */}
           {filteredRepairs.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-zinc-400 text-sm">
-                ไม่พบรายการที่ตรงกับการค้นหา
+            <div className="py-16 flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-full bg-zinc-50 flex items-center justify-center mb-3">
+                <Search className="text-zinc-300" size={20} />
+              </div>
+              <p className="text-zinc-900 font-medium">ไม่พบรายการที่ค้นหา</p>
+              <p className="text-zinc-500 text-sm mt-1">
+                ลองเปลี่ยนคำค้นหาหรือตัวกรองสถานะ
               </p>
             </div>
           )}
         </div>
 
-        {/* Mobile Card View */}
-        <div className="md:hidden space-y-4">
+        {/* Mobile List View */}
+        <div className="md:hidden space-y-3">
           {filteredRepairs
             .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
             .map((repair) => (
               <div
                 key={repair.id}
-                className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm"
+                onClick={() => router.push(`/admin/repairs/${repair.id}`)}
+                className="bg-white border border-zinc-200 rounded-xl p-4 active:scale-[0.99] transition-transform"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-mono text-xs font-bold text-zinc-500">
-                    #{repair.ticketCode}
-                  </span>
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold font-mono text-zinc-900 bg-zinc-100 px-1.5 py-0.5 rounded">
+                      #{repair.ticketCode}
+                    </span>
+                    <span className="text-[10px] text-zinc-400">
+                      {new Date(repair.createdAt).toLocaleDateString("th-TH")}
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                      statusLabels[repair.status as keyof typeof statusLabels]
+                        ?.bg
+                    } ${
+                      statusLabels[repair.status as keyof typeof statusLabels]
+                        ?.color
+                    } ${
+                      statusLabels[repair.status as keyof typeof statusLabels]
+                        ?.border
+                    }`}
+                  >
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        statusLabels[repair.status as keyof typeof statusLabels]
-                          ?.bg || "bg-zinc-50 text-zinc-700"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          statusLabels[
-                            repair.status as keyof typeof statusLabels
-                          ]?.dotColor || "bg-zinc-500"
-                        }`}
-                      />
-                      {statusLabels[repair.status as keyof typeof statusLabels]
-                        ?.label || repair.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <h3 className="text-sm font-semibold text-zinc-900 mb-1">
-                    {repair.problemTitle}
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
-                    <div className="flex items-center gap-1.5">
-                      <Wrench size={12} className="text-zinc-400" />
-                      <span>{repair.problemCategory}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <User size={12} className="text-zinc-400" />
-                      <span>{repair.reporterName}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        urgencyLabels[
-                          repair.urgency as keyof typeof urgencyLabels
-                        ]?.dot
-                      }`}
+                      className={`w-1 h-1 rounded-full ${statusLabels[repair.status as keyof typeof statusLabels]?.dot}`}
                     />
-                    <span className="text-xs font-medium text-zinc-600">
-                      {
-                        urgencyLabels[
-                          repair.urgency as keyof typeof urgencyLabels
-                        ]?.label
-                      }
-                    </span>
-                  </div>
+                    {
+                      statusLabels[repair.status as keyof typeof statusLabels]
+                        ?.label
+                    }
+                  </span>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => router.push(`/admin/repairs/${repair.id}`)}
-                      className="p-2 text-zinc-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(repair.id, repair.ticketCode)}
-                      className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                <h3 className="text-sm font-medium text-zinc-900 mb-2 line-clamp-2">
+                  {repair.problemTitle}
+                </h3>
+
+                <div className="flex items-center gap-3 text-xs text-zinc-500">
+                  <span className="flex items-center gap-1">
+                    <User size={12} />
+                    {repair.reporterName}
+                  </span>
+                  <span className="w-px h-3 bg-zinc-200" />
+                  <span>{repair.location}</span>
                 </div>
               </div>
             ))}
-          {filteredRepairs.length === 0 && (
-            <div className="py-12 text-center bg-white rounded-lg border border-zinc-200">
-              <p className="text-zinc-400 text-sm">
-                ไม่พบรายการที่ตรงกับการค้นหา
-              </p>
-            </div>
-          )}
         </div>
 
-        {/* Pagination - Responsive */}
+        {/* Pagination */}
         {filteredRepairs.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 bg-white border border-zinc-200 rounded-lg p-4">
-            <p className="text-sm text-zinc-500 text-center sm:text-left">
-              <span className="hidden sm:inline">แสดง </span>
-              <b>{(currentPage - 1) * itemsPerPage + 1}</b>
-              <span className="hidden sm:inline"> ถึง </span>
-              <span className="sm:hidden">-</span>
-              <b>
-                {Math.min(currentPage * itemsPerPage, filteredRepairs.length)}
-              </b>
-              <span className="hidden sm:inline"> จาก </span>
-              <span className="sm:hidden"> / </span>
-              <b>{filteredRepairs.length}</b>
-              <span className="hidden sm:inline"> รายการ</span>
-            </p>
+          <div className="flex items-center justify-between mt-6 px-1">
+            <div className="text-xs text-zinc-500">
+              แสดง {(currentPage - 1) * itemsPerPage + 1} -{" "}
+              {Math.min(currentPage * itemsPerPage, filteredRepairs.length)} จาก{" "}
+              {filteredRepairs.length}
+            </div>
             <div className="flex items-center gap-2">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-2 border border-zinc-200 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-zinc-50 transition-all"
+                className="p-2 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronLeft size={16} className="text-zinc-600" />
+                <ChevronLeft size={16} />
               </button>
-              <span className="text-sm font-medium text-zinc-600 px-2 sm:px-3 whitespace-nowrap">
-                <span className="hidden sm:inline">หน้า </span>
+              <div className="text-xs font-medium text-zinc-900 min-w-[3rem] text-center">
                 {currentPage} /{" "}
                 {Math.ceil(filteredRepairs.length / itemsPerPage)}
-              </span>
+              </div>
               <button
                 disabled={
                   currentPage >=
                   Math.ceil(filteredRepairs.length / itemsPerPage)
                 }
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-2 border border-zinc-200 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed hover:bg-zinc-50 transition-all"
+                className="p-2 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <ChevronRight size={16} className="text-zinc-600" />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
