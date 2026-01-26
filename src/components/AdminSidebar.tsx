@@ -121,16 +121,15 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900 border-b border-slate-800 z-[50] px-4 flex items-center justify-between shadow-md">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#F5F5F5] border-b border-zinc-200 z-[50] px-4 flex items-center justify-between shadow-sm">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
-            TR
-          </div>
-          <span className="font-bold text-white tracking-tight">TRR Admin</span>
+          <span className="font-bold text-zinc-800 tracking-tight text-xl">
+            TRR-RP
+          </span>
         </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 -mr-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
+          className="p-2 -mr-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 rounded-lg transition-all"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -146,33 +145,22 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-slate-900 border-r border-slate-800 transition-transform duration-300 z-[60] flex flex-col ${
+        className={`fixed left-0 top-0 h-screen w-64 bg-[#ECECEC] border-r border-zinc-200 transition-transform duration-300 z-[60] flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Branding */}
-        <div className="h-20 flex items-center px-6 border-b border-slate-800/60">
-          <Link
-            href="/admin/dashboard"
-            className="flex items-center gap-3 group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-900/20 group-hover:scale-105 transition-transform">
-              TR
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base font-bold text-white tracking-tight">
-                TRR Admin
-              </span>
-              <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
-                Management
-              </span>
-            </div>
+        <div className="h-24 flex items-center px-8">
+          <Link href="/admin/dashboard" className="flex items-center">
+            <span className="text-2xl font-medium text-zinc-800 tracking-tight">
+              TRR-RP
+            </span>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 overflow-y-auto custom-scrollbar">
-          <div className="space-y-1">
+        <nav className="flex-1 px-6 py-4 overflow-y-auto custom-scrollbar">
+          <div className="space-y-4">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isExpanded = expandedMenu === item.label;
@@ -184,36 +172,36 @@ export default function AdminSidebar() {
               );
 
               return (
-                <div key={item.label} className="mb-2">
+                <div key={item.label}>
                   {item.subItems ? (
                     <div className="space-y-1">
                       <button
                         onClick={() => toggleSubMenu(item.label)}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group ${
+                        className={`w-full flex items-center justify-between py-2 transition-all group ${
                           hasActiveSub || isExpanded
-                            ? "bg-slate-800/50 text-white"
-                            : "text-slate-400 hover:text-white hover:bg-slate-800/30"
+                            ? "text-zinc-800"
+                            : "text-zinc-500 hover:text-zinc-800"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                           <Icon
-                            size={20}
+                            size={22}
+                            strokeWidth={1.5}
                             className={`${
                               hasActiveSub || isExpanded
-                                ? "text-indigo-400"
-                                : "text-slate-500 group-hover:text-slate-300"
+                                ? "text-zinc-800"
+                                : "text-zinc-500 group-hover:text-zinc-700"
                             }`}
                           />
-                          <span className="text-sm font-medium">
+                          <span className="text-base font-normal">
                             {item.label}
                           </span>
                         </div>
                         <ChevronDown
-                          size={16}
+                          size={18}
+                          strokeWidth={1.5}
                           className={`transition-transform duration-200 ${
-                            isExpanded
-                              ? "rotate-180 text-indigo-400"
-                              : "text-slate-600"
+                            isExpanded ? "rotate-180" : ""
                           }`}
                         />
                       </button>
@@ -226,17 +214,17 @@ export default function AdminSidebar() {
                             : "max-h-0 opacity-0"
                         }`}
                       >
-                        <div className="ml-4 pl-4 border-l border-slate-800 space-y-1 py-1">
+                        <div className="ml-10 space-y-2 py-1">
                           {item.subItems.map((sub) => {
                             const isSubActive = isLinkActive(sub.href);
                             return (
                               <Link
                                 key={sub.label}
                                 href={sub.href}
-                                className={`block px-3 py-2 rounded-lg text-sm transition-all ${
+                                className={`block text-sm transition-all ${
                                   isSubActive
-                                    ? "bg-indigo-500/10 text-indigo-400 font-medium"
-                                    : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30"
+                                    ? "text-zinc-800 font-medium"
+                                    : "text-zinc-500 hover:text-zinc-800"
                                 }`}
                               >
                                 {sub.label}
@@ -249,21 +237,24 @@ export default function AdminSidebar() {
                   ) : (
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+                      className={`flex items-center gap-4 py-2 transition-all group ${
                         isActive
-                          ? "bg-indigo-600 shadow-md shadow-indigo-900/20 text-white"
-                          : "text-slate-400 hover:text-white hover:bg-slate-800/30"
+                          ? "text-zinc-800"
+                          : "text-zinc-500 hover:text-zinc-800"
                       }`}
                     >
                       <Icon
-                        size={20}
+                        size={22}
+                        strokeWidth={1.5}
                         className={`${
                           isActive
-                            ? "text-indigo-200"
-                            : "text-slate-500 group-hover:text-slate-300"
+                            ? "text-zinc-800"
+                            : "text-zinc-500 group-hover:text-zinc-700"
                         }`}
                       />
-                      <span className="text-sm font-medium">{item.label}</span>
+                      <span className="text-base font-normal">
+                        {item.label}
+                      </span>
                     </Link>
                   )}
                 </div>
@@ -273,52 +264,45 @@ export default function AdminSidebar() {
         </nav>
 
         {/* User Profile Area - Fixed Bottom */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900 z-10">
-          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
-            {isLoadingProfile ? (
-              <div className="animate-pulse flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-slate-700" />
-                <div className="1">
-                  <div className="h-3 bg-slate-700 rounded w-20 mb-1" />
-                  <div className="h-2 bg-slate-700 rounded w-28" />
-                </div>
-              </div>
+        <div className="p-6">
+          <div className="border-t border-zinc-400/40 mb-6" />
+
+          <div className="flex items-center gap-4 mb-6">
+            {adminProfile?.pictureUrl ? (
+              <Image
+                src={adminProfile.pictureUrl}
+                alt={adminProfile.name}
+                width={56}
+                height={56}
+                className="w-14 h-14 rounded-full object-cover"
+              />
             ) : (
-              <div className="flex items-center gap-3">
-                {adminProfile?.pictureUrl ? (
-                  <Image
-                    src={adminProfile.pictureUrl}
-                    alt={adminProfile.name}
-                    width={36}
-                    height={36}
-                    className="w-9 h-9 rounded-full object-cover border border-slate-600"
-                  />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-                    {(adminProfile?.name || "A").charAt(0).toUpperCase()}
-                  </div>
-                )}
-
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {adminProfile?.name || "Admin"}
-                  </p>
-                  <p className="text-xs text-slate-400 truncate">
-                    {adminProfile?.role || "Administrator"}
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-700 rounded-lg transition-colors"
-                  title="ออกจากระบบ"
-                >
-                  <LogOut size={16} />
-                </button>
+              <div className="w-14 h-14 rounded-full bg-[#6D4242] flex items-center justify-center shadow-sm shrink-0">
+                {/* Mockup shows plain circle, maybe no text or simple text */}
               </div>
             )}
+
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-base font-normal text-zinc-800 truncate">
+                {adminProfile?.name || "admin"}
+              </span>
+              <div className="flex items-center gap-1.5 text-zinc-600">
+                <User size={14} className="shrink-0" />
+                <span className="text-sm truncate">
+                  {adminProfile?.email || "admin@trr.com"}
+                </span>
+              </div>
+            </div>
           </div>
+
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#E0E0E0] hover:bg-[#d4d4d4] border border-zinc-400/50 rounded-lg text-zinc-700 transition-all font-medium"
+          >
+            <LogOut size={20} strokeWidth={1.5} />
+            <span>ออกจากระบบ</span>
+          </button>
         </div>
       </aside>
     </>
