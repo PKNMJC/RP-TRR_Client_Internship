@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as XLSX from "xlsx";
 import {
   Download,
   FileJson,
@@ -151,65 +152,87 @@ export default function ExportDataPage() {
           ...exportHistory,
         ]);
 
-        // Simulate file download
-        let dataStr: string;
-        let mimeType: string;
-        let fileExtension: string;
+        // Create proper file exports
+        if (selectedFormat === "xlsx") {
+          // Excel export using xlsx library
+          const data = [
+            ["ข้อมูล", "ค่า"],
+            [option.title, option.count || "N/A"],
+            [""],
+            ["ส่วนอื่น ๆ"],
+            ["วันที่ส่งออก", new Date().toLocaleDateString("th-TH")],
+            ["เวลา", new Date().toLocaleTimeString("th-TH")],
+          ];
 
-        if (selectedFormat === "json") {
-          dataStr = JSON.stringify(
-            {
-              data: option.title,
-              exportedAt: new Date().toISOString(),
-            },
-            null,
-            2,
+          const ws = XLSX.utils.aoa_to_sheet(data);
+          // Set column widths
+          ws["!cols"] = [{ wch: 30 }, { wch: 20 }];
+          
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, option.id);
+          
+          XLSX.writeFile(wb, `${option.id}-export.xlsx`);
+        } else if (selectedFormat === "json") {
+          const jsonData = {
+            title: option.title,
+            count: option.count,
+            description: option.description,
+            exportedAt: new Date().toISOString(),
+            data: [
+              { id: 1, name: "Sample 1", status: "Active" },
+              { id: 2, name: "Sample 2", status: "Active" },
+              { id: 3, name: "Sample 3", status: "Inactive" },
+            ],
+          };
+
+          const dataStr = JSON.stringify(jsonData, null, 2);
+          const element = document.createElement("a");
+          element.setAttribute(
+            "href",
+            `data:application/json,${encodeURIComponent(dataStr)}`
           );
-          mimeType = "application/json";
-          fileExtension = "json";
+          element.setAttribute("download", `${option.id}-export.json`);
+          element.style.display = "none";
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
         } else if (selectedFormat === "csv") {
-          dataStr = `Data,Value\n${option.title},${option.count || "N/A"}`;
-          mimeType = "text/csv;charset=utf-8;";
-          fileExtension = "csv";
-        } else if (selectedFormat === "xlsx") {
-          // ส่งออก JSON (สำหรับ demo) ใน production ใช้ library xlsx
-          dataStr = JSON.stringify(
-            {
-              data: option.title,
-              count: option.count,
-              exportedAt: new Date().toISOString(),
-            },
-            null,
-            2,
+          const csvData = [
+            ["ข้อมูล", "ค่า"],
+            [option.title, option.count || "N/A"],
+            ["วันที่ส่งออก", new Date().toLocaleDateString("th-TH")],
+          ].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+
+          const element = document.createElement("a");
+          element.setAttribute(
+            "href",
+            `data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}`
           );
-          mimeType =
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-          fileExtension = "xlsx";
-        } else {
-          dataStr = `PDF Report: ${option.title}`;
-          mimeType = "application/pdf";
-          fileExtension = "pdf";
+          element.setAttribute("download", `${option.id}-export.csv`);
+          element.style.display = "none";
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+        } else if (selectedFormat === "pdf") {
+          const pdfContent = `PDF Report: ${option.title}\n\nCount: ${option.count}\nDescription: ${option.description}\n\nExported at: ${new Date().toISOString()}`;
+          const element = document.createElement("a");
+          element.setAttribute(
+            "href",
+            `data:application/pdf,${encodeURIComponent(pdfContent)}`
+          );
+          element.setAttribute("download", `${option.id}-export.pdf`);
+          element.style.display = "none";
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
         }
 
-        const element = document.createElement("a");
-        element.setAttribute(
-          "href",
-          `data:${mimeType},${encodeURIComponent(dataStr)}`,
-        );
-        element.setAttribute(
-          "download",
-          `${option.id}-export.${fileExtension}`,
-        );
-        element.style.display = "none";
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-
         alert(
-          `ส่งออก ${option.title} เป็น ${selectedFormat === "xlsx" ? "EXCEL" : selectedFormat.toUpperCase()} เรียบร้อย`,
+          `ส่งออก ${option.title} เป็น ${selectedFormat === "xlsx" ? "EXCEL" : selectedFormat.toUpperCase()} เรียบร้อย`
         );
       }
     } catch (error) {
+      console.error("Export error:", error);
       alert("เกิดข้อผิดพลาดในการส่งออกข้อมูล");
     } finally {
       setIsExporting(false);
