@@ -167,10 +167,10 @@ export default function ExportDataPage() {
           const ws = XLSX.utils.aoa_to_sheet(data);
           // Set column widths
           ws["!cols"] = [{ wch: 30 }, { wch: 20 }];
-          
+
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, option.id);
-          
+
           XLSX.writeFile(wb, `${option.id}-export.xlsx`);
         } else if (selectedFormat === "json") {
           const jsonData = {
@@ -189,7 +189,7 @@ export default function ExportDataPage() {
           const element = document.createElement("a");
           element.setAttribute(
             "href",
-            `data:application/json,${encodeURIComponent(dataStr)}`
+            `data:application/json,${encodeURIComponent(dataStr)}`,
           );
           element.setAttribute("download", `${option.id}-export.json`);
           element.style.display = "none";
@@ -201,12 +201,14 @@ export default function ExportDataPage() {
             ["ข้อมูล", "ค่า"],
             [option.title, option.count || "N/A"],
             ["วันที่ส่งออก", new Date().toLocaleDateString("th-TH")],
-          ].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+          ]
+            .map((row) => row.map((cell) => `"${cell}"`).join(","))
+            .join("\n");
 
           const element = document.createElement("a");
           element.setAttribute(
             "href",
-            `data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}`
+            `data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}`,
           );
           element.setAttribute("download", `${option.id}-export.csv`);
           element.style.display = "none";
@@ -218,7 +220,7 @@ export default function ExportDataPage() {
           const element = document.createElement("a");
           element.setAttribute(
             "href",
-            `data:application/pdf,${encodeURIComponent(pdfContent)}`
+            `data:application/pdf,${encodeURIComponent(pdfContent)}`,
           );
           element.setAttribute("download", `${option.id}-export.pdf`);
           element.style.display = "none";
@@ -228,7 +230,7 @@ export default function ExportDataPage() {
         }
 
         alert(
-          `ส่งออก ${option.title} เป็น ${selectedFormat === "xlsx" ? "EXCEL" : selectedFormat.toUpperCase()} เรียบร้อย`
+          `ส่งออก ${option.title} เป็น ${selectedFormat === "xlsx" ? "EXCEL" : selectedFormat.toUpperCase()} เรียบร้อย`,
         );
       }
     } catch (error) {

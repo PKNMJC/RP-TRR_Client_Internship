@@ -1,7 +1,7 @@
 "use client";
 
 import type { Metadata } from "next";
-import AdminSidebar from "@/components/AdminSidebar-new";
+import AdminSidebar from "@/components/AdminSidebar";
 import "@/app/globals.css";
 
 export default function AdminLayout({
