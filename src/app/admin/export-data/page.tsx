@@ -287,7 +287,9 @@ export default function ExportDataPage() {
                     <div
                       className={`w-12 h-12 rounded-lg ${option.bgColor} border border-slate-700 flex items-center justify-center`}
                     >
-                      <Icon size={24} className={option.color} />
+                      <span className={option.color}>
+                        <Icon size={24} />
+                      </span>
                     </div>
                     {option.count && (
                       <span className="text-xs font-semibold text-slate-400">

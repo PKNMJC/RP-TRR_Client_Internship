@@ -13,7 +13,7 @@ import {
   RefreshCw,
   Trash2,
   Lock,
-  UnlockOpen,
+  Unlock,
 } from "lucide-react";
 
 interface Backup {
@@ -246,7 +246,7 @@ export default function BackupPage() {
               </>
             ) : (
               <>
-                <UnlockOpen size={20} />
+                <Unlock size={20} />
                 ปลดล็อคฐานข้อมูล
               </>
             )}

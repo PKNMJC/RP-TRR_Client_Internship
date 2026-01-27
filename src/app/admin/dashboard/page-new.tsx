@@ -210,7 +210,9 @@ export default function AdminDashboard() {
               <div className="absolute top-0 right-0 w-20 h-20 bg-slate-700/10 rounded-full -mr-8 -mt-8" />
               <div className="relative z-10 space-y-3">
                 <div className="flex items-center justify-between">
-                  <Icon size={24} className={stat.color} />
+                  <span className={stat.color}>
+                    <Icon size={24} />
+                  </span>
                   {stat.trend && (
                     <span
                       className={`text-xs font-semibold ${
@@ -261,7 +263,9 @@ export default function AdminDashboard() {
                     <div
                       className={`w-12 h-12 rounded-lg ${action.bgColor} border border-slate-700 flex items-center justify-center`}
                     >
-                      <Icon size={24} className={action.color} />
+                      <span className={action.color}>
+                        <Icon size={24} />
+                      </span>
                     </div>
                     {action.isNew && (
                       <span className="px-2 py-1 bg-blue-600/80 text-blue-100 text-[10px] font-bold rounded-full">
