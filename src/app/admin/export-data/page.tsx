@@ -98,36 +98,49 @@ export default function ExportDataPage() {
         ปัญหา: repair.problemTitle,
         สถานที่: repair.location,
         ผู้แจ้ง: repair.reporterName,
+        แผนก: repair.reporterDepartment || "-",
+        เบอร์โทร: repair.reporterPhone || "-",
         สถานะ: statusLabels[repair.status] || repair.status,
         รายละเอียด: safeTruncate(repair.description || "-", 32000),
-        รูปภาพประกอบ: safeTruncate(
-          repair.attachments?.map((a) => a.fileUrl).join(", ") || "-",
-          32000,
-        ),
-        ข้อมูลผู้แจ้งซ่อม: `${repair.reporterDepartment || "-"} (${repair.reporterPhone || "-"})`,
       }));
 
       if (selectedFormat === "xlsx") {
-        // Excel export
-        const ws = XLSX.utils.json_to_sheet(exportData);
+        // Excel export with professional layout
+        const wb = XLSX.utils.book_new();
+
+        // 1. Create Data Worksheet
+        const ws = XLSX.utils.aoa_to_sheet([
+          ["รายงานการแจ้งซ่อม (Repair Report)"],
+          [
+            `วันที่ส่งออก: ${new Date().toLocaleDateString("th-TH")} ${new Date().toLocaleTimeString("th-TH")}`,
+          ],
+          [""], // Empty row
+        ]);
+
+        // Add headers and data starting from row 4 (index 3)
+        XLSX.utils.sheet_add_json(ws, exportData, { origin: "A4" });
 
         // Set column widths
         ws["!cols"] = [
           { wch: 22 }, // เลขใบงาน
           { wch: 12 }, // วันที่
-          { wch: 8 }, // เวลา
+          { wch: 10 }, // เวลา
           { wch: 30 }, // ปัญหา
           { wch: 20 }, // สถานที่
-          { wch: 15 }, // ผู้แจ้ง
+          { wch: 20 }, // ผู้แจ้ง
+          { wch: 15 }, // แผนก
+          { wch: 15 }, // เบอร์โทร
           { wch: 15 }, // สถานะ
-          { wch: 40 }, // รายละเอียด
-          { wch: 50 }, // รูปภาพประกอบ
-          { wch: 30 }, // ข้อมูลผู้แจ้งซ่อม
+          { wch: 50 }, // รายละเอียด
         ];
 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "งานซ่อมแซม");
+        // Merge title cells
+        ws["!merges"] = [
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }, // Merge title across columns
+          { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }, // Merge date across columns
+        ];
 
+        XLSX.utils.book_append_sheet(wb, ws, "งานซ่อมแซม");
         const fileName = `repairs-export-${new Date().toISOString().split("T")[0]}.xlsx`;
         XLSX.writeFile(wb, fileName);
       } else if (selectedFormat === "csv") {
@@ -265,10 +278,10 @@ export default function ExportDataPage() {
               "ปัญหา",
               "สถานที่",
               "ผู้แจ้ง",
+              "แผนก",
+              "เบอร์โทร",
               "สถานะ",
               "รายละเอียด",
-              "รูปภาพประกอบ",
-              "ข้อมูลผู้แจ้งซ่อม",
             ].map((col) => (
               <span
                 key={col}
@@ -368,13 +381,13 @@ export default function ExportDataPage() {
                     ผู้แจ้ง
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
-                    ข้อมูลผู้แจ้ง
+                    แผนก
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
+                    เบอร์โทร
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
                     สถานะ
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-400">
-                    รูปภาพประกอบ
                   </th>
                 </tr>
               </thead>
@@ -403,8 +416,10 @@ export default function ExportDataPage() {
                       {repair.reporterName}
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-300">
-                      {repair.reporterDepartment || "-"}{" "}
-                      {repair.reporterPhone ? `(${repair.reporterPhone})` : ""}
+                      {repair.reporterDepartment || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-300">
+                      {repair.reporterPhone || "-"}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
@@ -418,9 +433,6 @@ export default function ExportDataPage() {
                       >
                         {statusLabels[repair.status] || repair.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-center text-slate-500">
-                      {repair.attachments?.length || 0}
                     </td>
                   </tr>
                 ))}
