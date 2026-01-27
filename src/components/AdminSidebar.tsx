@@ -16,7 +16,6 @@ import {
   Shield,
   Download,
   Trash2,
-  Building2,
 } from "lucide-react";
 import { userService, User as UserType } from "@/services/userService";
 
@@ -52,7 +51,6 @@ export default function AdminSidebar() {
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "แดชบอร์ด", href: "/admin/dashboard" },
     { icon: Users, label: "จัดการผู้ใช้", href: "/admin/users" },
-    { icon: Building2, label: "จัดการแผนก", href: "/admin/departments" },
     { icon: Wrench, label: "งานซ่อมแซม", href: "/admin/repairs" },
     { icon: Package, label: "ยืม-คืนอุปกรณ์", href: "/admin/loans" },
     { icon: Download, label: "นำออกข้อมูล", href: "/admin/export-data" },
