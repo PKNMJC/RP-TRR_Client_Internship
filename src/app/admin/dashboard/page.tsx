@@ -164,23 +164,6 @@ export default function AdminDashboard() {
       color: "text-amber-500",
       bgColor: "bg-amber-900/20",
     },
-    {
-      icon: FileText,
-      label: "บันทึกการเข้าถึง",
-      description: "ดูบันทึกการเข้าถึงและกิจกรรมผู้ใช้",
-      href: "/admin/audit-logs",
-      color: "text-cyan-500",
-      bgColor: "bg-cyan-900/20",
-    },
-    {
-      icon: Server,
-      label: "สำรองข้อมูล",
-      description: "จัดการสำรองและกู้คืนข้อมูล",
-      href: "/admin/backup",
-      color: "text-purple-500",
-      bgColor: "bg-purple-900/20",
-      isNew: true,
-    },
   ];
 
   return (
