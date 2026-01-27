@@ -80,6 +80,13 @@ export default function ExportDataPage() {
     try {
       setIsExporting(true);
 
+      // Helper to safely truncate text for Excel (max 32767 chars)
+      const safeTruncate = (text: string, maxLength: number = 32000) => {
+        if (!text) return "";
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + "...(ตัดทอนเคื่องจากยาวเกินไป)";
+      };
+
       // Prepare data with Thai headers
       const exportData = repairs.map((repair) => ({
         เลขใบงาน: repair.ticketCode,
@@ -92,9 +99,11 @@ export default function ExportDataPage() {
         สถานที่: repair.location,
         ผู้แจ้ง: repair.reporterName,
         สถานะ: statusLabels[repair.status] || repair.status,
-        รายละเอียด: repair.description || "-",
-        รูปภาพประกอบ:
+        รายละเอียด: safeTruncate(repair.description || "-", 32000),
+        รูปภาพประกอบ: safeTruncate(
           repair.attachments?.map((a) => a.fileUrl).join(", ") || "-",
+          32000,
+        ),
         ข้อมูลผู้แจ้งซ่อม: `${repair.reporterDepartment || "-"} (${repair.reporterPhone || "-"})`,
       }));
 
