@@ -47,6 +47,35 @@ const menuItems = [
 
 export default function AdminHome() {
   const router = useRouter();
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/repairs/statistics/overview`,
+      );
+      if (!res.ok) {
+        throw new Error("Failed to fetch statistics");
+      }
+      const data = await res.json();
+      setStats(data);
+    } catch (err: any) {
+      console.error("Error fetching stats:", err);
+      // Don't show error to user immediately if it's just a network blip, maybe retry?
+      // For now, just set error state
+      setError("ไม่สามารถโหลดข้อมูลได้");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-full">
@@ -95,55 +124,72 @@ export default function AdminHome() {
         <h2 className="text-base md:text-lg font-semibold text-zinc-900 mb-4">
           สรุปภาพรวม
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Wrench size={16} className="text-blue-600" />
-              </div>
-              <span className="text-xs text-zinc-500">งานทั้งหมด</span>
-            </div>
-            <div className="text-xl md:text-2xl font-bold text-zinc-900">
-              --
-            </div>
-          </div>
 
-          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Clock size={16} className="text-amber-600" />
-              </div>
-              <span className="text-xs text-zinc-500">รอรับงาน</span>
-            </div>
-            <div className="text-xl md:text-2xl font-bold text-amber-600">
-              --
-            </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-500">
+            <p>{error}</p>
+            <button
+              onClick={fetchStats}
+              className="mt-2 text-sm text-blue-600 hover:underline"
+            >
+              ลองใหม่อีกครั้ง
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Wrench size={16} className="text-blue-600" />
+                </div>
+                <span className="text-xs text-zinc-500">งานทั้งหมด</span>
+              </div>
+              <div className="text-xl md:text-2xl font-bold text-zinc-900">
+                {stats?.total || 0}
+              </div>
+            </div>
 
-          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <AlertCircle size={16} className="text-orange-600" />
+            <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Clock size={16} className="text-amber-600" />
+                </div>
+                <span className="text-xs text-zinc-500">รอรับงาน</span>
               </div>
-              <span className="text-xs text-zinc-500">กำลังซ่อม</span>
+              <div className="text-xl md:text-2xl font-bold text-amber-600">
+                {stats?.pending || 0}
+              </div>
             </div>
-            <div className="text-xl md:text-2xl font-bold text-orange-600">
-              --
-            </div>
-          </div>
 
-          <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <CheckCircle size={16} className="text-emerald-600" />
+            <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <AlertCircle size={16} className="text-orange-600" />
+                </div>
+                <span className="text-xs text-zinc-500">กำลังซ่อม</span>
               </div>
-              <span className="text-xs text-zinc-500">เสร็จแล้ว</span>
+              <div className="text-xl md:text-2xl font-bold text-orange-600">
+                {stats ? stats.inProgress + stats.waitingParts : 0}
+              </div>
             </div>
-            <div className="text-xl md:text-2xl font-bold text-emerald-600">
-              --
+
+            <div className="bg-zinc-50 rounded-lg p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <CheckCircle size={16} className="text-emerald-600" />
+                </div>
+                <span className="text-xs text-zinc-500">เสร็จแล้ว</span>
+              </div>
+              <div className="text-xl md:text-2xl font-bold text-emerald-600">
+                {stats?.completed || 0}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Recent Activity Placeholder */}
