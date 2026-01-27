@@ -326,14 +326,15 @@ export default function AdminSidebar() {
                             }`}
                           >
                             {SubIcon && (
-                              <SubIcon
-                                size={16}
+                              <span
                                 className={`${
                                   isSubActive
                                     ? "text-blue-400"
                                     : "text-slate-500 group-hover:text-slate-300"
                                 }`}
-                              />
+                              >
+                                <SubIcon size={16} />
+                              </span>
                             )}
                             {sub.label}
                           </Link>
