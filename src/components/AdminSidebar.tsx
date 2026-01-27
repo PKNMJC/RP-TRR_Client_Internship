@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Wrench,
@@ -14,13 +14,21 @@ import {
   ChevronDown,
   User,
   Package,
-  Building2,
+  FileText,
+  BarChart3,
+  Settings,
+  Shield,
+  Download,
+  Trash2,
+  Bell,
+  Database,
 } from "lucide-react";
 import { userService, User as UserType } from "../../services/userService";
 
 interface SubItem {
   label: string;
   href: string;
+  icon?: React.ComponentType<{ size: number }>;
 }
 
 interface MenuItem {
@@ -30,8 +38,9 @@ interface MenuItem {
     className?: string;
   }>;
   label: string;
-  href: string;
+  href?: string;
   subItems?: SubItem[];
+  isSection?: boolean;
 }
 
 export default function AdminSidebar() {
@@ -42,7 +51,6 @@ export default function AdminSidebar() {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   // Fetch admin profile on mount
   useEffect(() => {
@@ -63,65 +71,105 @@ export default function AdminSidebar() {
     fetchAdminProfile();
   }, []);
 
-  // Update menu items
+  // Menu items with grouped sections
   const menuItems: MenuItem[] = [
-    { icon: LayoutDashboard, label: "แดชบอร์ด", href: "/admin/dashboard" },
+    // Main Dashboard
     {
-      icon: Wrench,
-      label: "งานซ่อมแซม",
-      href: "/repairs/overview",
+      icon: LayoutDashboard,
+      label: "แดชบอร์ด",
+      href: "/admin/dashboard",
+    },
+
+    // System Management Section
+    {
+      icon: Shield,
+      label: "จัดการระบบ",
+      isSection: true,
       subItems: [
-        { label: "ภาพรวม", href: "/repairs/overview" },
-        { label: "รอรับงาน", href: "/repairs/waiting" },
-        { label: "กำลังซ่อม", href: "/repairs/in-progress" },
-        { label: "เสร็จสิ้น", href: "/repairs/completed" },
+        { label: "จัดการผู้ใช้", href: "/admin/users", icon: Users },
+        {
+          label: "จัดการแผนก",
+          href: "/admin/departments",
+          icon: Package,
+        },
+        {
+          label: "บันทึกการเข้าถึง",
+          href: "/admin/audit-logs",
+          icon: FileText,
+        },
+        { label: "ตั้งค่าระบบ", href: "/admin/settings", icon: Settings },
       ],
     },
-    { icon: Package, label: "ยืม-คืนอุปกรณ์", href: "/admin/loans" },
-    { icon: Users, label: "จัดการผู้ใช้", href: "/admin/users" },
+
+    // Operations Management Section
+    {
+      icon: Wrench,
+      label: "บริหารปฏิบัติการ",
+      isSection: true,
+      subItems: [
+        { label: "งานซ่อมแซม", href: "/admin/repairs", icon: Wrench },
+        { label: "ยืม-คืนอุปกรณ์", href: "/admin/loans", icon: Package },
+        {
+          label: "งานที่มอบหมาย",
+          href: "/admin/assigned-tasks",
+          icon: FileText,
+        },
+      ],
+    },
+
+    // Analytics & Reports Section
+    {
+      icon: BarChart3,
+      label: "รายงานและวิเคราะห์",
+      isSection: true,
+      subItems: [
+        { label: "สถิติภาพรวม", href: "/admin/analytics", icon: BarChart3 },
+        { label: "นำออกข้อมูล", href: "/admin/export-data", icon: Download },
+        {
+          label: "การสำรองข้อมูล",
+          href: "/admin/backup",
+          icon: Database,
+        },
+      ],
+    },
+
+    // Admin Actions Section
+    {
+      icon: Trash2,
+      label: "การจัดการขั้นสูง",
+      isSection: true,
+      subItems: [
+        { label: "ลบรายการซ่อม", href: "/admin/delete-repairs", icon: Trash2 },
+        { label: "ลบข้อมูลผู้ใช้", href: "/admin/delete-users", icon: Users },
+        {
+          label: "ล้างข้อมูลตามกำหนดเวลา",
+          href: "/admin/cleanup",
+          icon: Database,
+        },
+      ],
+    },
   ];
 
-  // Helper to check link active status (moved up for use in effect)
   const isLinkActive = useCallback(
     (href: string) => {
-      // Check if href has params
-      if (href.includes("?")) {
-        const [path, query] = href.split("?");
-        if (pathname !== path) return false;
-        const params = new URLSearchParams(query);
-        // Check if all params match
-        for (const [key, value] of params.entries()) {
-          if (searchParams.get(key) !== value) return false;
-        }
-        return true;
-      }
-      // Exact match for base paths or subpaths
-      return (
-        pathname === href ||
-        (href !== "/admin/dashboard" &&
-          pathname.startsWith(href) &&
-          !searchParams.toString())
-      );
+      return pathname === href || pathname.startsWith(href);
     },
-    [pathname, searchParams],
+    [pathname],
   );
 
   // Close sidebar on route change (mobile) and handle auto-expand/collapse
   useEffect(() => {
     setIsOpen(false);
 
-    // Auto expand/collapse Based on current path
+    // Auto expand section if current path matches any sub-item
     const activeItem = menuItems.find((item) =>
       item.subItems?.some((sub) => isLinkActive(sub.href)),
     );
 
     if (activeItem) {
       setExpandedMenu(activeItem.label);
-    } else {
-      // Collapse if no sub-item matches (navigating to another main page)
-      setExpandedMenu(null);
     }
-  }, [pathname, searchParams, isLinkActive]);
+  }, [pathname, isLinkActive]);
 
   const toggleSubMenu = useCallback((label: string) => {
     setExpandedMenu((prev) => (prev === label ? null : label));
@@ -142,15 +190,16 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#F5F5F5] border-b border-zinc-200 z-[50] px-4 flex items-center justify-between shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gradient-to-r from-slate-800 to-slate-900 border-b border-slate-700 z-[50] px-4 flex items-center justify-between shadow-lg">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <span className="font-bold text-zinc-800 tracking-tight text-xl">
-            TRR-RP
+          <Shield size={24} className="text-blue-400" />
+          <span className="font-bold text-white tracking-tight text-lg">
+            ADMIN
           </span>
         </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 -mr-2 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 rounded-lg transition-all"
+          className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -166,126 +215,141 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-56 bg-[#ECECEC] border-r border-zinc-200 transition-transform duration-300 z-[60] flex flex-col ${
+        className={`fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-slate-800 via-slate-800 to-slate-900 border-r border-slate-700 transition-transform duration-300 z-[60] flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Branding */}
-        <div className="h-20 flex items-center px-6">
-          <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-xl font-normal text-zinc-700 tracking-tight">
-              TRR-RP
-            </span>
+        <div className="h-20 flex items-center px-6 border-b border-slate-700">
+          <Link href="/admin/dashboard" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+              <Shield size={24} className="text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold text-white tracking-tight">
+                ADMIN
+              </span>
+              <span className="text-[10px] text-slate-400 font-medium tracking-wider">
+                PORTAL
+              </span>
+            </div>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-3 overflow-y-auto custom-scrollbar">
-          <div className="space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isExpanded = expandedMenu === item.label;
-              const isActive = isLinkActive(item.href);
+        <nav className="flex-1 px-3 py-4 overflow-y-auto custom-scrollbar space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isExpanded = expandedMenu === item.label;
+            const isActive = item.href ? isLinkActive(item.href) : false;
+            const hasActiveSub = item.subItems?.some((sub) =>
+              isLinkActive(sub.href),
+            );
 
-              // Check if any sub-item is active
-              const hasActiveSub = item.subItems?.some((sub) =>
-                isLinkActive(sub.href),
-              );
-
+            // Simple link item (no sub-items)
+            if (!item.subItems) {
               return (
-                <div key={item.label}>
-                  {item.subItems ? (
-                    <div className="space-y-1">
-                      <button
-                        onClick={() => toggleSubMenu(item.label)}
-                        className={`w-full flex items-center justify-between py-1.5 transition-all group ${
-                          hasActiveSub || isExpanded
-                            ? "text-zinc-800"
-                            : "text-zinc-500 hover:text-zinc-800"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon
-                            size={20}
-                            strokeWidth={1.5}
-                            className={`${
-                              hasActiveSub || isExpanded
-                                ? "text-zinc-800"
-                                : "text-zinc-500 group-hover:text-zinc-700"
-                            }`}
-                          />
-                          <span className="text-sm font-normal">
-                            {item.label}
-                          </span>
-                        </div>
-                        <ChevronDown
-                          size={18}
-                          strokeWidth={1.5}
-                          className={`transition-transform duration-200 ${
-                            isExpanded ? "rotate-180" : ""
-                          }`}
-                        />
-                      </button>
+                <Link
+                  key={item.label}
+                  href={item.href || "#"}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group ${
+                    isActive
+                      ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                      : "text-slate-300 hover:bg-slate-700/50 hover:text-slate-100"
+                  }`}
+                >
+                  <Icon
+                    size={20}
+                    strokeWidth={1.5}
+                    className={`${
+                      isActive
+                        ? "text-blue-400"
+                        : "text-slate-400 group-hover:text-slate-200"
+                    }`}
+                  />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Link>
+              );
+            }
 
-                      {/* Submenu */}
-                      <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          isExpanded
-                            ? "max-h-96 opacity-100 mt-1"
-                            : "max-h-0 opacity-0"
-                        }`}
-                      >
-                        <div className="ml-8 space-y-1 py-1">
-                          {item.subItems.map((sub) => {
-                            const isSubActive = isLinkActive(sub.href);
-                            return (
-                              <Link
-                                key={sub.label}
-                                href={sub.href}
-                                className={`block text-sm transition-all ${
+            // Section with sub-items
+            return (
+              <div key={item.label} className="space-y-1">
+                <button
+                  onClick={() => toggleSubMenu(item.label)}
+                  className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-all group ${
+                    hasActiveSub || isExpanded
+                      ? "bg-slate-700/50 text-slate-100"
+                      : "text-slate-300 hover:bg-slate-700/30 hover:text-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      size={20}
+                      strokeWidth={1.5}
+                      className={`${
+                        hasActiveSub || isExpanded
+                          ? "text-blue-400"
+                          : "text-slate-400 group-hover:text-slate-200"
+                      }`}
+                    />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </div>
+                  <ChevronDown
+                    size={18}
+                    strokeWidth={1.5}
+                    className={`transition-transform duration-200 text-slate-400 ${
+                      isExpanded ? "rotate-180 text-blue-400" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Submenu */}
+                {item.subItems && (
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="ml-6 space-y-1 py-1 border-l border-slate-600/50">
+                      {item.subItems.map((sub) => {
+                        const SubIcon = sub.icon;
+                        const isSubActive = isLinkActive(sub.href);
+                        return (
+                          <Link
+                            key={sub.label}
+                            href={sub.href}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all group ${
+                              isSubActive
+                                ? "text-blue-400 bg-blue-600/10 font-medium"
+                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/30"
+                            }`}
+                          >
+                            {SubIcon && (
+                              <span
+                                className={`${
                                   isSubActive
-                                    ? "text-zinc-800 font-medium"
-                                    : "text-zinc-500 hover:text-zinc-800"
+                                    ? "text-blue-400"
+                                    : "text-slate-500 group-hover:text-slate-300"
                                 }`}
                               >
-                                {sub.label}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
+                                <SubIcon size={16} />
+                              </span>
+                            )}
+                            {sub.label}
+                          </Link>
+                        );
+                      })}
                     </div>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className={`flex items-center gap-3 py-1.5 transition-all group ${
-                        isActive
-                          ? "text-zinc-800"
-                          : "text-zinc-500 hover:text-zinc-800"
-                      }`}
-                    >
-                      <Icon
-                        size={20}
-                        strokeWidth={1.5}
-                        className={`${
-                          isActive
-                            ? "text-zinc-800"
-                            : "text-zinc-500 group-hover:text-zinc-700"
-                        }`}
-                      />
-                      <span className="text-sm font-normal">{item.label}</span>
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* User Profile Area - Fixed Bottom */}
-        <div className="p-4">
-          <div className="border-t border-zinc-400/40 mb-4" />
-
+        <div className="p-4 border-t border-slate-700">
           <div className="flex items-center gap-3 mb-4">
             {adminProfile?.pictureUrl ? (
               <Image
@@ -293,35 +357,38 @@ export default function AdminSidebar() {
                 alt={adminProfile.name}
                 width={48}
                 height={48}
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-12 h-12 rounded-full object-cover border border-slate-600"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-[#6D4242] flex items-center justify-center shadow-sm shrink-0">
-                {/* Mockup shows plain circle, maybe no text or simple text */}
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm shrink-0 border border-slate-600">
+                <User size={24} className="text-white" />
               </div>
             )}
 
             <div className="flex flex-col overflow-hidden min-w-0">
-              <span className="text-sm font-normal text-zinc-800 truncate">
-                {adminProfile?.name || "admin"}
+              <span className="text-sm font-medium text-slate-100 truncate">
+                {adminProfile?.name || "Admin"}
               </span>
-              <div className="flex items-center gap-1.5 text-zinc-600">
-                <User size={14} className="shrink-0" />
-                <span className="text-sm truncate">
+              <div className="flex items-center gap-1 text-slate-400">
+                <span className="text-xs truncate">
                   {adminProfile?.email || "admin@trr.com"}
                 </span>
               </div>
             </div>
           </div>
 
-          <button
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="w-full flex items-center justify-center gap-2 py-2 bg-transparent hover:bg-zinc-200/50 border border-zinc-500 rounded-lg text-zinc-700 transition-all font-medium text-sm"
-          >
-            <LogOut size={20} strokeWidth={1.5} />
-            <span>ออกจากระบบ</span>
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button className="flex items-center justify-center p-2 rounded-lg bg-slate-700/30 border border-slate-600 text-slate-300 hover:text-slate-100 hover:bg-slate-700/50 transition-all group">
+              <Bell size={18} strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex items-center justify-center p-2 rounded-lg bg-slate-700/30 border border-slate-600 text-slate-300 hover:text-red-400 hover:bg-red-900/20 hover:border-red-700/50 transition-all"
+            >
+              <LogOut size={18} strokeWidth={1.5} />
+            </button>
+          </div>
         </div>
       </aside>
     </>

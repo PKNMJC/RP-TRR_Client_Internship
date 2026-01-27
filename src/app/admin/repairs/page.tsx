@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
@@ -84,7 +84,7 @@ const urgencyLabels = {
   },
 };
 
-export default function AdminRepairsPage() {
+function AdminRepairsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { role } = useCurrentRole();
@@ -723,5 +723,13 @@ export default function AdminRepairsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminRepairsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdminRepairsContent />
+    </Suspense>
   );
 }
