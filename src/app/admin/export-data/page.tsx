@@ -25,6 +25,13 @@ const statusLabels: { [key: string]: string } = {
   CANCELLED: "ยกเลิก",
 };
 
+interface RepairAttachment {
+  id: number;
+  fileUrl: string;
+  filename: string;
+  mimeType: string;
+}
+
 interface Repair {
   id: string;
   ticketCode: string;
@@ -33,9 +40,12 @@ interface Repair {
   problemCategory: string;
   location: string;
   reporterName: string;
+  reporterPhone?: string;
+  reporterDepartment?: string;
   status: string;
   description?: string;
   urgency?: string;
+  attachments?: RepairAttachment[];
 }
 
 export default function ExportDataPage() {
@@ -74,12 +84,18 @@ export default function ExportDataPage() {
       const exportData = repairs.map((repair) => ({
         เลขใบงาน: repair.ticketCode,
         วันที่: new Date(repair.createdAt).toLocaleDateString("th-TH"),
+        เวลา: new Date(repair.createdAt).toLocaleTimeString("th-TH", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         ปัญหา: repair.problemTitle,
-        หมวดหมู่: repair.problemCategory || "-",
         สถานที่: repair.location,
         ผู้แจ้ง: repair.reporterName,
         สถานะ: statusLabels[repair.status] || repair.status,
         รายละเอียด: repair.description || "-",
+        รูปภาพประกอบ:
+          repair.attachments?.map((a) => a.fileUrl).join(", ") || "-",
+        ข้อมูลผู้แจ้งซ่อม: `${repair.reporterDepartment || "-"} (${repair.reporterPhone || "-"})`,
       }));
 
       if (selectedFormat === "xlsx") {
@@ -90,12 +106,14 @@ export default function ExportDataPage() {
         ws["!cols"] = [
           { wch: 22 }, // เลขใบงาน
           { wch: 12 }, // วันที่
+          { wch: 8 }, // เวลา
           { wch: 30 }, // ปัญหา
-          { wch: 15 }, // หมวดหมู่
           { wch: 20 }, // สถานที่
           { wch: 15 }, // ผู้แจ้ง
           { wch: 15 }, // สถานะ
           { wch: 40 }, // รายละเอียด
+          { wch: 50 }, // รูปภาพประกอบ
+          { wch: 30 }, // ข้อมูลผู้แจ้งซ่อม
         ];
 
         const wb = XLSX.utils.book_new();
@@ -234,12 +252,14 @@ export default function ExportDataPage() {
             {[
               "เลขใบงาน",
               "วันที่",
+              "เวลา",
               "ปัญหา",
-              "หมวดหมู่",
               "สถานที่",
               "ผู้แจ้ง",
               "สถานะ",
               "รายละเอียด",
+              "รูปภาพประกอบ",
+              "ข้อมูลผู้แจ้งซ่อม",
             ].map((col) => (
               <span
                 key={col}
@@ -327,6 +347,9 @@ export default function ExportDataPage() {
                     วันที่
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
+                    เวลา
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
                     ปัญหา
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
@@ -336,7 +359,13 @@ export default function ExportDataPage() {
                     ผู้แจ้ง
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
+                    ข้อมูลผู้แจ้ง
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-400">
                     สถานะ
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-400">
+                    รูปภาพประกอบ
                   </th>
                 </tr>
               </thead>
@@ -349,6 +378,12 @@ export default function ExportDataPage() {
                     <td className="px-4 py-3 text-sm text-slate-300">
                       {new Date(repair.createdAt).toLocaleDateString("th-TH")}
                     </td>
+                    <td className="px-4 py-3 text-sm text-slate-300">
+                      {new Date(repair.createdAt).toLocaleTimeString("th-TH", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-300 max-w-xs truncate">
                       {repair.problemTitle}
                     </td>
@@ -357,6 +392,10 @@ export default function ExportDataPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-slate-300">
                       {repair.reporterName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-300">
+                      {repair.reporterDepartment || "-"}{" "}
+                      {repair.reporterPhone ? `(${repair.reporterPhone})` : ""}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
@@ -370,6 +409,9 @@ export default function ExportDataPage() {
                       >
                         {statusLabels[repair.status] || repair.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-center text-slate-500">
+                      {repair.attachments?.length || 0}
                     </td>
                   </tr>
                 ))}
