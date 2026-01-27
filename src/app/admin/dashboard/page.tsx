@@ -2,22 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiFetch } from "../../../../services/api";
 import {
-  LayoutDashboard,
   Wrench,
   Users,
   Package,
-  BarChart3,
-  FileText,
   Download,
   Trash2,
   AlertCircle,
-  TrendingUp,
   Clock,
   CheckCircle,
   ArrowRight,
   Server,
-  Shield,
 } from "lucide-react";
 
 interface StatCard {
@@ -40,93 +36,169 @@ interface QuickAction {
 }
 
 export default function AdminDashboard() {
-  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<StatCard[]>([]);
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<
+    Array<{
+      id: number;
+      type: string;
+      message: string;
+      timestamp: string;
+    }>
+  >([]);
 
   useEffect(() => {
-    // Simulate loading dashboard data
-    setTimeout(() => {
-      setStats([
-        {
-          title: "ทั้งหมดงานซ่อม",
-          value: "248",
-          change: "+12%",
-          trend: "up",
-          icon: Wrench,
-          color: "text-blue-500",
-        },
-        {
-          title: "รอการดำเนินการ",
-          value: "45",
-          change: "-5%",
-          trend: "down",
-          icon: Clock,
-          color: "text-amber-500",
-        },
-        {
-          title: "งานสำเร็จ",
-          value: "198",
-          change: "+8%",
-          trend: "up",
-          icon: CheckCircle,
-          color: "text-green-500",
-        },
-        {
-          title: "จำนวนผู้ใช้",
-          value: "156",
-          change: "+3%",
-          trend: "up",
-          icon: Users,
-          color: "text-purple-500",
-        },
-        {
-          title: "อุปกรณ์ที่ยืม",
-          value: "78",
-          change: "+2%",
-          trend: "up",
-          icon: Package,
-          color: "text-emerald-500",
-        },
-        {
-          title: "ขนาดฐานข้อมูล",
-          value: "2.5 GB",
-          change: "+0.5 GB",
-          trend: "up",
-          icon: Server,
-          color: "text-cyan-500",
-        },
-      ]);
+    const loadDashboardData = async () => {
+      try {
+        // Fetch repair statistics
+        const repairStats = await apiFetch(
+          "/repairs/statistics/overview",
+          "GET",
+        );
 
-      setRecentActivity([
-        {
-          id: 1,
-          type: "repair",
-          message: "งานซ่อมแซมใหม่ถูกสร้างขึ้น - RPT-2025-001",
-          timestamp: "5 นาทีที่แล้ว",
-        },
-        {
-          id: 2,
-          type: "user",
-          message: "ผู้ใช้ใหม่ลงทะเบียน - user@example.com",
-          timestamp: "1 ชั่วโมงที่แล้ว",
-        },
-        {
-          id: 3,
-          type: "loan",
-          message: "การคืนอุปกรณ์ - LAP-001",
-          timestamp: "3 ชั่วโมงที่แล้ว",
-        },
-        {
-          id: 4,
-          type: "system",
-          message: "สำรองข้อมูลเสร็จสิ้นเรียบร้อย",
-          timestamp: "วันเมื่อวาน",
-        },
-      ]);
+        // Fetch all users count
+        const usersData = await apiFetch("/users?page=1&limit=1000", "GET");
 
-      setIsLoading(false);
-    }, 800);
+        // Fetch all loans
+        const loansData = await apiFetch("/loans", "GET");
+
+        const userCount = usersData?.total || usersData?.length || 0;
+        const loansCount = Array.isArray(loansData)
+          ? loansData.length
+          : loansData?.total || 0;
+
+        setStats([
+          {
+            title: "ทั้งหมดงานซ่อม",
+            value: repairStats?.total || 0,
+            change: undefined,
+            trend: undefined,
+            icon: Wrench,
+            color: "text-blue-500",
+          },
+          {
+            title: "รอการดำเนินการ",
+            value: repairStats?.pending || 0,
+            change: undefined,
+            trend: undefined,
+            icon: Clock,
+            color: "text-amber-500",
+          },
+          {
+            title: "งานสำเร็จ",
+            value: repairStats?.completed || 0,
+            change: undefined,
+            trend: undefined,
+            icon: CheckCircle,
+            color: "text-green-500",
+          },
+          {
+            title: "จำนวนผู้ใช้",
+            value: userCount,
+            change: undefined,
+            trend: undefined,
+            icon: Users,
+            color: "text-purple-500",
+          },
+          {
+            title: "อุปกรณ์ที่ยืม",
+            value: loansCount,
+            change: undefined,
+            trend: undefined,
+            icon: Package,
+            color: "text-emerald-500",
+          },
+          {
+            title: "กำลังดำเนินการ",
+            value: repairStats?.inProgress || 0,
+            change: undefined,
+            trend: undefined,
+            icon: Server,
+            color: "text-cyan-500",
+          },
+        ]);
+
+        // Fetch recent repairs for activity
+        const recentRepairs = await apiFetch("/repairs?limit=5", "GET");
+        const repairsArray = Array.isArray(recentRepairs)
+          ? recentRepairs
+          : recentRepairs?.data || [];
+
+        const activities = repairsArray
+          .slice(0, 4)
+          .map((repair: Record<string, unknown>, idx: number) => ({
+            id: idx + 1,
+            type: "repair",
+            message: `งานซ่อมแซม - ${String(repair.ticketCode || repair.id)}`,
+            timestamp: new Date(String(repair.createdAt)).toLocaleDateString(
+              "th-TH",
+            ),
+          }));
+
+        setRecentActivity(
+          activities.length > 0
+            ? activities
+            : [
+                {
+                  id: 1,
+                  type: "system",
+                  message: "ระบบพร้อมใช้งาน",
+                  timestamp: "เดี๋ยวนี้",
+                },
+              ],
+        );
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+        // Set default values on error
+        setStats([
+          {
+            title: "ทั้งหมดงานซ่อม",
+            value: "-",
+            icon: Wrench,
+            color: "text-blue-500",
+          },
+          {
+            title: "รอการดำเนินการ",
+            value: "-",
+            icon: Clock,
+            color: "text-amber-500",
+          },
+          {
+            title: "งานสำเร็จ",
+            value: "-",
+            icon: CheckCircle,
+            color: "text-green-500",
+          },
+          {
+            title: "จำนวนผู้ใช้",
+            value: "-",
+            icon: Users,
+            color: "text-purple-500",
+          },
+          {
+            title: "อุปกรณ์ที่ยืม",
+            value: "-",
+            icon: Package,
+            color: "text-emerald-500",
+          },
+          {
+            title: "กำลังดำเนินการ",
+            value: "-",
+            icon: Server,
+            color: "text-cyan-500",
+          },
+        ]);
+        setRecentActivity([
+          {
+            id: 1,
+            type: "system",
+            message: "ไม่สามารถโหลดข้อมูล",
+            timestamp: "เดี๋ยวนี้",
+          },
+        ]);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   const quickActions: QuickAction[] = [
@@ -196,15 +268,6 @@ export default function AdminDashboard() {
                   <span className={stat.color}>
                     <Icon size={24} />
                   </span>
-                  {stat.trend && (
-                    <span
-                      className={`text-xs font-semibold ${
-                        stat.trend === "up" ? "text-green-400" : "text-red-400"
-                      }`}
-                    >
-                      {stat.change}
-                    </span>
-                  )}
                 </div>
                 <div>
                   <p className="text-slate-400 text-sm font-medium">
