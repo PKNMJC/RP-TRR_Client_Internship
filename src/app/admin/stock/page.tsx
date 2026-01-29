@@ -9,119 +9,86 @@ import {
   ChevronRight,
   Plus,
   X as XIcon,
+  Package,
 } from "lucide-react";
 
-interface Loan {
+interface StockItem {
   id: number;
-  itemName: string;
-  description: string;
+  name: string;
   quantity: number;
-  borrowDate: string;
-  expectedReturnDate: string;
-  returnDate?: string;
-  status: string;
-  borrowedBy: {
-    id: number;
-    name: string;
-  };
-  borrowerName?: string;
-  borrowerDepartment?: string;
-  borrowerPhone?: string;
+  category: string;
+  location: string;
+  lastUpdated: string;
 }
 
-const statusLabels: Record<string, string> = {
-  BORROWED: "กำลังยืม",
-  RETURNED: "คืนสำเร็จ",
-  OVERDUE: "เกินกำหนด",
-};
-
-export default function AdminLoansPage() {
-  const [loans, setLoans] = useState<Loan[]>([]);
+export default function AdminStockPage() {
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    itemName: "",
-    description: "",
+    name: "",
     quantity: 1,
-    expectedReturnDate: "",
-    borrowerName: "",
-    borrowerPhone: "",
-    borrowerDepartment: "",
+    category: "",
+    location: "",
   });
 
   const itemsPerPage = 10;
 
-  // Stats
-  const stats = {
-    total: loans.length,
-    active: loans.filter((l) => l.status === "BORROWED").length,
-    overdue: loans.filter((l) => l.status === "OVERDUE").length,
-    returned: loans.filter((l) => l.status === "RETURNED").length,
-  };
-
+  // Mock data for initial load - replace with actual API when available
   useEffect(() => {
-    fetchLoans();
+    const fetchStock = async () => {
+      try {
+        setLoading(true);
+        // Try to fetch from API, fallback to empty array
+        try {
+          const data = await apiFetch("/api/stock");
+          setStockItems(data || []);
+        } catch {
+          // API might not exist yet, use empty array
+          setStockItems([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStock();
   }, []);
 
-  const fetchLoans = async () => {
-    try {
-      setLoading(true);
-      const data = await apiFetch("/api/loans/admin/all");
-      setLoans(data || []);
-    } catch (err) {
-      console.error("Failed to fetch loans:", err);
-    } finally {
-      setLoading(false);
-    }
+  // Stats
+  const stats = {
+    total: stockItems.length,
+    lowStock: stockItems.filter((s) => s.quantity < 5).length,
+    outOfStock: stockItems.filter((s) => s.quantity === 0).length,
   };
 
-  const handleDelete = async (loanId: number) => {
-    if (!confirm("ลบรายการยืมนี้?")) return;
+  const handleDelete = async (itemId: number) => {
+    if (!confirm("ลบรายการนี้?")) return;
     try {
-      await apiFetch(`/api/loans/${loanId}`, { method: "DELETE" });
-      fetchLoans();
+      await apiFetch(`/api/stock/${itemId}`, { method: "DELETE" });
+      setStockItems(stockItems.filter((s) => s.id !== itemId));
     } catch {
       alert("เกิดข้อผิดพลาด");
     }
   };
 
-  const handleAddLoan = async () => {
-    if (!formData.itemName || !formData.expectedReturnDate) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+  const handleAddStock = async () => {
+    if (!formData.name) {
+      alert("กรุณากรอกชื่อรายการ");
       return;
     }
 
     try {
       setIsSaving(true);
-      await apiFetch("/api/loans", {
+      const newItem = await apiFetch("/api/stock", {
         method: "POST",
-        body: JSON.stringify({
-          itemName: formData.itemName,
-          description: formData.description || "",
-          quantity: formData.quantity || 1,
-          expectedReturnDate: new Date(
-            formData.expectedReturnDate,
-          ).toISOString(),
-          borrowerName: formData.borrowerName || "",
-          borrowerPhone: formData.borrowerPhone || "",
-          borrowerDepartment: formData.borrowerDepartment || "",
-        }),
+        body: JSON.stringify(formData),
       });
+      setStockItems([...stockItems, newItem]);
       setShowModal(false);
-      setFormData({
-        itemName: "",
-        description: "",
-        quantity: 1,
-        expectedReturnDate: "",
-        borrowerName: "",
-        borrowerPhone: "",
-        borrowerDepartment: "",
-      });
-      fetchLoans();
+      setFormData({ name: "", quantity: 1, category: "", location: "" });
     } catch {
       alert("เกิดข้อผิดพลาด");
     } finally {
@@ -129,19 +96,14 @@ export default function AdminLoansPage() {
     }
   };
 
-  const filteredLoans = loans.filter((loan) => {
-    const matchesSearch =
-      loan.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (loan.borrowerName || loan.borrowedBy.name)
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || loan.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredItems = stockItems.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
-  const totalPages = Math.ceil(filteredLoans.length / itemsPerPage);
-  const paginatedLoans = filteredLoans.slice(
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
@@ -158,11 +120,10 @@ export default function AdminLoansPage() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="รายการคืนทั้งหมด" value={stats.total} />
-          <StatCard label="กำลังยืม" value={stats.active} />
-          <StatCard label="เกินกำหนด" value={stats.overdue} />
-          <StatCard label="คืนสำเร็จแล้ว" value={stats.returned} />
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard label="รายการทั้งหมด" value={stats.total} />
+          <StatCard label="ใกล้หมด" value={stats.lowStock} />
+          <StatCard label="หมดสต็อก" value={stats.outOfStock} />
         </div>
 
         {/* Filters */}
@@ -172,7 +133,7 @@ export default function AdminLoansPage() {
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
-                placeholder="ค้นหาชื่ออุปกรณ์/ชื่อผู้รับผิดชอบ"
+                placeholder="ค้นหาชื่ออุปกรณ์/หมวดหมู่"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
@@ -181,21 +142,6 @@ export default function AdminLoansPage() {
                 ค้นหา
               </button>
             </div>
-
-            {/* Status Filter */}
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none"
-            >
-              <option value="all">ทุกสถานะ</option>
-              <option value="BORROWED">กำลังยืม</option>
-              <option value="RETURNED">คืนแล้ว</option>
-              <option value="OVERDUE">เกินกำหนด</option>
-            </select>
           </div>
 
           <div className="flex gap-2">
@@ -204,7 +150,7 @@ export default function AdminLoansPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50 flex items-center gap-1"
             >
               <Plus size={16} />
-              เพิ่มรายการยืม
+              เพิ่มรายการ
             </button>
             <button className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50">
               Export reprot
@@ -218,16 +164,16 @@ export default function AdminLoansPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  อุปกรณ์
+                  ชื่ออุปกรณ์
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  ผู้รับผิดชอบ
+                  หมวดหมู่
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  กำหนดคืน
+                  จำนวน
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  สถานะ
+                  สถานที่เก็บ
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600 text-right">
                   จัดการ
@@ -235,33 +181,26 @@ export default function AdminLoansPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {paginatedLoans.map((loan) => (
-                <tr key={loan.id} className="hover:bg-gray-50">
+              {paginatedItems.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900">
-                      {loan.itemName}
+                    <span className="text-sm text-gray-900">{item.name}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-sm text-gray-700">
+                      {item.category || "-"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`text-sm font-medium ${item.quantity === 0 ? "text-red-600" : item.quantity < 5 ? "text-amber-600" : "text-gray-900"}`}
+                    >
+                      {item.quantity}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-700">
-                      {loan.borrowerName || loan.borrowedBy.name}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">
-                      {new Date(loan.expectedReturnDate).toLocaleDateString(
-                        "th-TH",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        },
-                      )}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-700">
-                      {statusLabels[loan.status] || loan.status}
+                      {item.location || "-"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -270,7 +209,7 @@ export default function AdminLoansPage() {
                         <ChevronRight size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(loan.id)}
+                        onClick={() => handleDelete(item.id)}
                         className="p-1 text-gray-400 hover:text-red-600"
                       >
                         <Trash2 size={18} />
@@ -279,13 +218,17 @@ export default function AdminLoansPage() {
                   </td>
                 </tr>
               ))}
-              {paginatedLoans.length === 0 && (
+              {paginatedItems.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    ไม่พบรายการ
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <Package className="mx-auto mb-3 text-gray-300" size={40} />
+                    <p className="text-gray-500">ไม่มีรายการในสต็อก</p>
+                    <button
+                      onClick={() => setShowModal(true)}
+                      className="mt-3 text-sm text-gray-600 hover:text-gray-900 underline"
+                    >
+                      เพิ่มรายการใหม่
+                    </button>
                   </td>
                 </tr>
               )}
@@ -320,10 +263,10 @@ export default function AdminLoansPage() {
       {/* Add Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-bold text-gray-900">
-                เพิ่มการยืมใหม่
+                เพิ่มรายการสต็อก
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -340,9 +283,9 @@ export default function AdminLoansPage() {
                 </label>
                 <input
                   type="text"
-                  value={formData.itemName}
+                  value={formData.name}
                   onChange={(e) =>
-                    setFormData({ ...formData, itemName: e.target.value })
+                    setFormData({ ...formData, name: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
                   placeholder="กรอกชื่ออุปกรณ์"
@@ -351,33 +294,49 @@ export default function AdminLoansPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ชื่อผู้ยืม
+                  จำนวน
                 </label>
                 <input
-                  type="text"
-                  value={formData.borrowerName}
+                  type="number"
+                  min="0"
+                  value={formData.quantity}
                   onChange={(e) =>
-                    setFormData({ ...formData, borrowerName: e.target.value })
+                    setFormData({
+                      ...formData,
+                      quantity: parseInt(e.target.value) || 0,
+                    })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-                  placeholder="กรอกชื่อผู้ยืม"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  กำหนดคืน *
+                  หมวดหมู่
                 </label>
                 <input
-                  type="date"
-                  value={formData.expectedReturnDate}
+                  type="text"
+                  value={formData.category}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      expectedReturnDate: e.target.value,
-                    })
+                    setFormData({ ...formData, category: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  placeholder="เช่น อุปกรณ์สำนักงาน"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  สถานที่เก็บ
+                </label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  placeholder="เช่น ห้อง IT ชั้น 2"
                 />
               </div>
             </div>
@@ -390,7 +349,7 @@ export default function AdminLoansPage() {
                 ยกเลิก
               </button>
               <button
-                onClick={handleAddLoan}
+                onClick={handleAddStock}
                 disabled={isSaving}
                 className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 disabled:opacity-50"
               >
