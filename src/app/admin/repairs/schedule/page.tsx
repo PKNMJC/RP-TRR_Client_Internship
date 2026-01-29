@@ -45,22 +45,22 @@ interface RepairEvent {
 
 const statusMap: Record<string, { label: string; color: string; bg: string }> =
   {
-    PENDING: { label: "รอรับงาน", color: "text-amber-600", bg: "bg-amber-50" },
+    PENDING: { label: "รอรับงาน", color: "text-gray-900 font-bold", bg: "bg-white" },
     IN_PROGRESS: {
       label: "กำลังดำเนินการ",
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-gray-900 font-bold",
+      bg: "bg-white",
     },
     COMPLETED: {
       label: "เสร็จสิ้น",
-      color: "text-green-600",
-      bg: "bg-green-50",
+      color: "text-gray-900 font-bold",
+      bg: "bg-white",
     },
-    CANCELLED: { label: "ยกเลิก", color: "text-gray-600", bg: "bg-gray-50" },
+    CANCELLED: { label: "ยกเลิก", color: "text-gray-900 font-bold", bg: "bg-white" },
     WAITING_PARTS: {
       label: "รออะไหล่",
-      color: "text-orange-600",
-      bg: "bg-orange-50",
+      color: "text-gray-900 font-bold",
+      bg: "bg-white",
     },
   };
 
@@ -147,7 +147,7 @@ function CalendarContent() {
       for (let i = 0; i < 7; i++) {
         formattedDate = format(day, dateFormat);
         const cloneDay = day;
-        const hasEvents = events.some((e) =>
+        const hasEvents = events.filter((e) =>
           isSameDay(parseISO(e.createdAt), cloneDay),
         );
         const isSelected = selectedDate && isSameDay(day, selectedDate);
@@ -156,17 +156,18 @@ function CalendarContent() {
         days.push(
           <div
             key={day.toString()}
-            className={`relative flex flex-col items-center justify-center h-10 w-10 cursor-pointer rounded-full transition-all
-              ${!isCurrentMonth ? "text-gray-300" : "text-gray-700 font-medium"}
-              ${isSelected ? "bg-blue-500 text-white shadow-md shadow-blue-200" : "hover:bg-gray-100"}
+            className={`relative flex flex-col items-center justify-center h-10 w-10 cursor-pointer rounded-full transition-all group
+              ${!isCurrentMonth ? "text-gray-300" : "text-gray-500"}
+              ${isSelected ? "border-2 border-blue-400 text-blue-500 font-bold" : "hover:bg-gray-100"}
             `}
             onClick={() => setSelectedDate(cloneDay)}
           >
-            <span>{formattedDate}</span>
-            {hasEvents && !isSelected && (
-              <div className="flex gap-0.5 mt-0.5">
-                <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                <div className="w-1 h-1 bg-blue-400 rounded-full opacity-50"></div>
+            <span className="text-sm">{formattedDate}</span>
+            {hasEvents.length > 0 && (
+              <div className="flex gap-0.5 mt-0.5 absolute bottom-1">
+                {hasEvents.slice(0, 3).map((_, idx) => (
+                  <div key={idx} className="w-1 h-1 bg-blue-500 rounded-full"></div>
+                ))}
               </div>
             )}
           </div>,
@@ -181,39 +182,41 @@ function CalendarContent() {
       days = [];
     }
 
+    const monthYear = format(currentMonth, "MMMM yyyy", { locale: th });
+
     return (
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-fit">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-gray-800">
-            {format(currentMonth, "MMMM yyyy", { locale: th })}
+      <div className="bg-white p-8 rounded-[20px] shadow-sm border border-gray-100/50 h-fit">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-[1.4rem] font-bold text-gray-800">
+            {monthYear}
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-4">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500"
+              className="p-1 hover:bg-gray-100 rounded text-gray-400"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={22} />
             </button>
             <button
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500"
+              className="p-1 hover:bg-gray-100 rounded text-gray-400"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={22} />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 gap-1 mb-4">
           {daysOfWeek.map((d) => (
             <div
               key={d}
-              className="text-center text-xs text-gray-400 font-medium py-2"
+              className="text-center text-[0.8rem] text-gray-400 font-medium pb-2"
             >
               {d}
             </div>
           ))}
         </div>
-        <div className="space-y-1">{rows}</div>
+        <div className="space-y-4">{rows}</div>
       </div>
     );
   };
@@ -221,40 +224,45 @@ function CalendarContent() {
   const RepairCard = ({ event }: { event: RepairEvent }) => {
     const status = statusMap[event.status] || {
       label: event.status,
-      color: "text-gray-600",
-      bg: "bg-gray-100",
+      color: "text-gray-900 font-bold",
+      bg: "bg-white",
     };
     return (
-      <div className="bg-gray-100/60 p-5 rounded-2xl relative border border-transparent hover:border-gray-200 transition-all group">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            {event.problemTitle}
-            <div className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center text-[10px] text-gray-600 font-bold">
-              i
-            </div>
-          </h3>
+      <div className="bg-gray-200/50 p-6 rounded-sm relative border border-transparent hover:border-gray-300 transition-all group">
+         {/* Status Badge */}
+        <div className="absolute top-5 right-5">
           <div
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-200 shadow-sm ${status.color}`}
+            className={`px-4 py-2 rounded-sm text-sm font-bold bg-white border border-gray-300 shadow-sm ${status.color}`}
           >
             {status.label}
           </div>
         </div>
-        <p className="text-sm text-gray-500 mb-4 pr-12 line-clamp-1">
+
+        <div className="flex flex-col mb-1">
+          <h3 className="text-[1.2rem] font-bold text-gray-800 flex items-center gap-2">
+            {event.problemTitle}
+            <div className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 font-bold">
+              i
+            </div>
+          </h3>
+        </div>
+        
+        <p className="text-[1rem] text-gray-800 font-medium mb-4 pr-32">
           {event.problemDescription ||
             "สัญญาณอินเตอร์เน็ตติดๆดับๆ อินเตอร์เน็ตหลุดบ่อยมาก"}
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <Clock size={16} className="text-gray-400" />
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 text-gray-800 font-medium">
+            <Clock size={18} className="text-gray-600" />
             <span>{format(parseISO(event.createdAt), "HH:mm:ss")}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <MapPin size={16} className="text-gray-400" />
+          <div className="flex items-center gap-3 text-gray-800 font-medium">
+            <MapPin size={18} className="text-gray-600" />
             <span>{event.location}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <User size={16} className="text-gray-400" />
+          <div className="flex items-center gap-3 text-gray-800 font-medium">
+            <User size={18} className="text-gray-600" />
             <span>{event.reporterName}</span>
           </div>
         </div>
@@ -263,10 +271,10 @@ function CalendarContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6 lg:p-10 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-white p-8">
+      <div className="max-w-[1400px] mx-auto space-y-10">
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: "รายการซ่อมทั้งหมด", value: stats.total },
             { label: "รอรับงาน", value: stats.pending },
@@ -275,12 +283,12 @@ function CalendarContent() {
           ].map((stat, i) => (
             <div
               key={i}
-              className="bg-gray-200/80 p-6 rounded-2xl flex flex-col items-center justify-center text-center space-y-4 shadow-sm"
+              className="bg-gray-200/60 h-[140px] rounded-sm flex flex-col items-center justify-center text-center p-4"
             >
-              <span className="text-gray-600 font-medium text-lg">
+              <span className="text-gray-800 font-medium text-[1rem] mb-4">
                 {stat.label}
               </span>
-              <span className="text-5xl font-bold text-gray-800 tracking-tight">
+              <span className="text-[2.2rem] font-bold text-gray-800 leading-none">
                 {stat.value}
               </span>
             </div>
@@ -288,29 +296,26 @@ function CalendarContent() {
         </div>
 
         {/* Filter Bar */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative group w-full md:w-80">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-gray-600"
-              size={18}
-            />
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Search */}
+          <div className="flex flex-1 max-w-md">
             <input
               type="text"
               placeholder="ค้นหาชื่อผู้แจ้ง/เลขรหัส"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-200/80 rounded-xl pl-11 pr-4 py-3 text-gray-700 placeholder-gray-500 font-medium outline-none focus:bg-gray-200 transition-all border border-transparent focus:border-gray-300"
+              className="w-full px-4 py-2.5 bg-gray-200 border-none rounded-sm bg-gray-200 text-[1rem] placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-300"
             />
+             <button className="ml-2 px-6 py-2.5 bg-gray-200 text-gray-800 text-[1rem] font-bold rounded-sm hover:bg-gray-300 transition-colors">
+              ค้นหา
+            </button>
           </div>
-          <button className="bg-gray-200/80 px-6 py-3 rounded-xl font-bold text-gray-700 hover:bg-gray-300 transition-colors border border-transparent">
-            ค้นหา
-          </button>
 
           <div className="relative">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="appearance-none bg-gray-200/80 pl-4 pr-10 py-3 rounded-xl font-bold text-gray-700 outline-none hover:bg-gray-300 transition-all cursor-pointer border border-transparent focus:border-gray-300"
+              className="appearance-none pl-4 pr-12 py-2.5 bg-gray-200 text-gray-800 text-[1rem] font-bold rounded-sm border-none focus:outline-none focus:ring-1 focus:ring-gray-300"
             >
               <option value="all">ทุกสถานะ</option>
               <option value="PENDING">รอรับงาน</option>
@@ -319,8 +324,8 @@ function CalendarContent() {
               <option value="CANCELLED">ยกเลิก</option>
             </select>
             <ChevronDown
-              size={18}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              size={20}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
             />
           </div>
 
@@ -328,7 +333,7 @@ function CalendarContent() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="appearance-none bg-gray-200/80 pl-4 pr-10 py-3 rounded-xl font-bold text-gray-700 outline-none hover:bg-gray-300 transition-all cursor-pointer border border-transparent focus:border-gray-300"
+              className="appearance-none pl-4 pr-12 py-2.5 bg-gray-200 text-gray-800 text-[1rem] font-bold rounded-sm border-none focus:outline-none focus:ring-1 focus:ring-gray-300"
             >
               <option value="all">ทุกความสำคัญ</option>
               <option value="CRITICAL">เร่งด่วนที่สุด</option>
@@ -336,19 +341,19 @@ function CalendarContent() {
               <option value="NORMAL">ปกติ</option>
             </select>
             <ChevronDown
-              size={18}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              size={20}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
             />
           </div>
         </div>
 
         {/* Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8 space-y-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="lg:col-span-8 space-y-12">
             {/* Today Section */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">วันนี้</h2>
-              <div className="space-y-4">
+              <h2 className="text-[1.5rem] font-bold text-gray-800 mb-8">วันนี้</h2>
+              <div className="space-y-6">
                 {todayEvents.length > 0 ? (
                   todayEvents.map((event) => (
                     <RepairCard key={event.id} event={event} />
@@ -363,10 +368,10 @@ function CalendarContent() {
 
             {/* Upcoming Section */}
             <section>
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              <h2 className="text-[1.5rem] font-bold text-gray-800 mb-8">
                 วันที่กำลังจะมาถึง
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map((event) => (
                     <RepairCard key={event.id} event={event} />
@@ -386,6 +391,9 @@ function CalendarContent() {
     </div>
   );
 }
+  
+
+
 
 export default function RepairSchedulePage() {
   return (
@@ -403,3 +411,4 @@ export default function RepairSchedulePage() {
     </Suspense>
   );
 }
+
