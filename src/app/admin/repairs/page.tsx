@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Clock,
+} from "lucide-react";
 import { apiFetch } from "@/services/api";
 
 interface Repair {
@@ -28,6 +34,8 @@ function AdminRepairsContent() {
   const router = useRouter();
   const [repairs, setRepairs] = useState<Repair[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,20 +54,32 @@ function AdminRepairsContent() {
     if (status) setFilterStatus(status);
   }, [searchParams]);
 
-  useEffect(() => {
-    const fetchRepairs = async () => {
-      try {
-        setLoading(true);
-        const data = await apiFetch("/api/repairs");
-        setRepairs((data as Repair[]) || []);
-      } catch (err) {
-        console.error("Error fetching repairs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRepairs();
+  const fetchRepairs = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      else setIsRefreshing(true);
+
+      const data = await apiFetch("/api/repairs");
+      setRepairs((data as Repair[]) || []);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error("Error fetching repairs:", err);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchRepairs();
+
+    // Polling every 30 seconds
+    const interval = setInterval(() => {
+      fetchRepairs(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchRepairs]);
 
   const handleDelete = async (id: string, ticketCode: string) => {
     if (!window.confirm(`ลบงานซ่อม #${ticketCode}?`)) return;
@@ -149,10 +169,35 @@ function AdminRepairsContent() {
             </select>
           </div>
 
-          {/* Export Button */}
-          <button className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50">
-            Export reprot
-          </button>
+          {/* Export Button & Real-time Info */}
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full border border-green-100 text-xs font-medium">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              Real-time Active
+              <span className="text-green-300 mx-1">|</span>
+              <Clock size={12} className="inline mr-1" />
+              อัพเดตล่าสุด: {lastUpdated.toLocaleTimeString("th-TH")}
+            </div>
+
+            <button
+              onClick={() => fetchRepairs(false)}
+              disabled={isRefreshing}
+              className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              title="รีเฟรชข้อมูล"
+            >
+              <RefreshCw
+                size={18}
+                className={`text-gray-600 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+            </button>
+
+            <button className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50 font-medium">
+              Export report
+            </button>
+          </div>
         </div>
 
         {/* Desktop Table */}
