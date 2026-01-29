@@ -174,8 +174,8 @@ export default function AdminDashboard() {
         {/* Recent Items Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Repairs */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-4 border-b border-gray-100">
+          <div className="bg-white rounded-lg">
+            <div className="p-4">
               <h2 className="font-semibold text-gray-900">งานแจ้งซ่อม</h2>
             </div>
             <div className="divide-y divide-gray-100">
@@ -211,8 +211,8 @@ export default function AdminDashboard() {
           </div>
 
           {/* Recent Loans */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-4 border-b border-gray-100">
+          <div className="bg-white rounded-lg">
+            <div className="p-4">
               <h2 className="font-semibold text-gray-900">การยืม</h2>
             </div>
             <div className="divide-y divide-gray-100">

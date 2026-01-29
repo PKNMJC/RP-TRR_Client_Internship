@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { apiFetch } from "@/services/api";
 import {
   Search,
@@ -35,7 +36,8 @@ const statusLabels: Record<string, string> = {
   OVERDUE: "เกินกำหนด",
 };
 
-export default function AdminLoansPage() {
+function AdminLoansContent() {
+  const searchParams = useSearchParams();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -62,6 +64,14 @@ export default function AdminLoansPage() {
     overdue: loans.filter((l) => l.status === "OVERDUE").length,
     returned: loans.filter((l) => l.status === "RETURNED").length,
   };
+
+  // Read status from URL
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status) {
+      setFilterStatus(status);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchLoans();
@@ -412,5 +422,19 @@ function StatCard({ label, value }: { label: string; value: number }) {
         <span className="text-3xl font-bold text-gray-900">{value}</span>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoansPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+          กำลังโหลด...
+        </div>
+      }
+    >
+      <AdminLoansContent />
+    </Suspense>
   );
 }
