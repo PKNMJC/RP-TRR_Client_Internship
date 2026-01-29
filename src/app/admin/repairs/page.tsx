@@ -8,6 +8,8 @@ import {
   ChevronRight,
   RefreshCw,
   Clock,
+  Play,
+  Pause,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
 
@@ -36,6 +38,8 @@ function AdminRepairsContent() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [countdown, setCountdown] = useState(15); // 15 seconds refresh
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,14 +76,24 @@ function AdminRepairsContent() {
 
   useEffect(() => {
     fetchRepairs();
-
-    // Polling every 30 seconds
-    const interval = setInterval(() => {
-      fetchRepairs(false);
-    }, 30000);
-
-    return () => clearInterval(interval);
   }, [fetchRepairs]);
+
+  // Auto-refresh countdown logic
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (autoRefreshEnabled) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            fetchRepairs(false);
+            return 15;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [autoRefreshEnabled, fetchRepairs]);
 
   const handleDelete = async (id: string, ticketCode: string) => {
     if (!window.confirm(`ลบงานซ่อม #${ticketCode}?`)) return;
@@ -173,17 +187,40 @@ function AdminRepairsContent() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full border border-green-100 text-xs font-medium">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                {autoRefreshEnabled && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${autoRefreshEnabled ? "bg-green-500" : "bg-gray-400"}`}
+                ></span>
               </span>
-              Real-time Active
+              {autoRefreshEnabled ? "Real-time" : "Auto-Refresh OFF"}
+              <span className="text-green-300 mx-1">|</span>
+              <span className="font-mono">{countdown}s</span>
               <span className="text-green-300 mx-1">|</span>
               <Clock size={12} className="inline mr-1" />
-              อัพเดตล่าสุด: {lastUpdated.toLocaleTimeString("th-TH")}
+              {lastUpdated.toLocaleTimeString("th-TH")}
             </div>
 
             <button
-              onClick={() => fetchRepairs(false)}
+              onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+              className={`p-2 border border-gray-300 rounded-lg transition-colors ${
+                autoRefreshEnabled
+                  ? "bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+              title={
+                autoRefreshEnabled ? "ปิด Auto Refresh" : "เปิด Auto Refresh"
+              }
+            >
+              {autoRefreshEnabled ? <Pause size={18} /> : <Play size={18} />}
+            </button>
+
+            <button
+              onClick={() => {
+                fetchRepairs(false);
+                setCountdown(15);
+              }}
               disabled={isRefreshing}
               className="p-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 transition-colors"
               title="รีเฟรชข้อมูล"
