@@ -12,15 +12,23 @@ import {
   Pause,
 } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import * as XLSX from "xlsx";
 
 interface Repair {
   id: string;
   ticketCode: string;
   problemTitle: string;
+  problemDescription?: string;
   location: string;
   reporterName: string;
+  reporterDepartment?: string;
+  reporterPhone?: string;
   status: string;
+  urgency: string;
   createdAt: string;
+  assignee?: {
+    name: string;
+  };
 }
 
 const statusLabels: Record<string, string> = {
@@ -121,6 +129,97 @@ function AdminRepairsContent() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
+
+  const handleExportExcel = () => {
+    if (repairs.length === 0) {
+      alert("ไม่มีข้อมูลสำหรับส่งออก");
+      return;
+    }
+
+    try {
+      // 1. Prepare and format data for export
+      const exportData = filteredRepairs.map((repair) => ({
+        เลขใบงาน: repair.ticketCode,
+        วันที่แจ้ง: new Date(repair.createdAt).toLocaleDateString("th-TH"),
+        เวลาที่แจ้ง: new Date(repair.createdAt).toLocaleTimeString("th-TH", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        "ปัญหา/รายการ": repair.problemTitle,
+        รายละเอียด: repair.problemDescription || "-",
+        สถานที่: repair.location,
+        ความสำคัญ:
+          repair.urgency === "CRITICAL"
+            ? "ด่วนมาก"
+            : repair.urgency === "URGENT"
+              ? "ด่วน"
+              : "ปกติ",
+        ชื่อผู้แจ้ง: repair.reporterName || "-",
+        แผนก: repair.reporterDepartment || "-",
+        เบอร์โทรศัพท์: repair.reporterPhone || "-",
+        สถานะ: statusLabels[repair.status] || repair.status,
+        ผู้รับผิดชอบ: repair.assignee?.name || "ยังไม่มีผู้รับงาน",
+      }));
+
+      // 2. Create Workbook and Worksheet
+      const wb = XLSX.utils.book_new();
+
+      // Create Worksheet with professional headers
+      const ws = XLSX.utils.aoa_to_sheet([
+        ["รายงานการแจ้งซ่อม (Repair Management Report)"],
+        [
+          `วันที่พิมพ์: ${new Date().toLocaleDateString("th-TH")} ${new Date().toLocaleTimeString("th-TH")}`,
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          `จำนวนทั้งหมด: ${filteredRepairs.length} รายการ`,
+        ],
+        [""], // Spacer
+      ]);
+
+      // Add actual data starting from row 4
+      XLSX.utils.sheet_add_json(ws, exportData, { origin: "A4" });
+
+      // 3. Set Styles and Layout
+      // Set Column Widths
+      ws["!cols"] = [
+        { wch: 20 }, // เลขใบงาน
+        { wch: 15 }, // วันที่แจ้ง
+        { wch: 10 }, // เวลาที่แจ้ง
+        { wch: 30 }, // ปัญหา/รายการ
+        { wch: 40 }, // รายละเอียด
+        { wch: 20 }, // สถานที่
+        { wch: 12 }, // ความสำคัญ
+        { wch: 20 }, // ชื่อผู้แจ้ง
+        { wch: 15 }, // แผนก
+        { wch: 15 }, // เบอร์โทรศัพท์
+        { wch: 15 }, // สถานะ
+        { wch: 20 }, // ผู้รับผิดชอบ
+      ];
+
+      // Merge Title Cells
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }, // Main Title
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // Date info
+        { s: { r: 1, c: 6 }, e: { r: 1, c: 11 } }, // Summary info
+      ];
+
+      // 4. Download File
+      XLSX.utils.book_append_sheet(wb, ws, "RepairsReport");
+      const fileName = `Export_Repairs_${new Date().toISOString().split("T")[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    } catch (error) {
+      console.error("Export error:", error);
+      alert("เกิดข้อผิดพลาดในการส่งออกไฟล์ Excel");
+    }
+  };
 
   if (loading) {
     return (
@@ -231,7 +330,10 @@ function AdminRepairsContent() {
               />
             </button>
 
-            <button className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50 font-medium">
+            <button
+              onClick={handleExportExcel}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50 font-medium flex items-center gap-2"
+            >
               Export report
             </button>
           </div>
