@@ -134,7 +134,7 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 px-4 flex items-center justify-between shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white z-50 px-4 flex items-center justify-between shadow-sm">
         <Link href="/admin/dashboard" className="flex items-center gap-2">
           <span className="font-bold text-gray-800 text-lg tracking-wide">
             TRR-RP
@@ -158,12 +158,12 @@ export default function AdminSidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-56 bg-gray-50 border-r border-gray-200 transition-transform duration-300 z-[60] flex flex-col ${
+        className={`fixed left-0 top-0 h-screen w-56 bg-white transition-transform duration-300 z-[60] flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Logo Header */}
-        <div className="h-20 flex items-center justify-center border-b border-gray-200">
+        <div className="h-20 flex items-center justify-center">
           <Link href="/admin/dashboard" className="flex items-center">
             <span className="text-xl font-bold text-gray-800 tracking-wider">
               TRR-RP
@@ -250,7 +250,7 @@ export default function AdminSidebar() {
         </nav>
 
         {/* User Profile Section */}
-        <div className="p-4 border-t border-gray-200 bg-white">
+        <div className="p-4 bg-white">
           <div className="flex items-center gap-3 mb-4">
             {adminProfile?.pictureUrl ? (
               <Image
