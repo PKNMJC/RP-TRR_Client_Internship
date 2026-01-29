@@ -158,8 +158,8 @@ export default function AdminStockPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
@@ -234,6 +234,53 @@ export default function AdminStockPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {paginatedItems.map((item) => (
+            <div key={item.id} className="bg-white rounded-lg p-4">
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {item.name}
+                </span>
+                <span
+                  className={`text-sm font-bold ${item.quantity === 0 ? "text-red-600" : item.quantity < 5 ? "text-amber-600" : "text-gray-900"}`}
+                >
+                  {item.quantity} ชิ้น
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mb-1">
+                หมวดหมู่: {item.category || "-"}
+              </p>
+              <p className="text-xs text-gray-500">
+                สถานที่: {item.location || "-"}
+              </p>
+              <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="p-2 text-gray-400 hover:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {paginatedItems.length === 0 && (
+            <div className="bg-white rounded-lg p-8 text-center">
+              <Package className="mx-auto mb-3 text-gray-300" size={40} />
+              <p className="text-gray-500">ไม่มีรายการในสต็อก</p>
+              <button
+                onClick={() => setShowModal(true)}
+                className="mt-3 text-sm text-gray-600 hover:text-gray-900 underline"
+              >
+                เพิ่มรายการใหม่
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Pagination */}

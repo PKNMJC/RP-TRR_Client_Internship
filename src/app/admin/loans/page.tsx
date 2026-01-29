@@ -222,8 +222,8 @@ function AdminLoansContent() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
@@ -301,6 +301,49 @@ function AdminLoansContent() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {paginatedLoans.map((loan) => (
+            <div key={loan.id} className="bg-white rounded-lg p-4">
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {loan.itemName}
+                </span>
+                <span className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">
+                  {statusLabels[loan.status] || loan.status}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mb-1">
+                ผู้ยืม: {loan.borrowerName || loan.borrowedBy.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                กำหนดคืน:{" "}
+                {new Date(loan.expectedReturnDate).toLocaleDateString("th-TH", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+              <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={() => handleDelete(loan.id)}
+                  className="p-2 text-gray-400 hover:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {paginatedLoans.length === 0 && (
+            <div className="bg-white rounded-lg p-8 text-center text-gray-500">
+              ไม่พบรายการ
+            </div>
+          )}
         </div>
 
         {/* Pagination */}

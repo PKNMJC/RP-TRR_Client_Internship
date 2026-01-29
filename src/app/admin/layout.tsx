@@ -1,6 +1,5 @@
 "use client";
 
-import type { Metadata } from "next";
 import AdminSidebar from "@/components/AdminSidebar";
 import "@/app/globals.css";
 
@@ -10,10 +9,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex bg-slate-950 min-h-screen">
+    <div className="flex bg-gray-100 min-h-screen">
       <AdminSidebar />
-      <main className="flex-1 lg:ml-64 lg:pt-0 pt-16 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 min-h-screen">
-        <div className="p-4 md:p-8">{children}</div>
+      <main className="flex-1 lg:ml-56 lg:pt-0 pt-16 min-h-screen">
+        {children}
       </main>
     </div>
   );

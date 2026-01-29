@@ -155,8 +155,8 @@ function AdminRepairsContent() {
           </button>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Desktop Table */}
+        <div className="hidden md:block bg-white rounded-lg overflow-hidden">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
@@ -167,7 +167,7 @@ function AdminRepairsContent() {
                   ปัญหา
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
-                  สถานที่ / ผู้แจ้ง
+                  สถานที่
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
                   สถานะ
@@ -241,6 +241,49 @@ function AdminRepairsContent() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-3">
+          {paginatedRepairs.map((repair) => (
+            <div
+              key={repair.id}
+              className="bg-white rounded-lg p-4"
+              onClick={() => router.push(`/admin/repairs/${repair.id}`)}
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-mono text-gray-500">
+                  {repair.ticketCode}
+                </span>
+                <span className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">
+                  {statusLabels[repair.status] || repair.status}
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-900 mb-1">
+                {repair.problemTitle}
+              </p>
+              <p className="text-xs text-gray-500">{repair.location}</p>
+              <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(repair.id, repair.ticketCode);
+                  }}
+                  className="p-2 text-gray-400 hover:text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <button className="p-2 text-gray-400 hover:text-gray-600">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          {paginatedRepairs.length === 0 && (
+            <div className="bg-white rounded-lg p-8 text-center text-gray-500">
+              ไม่พบรายการ
+            </div>
+          )}
         </div>
 
         {/* Pagination */}
