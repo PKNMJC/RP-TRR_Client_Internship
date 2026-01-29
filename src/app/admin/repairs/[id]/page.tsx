@@ -13,6 +13,12 @@ type Status =
 
 type Urgency = "NORMAL" | "URGENT" | "CRITICAL";
 
+interface Attachment {
+  id: number;
+  fileUrl: string;
+  filename: string;
+}
+
 interface RepairDetail {
   id: string;
   ticketCode: string;
@@ -28,6 +34,7 @@ interface RepairDetail {
   reporterPhone: string;
   createdAt: string;
   notes: string;
+  attachments: Attachment[];
 }
 
 export default function RepairDetailPage() {
@@ -35,13 +42,17 @@ export default function RepairDetailPage() {
   const { id } = useParams<{ id: string }>();
 
   const [data, setData] = useState<RepairDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Editable fields
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<Status>("PENDING");
   const [urgency, setUrgency] = useState<Urgency>("NORMAL");
   const [assigneeId, setAssigneeId] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   /* ---------------- Fetch ---------------- */
   useEffect(() => {
@@ -67,8 +78,12 @@ export default function RepairDetailPage() {
           reporterPhone: res.reporterPhone,
           createdAt: res.createdAt,
           notes: res.notes || "",
+          attachments: res.attachments || [],
         });
 
+        setTitle(res.problemTitle);
+        setDescription(res.problemDescription || "");
+        setLocation(res.location);
         setStatus(res.status);
         setUrgency(res.urgency);
         setNotes(res.notes || "");
@@ -92,10 +107,13 @@ export default function RepairDetailPage() {
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
+          problemTitle: title,
+          problemDescription: description,
+          location: location,
           status,
           urgency,
           notes,
-          assignee: assigneeId ? { id: assigneeId } : null,
+          assignedTo: assigneeId ? parseInt(assigneeId) : null,
         },
       });
 
@@ -140,16 +158,62 @@ export default function RepairDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT : READ */}
           <section className="lg:col-span-2 space-y-6">
-            <Block title="รายละเอียดปัญหา">
-              <Item label="หัวข้อ" value={data.title} />
-              <Item label="หมวดหมู่" value={data.category} />
-              <Item label="สถานที่" value={data.location} />
-              <Item
-                label="รายละเอียด"
-                value={data.description}
-                multiline
-              />
+            <Block title="แก้ไขรายละเอียดปัญหา">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-zinc-500">หัวข้อปัญหา</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-zinc-500">สถานที่</label>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-zinc-500">
+                    รายละเอียดเพิ่มเติม
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    className="w-full border border-zinc-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                  />
+                </div>
+              </div>
             </Block>
+
+            {data.attachments && data.attachments.length > 0 && (
+              <Block title="รูปภาพประกอบ">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {data.attachments.map((file) => (
+                    <a
+                      key={file.id}
+                      href={file.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="aspect-square relative rounded-lg overflow-hidden border border-zinc-200 group"
+                    >
+                      <img
+                        src={file.fileUrl}
+                        alt={file.filename}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </Block>
+            )}
 
             <Block title="ข้อมูลผู้แจ้ง">
               <Item label="ชื่อ" value={data.reporterName} />
@@ -161,11 +225,7 @@ export default function RepairDetailPage() {
           {/* RIGHT : ACTION */}
           <aside className="space-y-6">
             <Block title="การจัดการ">
-              <Select
-                label="สถานะ"
-                value={status}
-                onChange={setStatus}
-              >
+              <Select label="สถานะ" value={status} onChange={setStatus}>
                 <option value="PENDING">รอดำเนินการ</option>
                 <option value="IN_PROGRESS">กำลังดำเนินการ</option>
                 <option value="WAITING_PARTS">รออะไหล่</option>
@@ -255,9 +315,7 @@ function Item({
     <div className="text-sm">
       <div className="text-zinc-500 mb-1">{label}</div>
       <div
-        className={`text-zinc-900 ${
-          multiline ? "whitespace-pre-wrap" : ""
-        }`}
+        className={`text-zinc-900 ${multiline ? "whitespace-pre-wrap" : ""}`}
       >
         {value || "-"}
       </div>
