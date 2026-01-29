@@ -194,7 +194,7 @@ function AdminRepairsContent() {
                   className={`relative inline-flex rounded-full h-2 w-2 ${autoRefreshEnabled ? "bg-green-500" : "bg-gray-400"}`}
                 ></span>
               </span>
-              {autoRefreshEnabled ? "Real-time" : "Auto-Refresh OFF"}
+              {autoRefreshEnabled ? "เรียลไทม์" : "ปิดเรียลไทม์"}
               <span className="text-green-300 mx-1">|</span>
               <span className="font-mono">{countdown}s</span>
               <span className="text-green-300 mx-1">|</span>
