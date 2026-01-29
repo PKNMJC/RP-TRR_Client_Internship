@@ -14,6 +14,7 @@ import {
 
 interface StockItem {
   id: number;
+  code: string;
   name: string;
   quantity: number;
   category: string;
@@ -29,6 +30,7 @@ export default function AdminStockPage() {
   const [showModal, setShowModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
+    code: "",
     name: "",
     quantity: 1,
     category: "",
@@ -88,7 +90,15 @@ export default function AdminStockPage() {
       });
       setStockItems([...stockItems, newItem]);
       setShowModal(false);
-      setFormData({ name: "", quantity: 1, category: "", location: "" });
+      setStockItems([...stockItems, newItem]);
+      setShowModal(false);
+      setFormData({
+        code: "",
+        name: "",
+        quantity: 1,
+        category: "",
+        location: "",
+      });
     } catch {
       alert("เกิดข้อผิดพลาด");
     } finally {
@@ -99,6 +109,7 @@ export default function AdminStockPage() {
   const filteredItems = stockItems.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -133,7 +144,7 @@ export default function AdminStockPage() {
             <div className="relative flex-1 max-w-md">
               <input
                 type="text"
-                placeholder="ค้นหาชื่ออุปกรณ์/หมวดหมู่"
+                placeholder="ค้นหาชื่ออุปกรณ์ / รหัส / หมวดหมู่"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
@@ -164,6 +175,9 @@ export default function AdminStockPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
+                  รหัส
+                </th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-600">
                   ชื่ออุปกรณ์
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-600">
@@ -183,6 +197,11 @@ export default function AdminStockPage() {
             <tbody className="divide-y divide-gray-100">
               {paginatedItems.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <span className="text-sm font-mono text-gray-900">
+                      {item.code || "-"}
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
                     <span className="text-sm text-gray-900">{item.name}</span>
                   </td>
@@ -241,21 +260,28 @@ export default function AdminStockPage() {
           {paginatedItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg p-4">
               <div className="flex justify-between items-start mb-2">
-                <span className="text-sm font-medium text-gray-900">
-                  {item.name}
-                </span>
+                <div>
+                  <span className="text-xs font-mono text-gray-500 block mb-1">
+                    {item.code || "-"}
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {item.name}
+                  </span>
+                </div>
                 <span
                   className={`text-sm font-bold ${item.quantity === 0 ? "text-red-600" : item.quantity < 5 ? "text-amber-600" : "text-gray-900"}`}
                 >
                   {item.quantity} ชิ้น
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mb-1">
-                หมวดหมู่: {item.category || "-"}
-              </p>
-              <p className="text-xs text-gray-500">
-                สถานที่: {item.location || "-"}
-              </p>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <p className="text-xs text-gray-500">
+                  หมวดหมู่: {item.category || "-"}
+                </p>
+                <p className="text-xs text-gray-500 text-right">
+                  สถานที่: {item.location || "-"}
+                </p>
+              </div>
               <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
                 <button
                   onClick={() => handleDelete(item.id)}
@@ -324,19 +350,35 @@ export default function AdminStockPage() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ชื่ออุปกรณ์ *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
-                  placeholder="กรอกชื่ออุปกรณ์"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    รหัสอุปกรณ์
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) =>
+                      setFormData({ ...formData, code: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+                    placeholder="เช่น EQ-001"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ชื่ออุปกรณ์ *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+                    placeholder="ระบุชื่อ"
+                  />
+                </div>
               </div>
 
               <div>
