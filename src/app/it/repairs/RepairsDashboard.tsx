@@ -55,6 +55,7 @@ export function RepairsDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [filterScope, setFilterScope] = useState<"all" | "mine">("mine");
 
   const [currentUser, setCurrentUser] = useState<{
     id: number;
@@ -75,9 +76,6 @@ export function RepairsDashboard() {
       if (showLoading) setLoading(true);
       else setIsRefreshing(true);
 
-      // Fetch all repairs like Admin, but we will filter in UI for now
-      // or if API supported /my-tasks we'd use that.
-      // Assuming generic /api/repairs returns all.
       const data = await apiFetch("/api/repairs");
       setRepairs((data as Repair[]) || []);
       setLastUpdated(new Date());
@@ -110,18 +108,7 @@ export function RepairsDashboard() {
     return () => clearInterval(timer);
   }, [autoRefreshEnabled, fetchRepairs]);
 
-  // Filter Logic:
-  // Admin sees ALL.
-  // IT sees ALL? Or just "My Repairs"?
-  // The user request said "IT of themselves" (My IT).
-  // But also said "model off repairs of admin" (which shows all).
-  // AND the image shows "Jobs Waiting", "Urgent", "My Jobs", "Completed".
-  // So likely the TABLE shows a mix or filtered view.
-  // Let's implement filtering for "My Repairs" primarily but maybe allow toggle?
-  // Actually, standard IT dashboard usually shows ALL tasks so they can PICK them (Pending)
-  // OR work on their own (In Progress).
-  // Let's filter slightly differently than AdminStats.
-
+  // Stats Logic
   const myRepairsCount = currentUser
     ? repairs.filter((r) => r.assignee?.id === currentUser.id).length
     : 0;
@@ -129,7 +116,7 @@ export function RepairsDashboard() {
   const urgentCount = repairs.filter(
     (r) => r.urgency === "URGENT" || r.urgency === "CRITICAL",
   ).length;
-  const completedCount = repairs.filter((r) => r.status === "COMPLETED").length; // Maybe just today/week? Admin shows total.
+  const completedCount = repairs.filter((r) => r.status === "COMPLETED").length;
 
   const stats = {
     waiting: pendingCount,
@@ -149,24 +136,15 @@ export function RepairsDashboard() {
     const matchesStatus =
       filterStatus === "all" || item.status === filterStatus;
 
-    // IMPORTANT: Should we filter by "My Repairs" only?
-    // The prompt says "repaire of it... but it of themselves".
-    // Usually means "My view".
-    // If I select "My Tasks" in a filter?
-    // Or is the whole page "My Repairs"?
-    // The Dashboard had "My Repairs".
-    // This page likely should show EVERYTHING available to IT (so they can pick up pending ones)
-    // PLUS their own.
-    // So "All" is probably correct for the table, but maybe highlight mine?
-    // Or maybe the user WANTS only "My Repairs" here?
-    // "IT of themselves" -> Likely "My Repairs Page".
-    // BUT if it's "My Repairs", then "Pending" (Waiting for acceptance) implies global pending?
-    // Let's stick to "Show All" but add a "My Tasks" filter option that is default?
-    // Or just show all (Admin style) and let them filter.
-    // The Admin style shows All.
-    // Let's show All matches "Admin model".
+    // Scope Filter (My Jobs vs All)
+    const matchesScope =
+      filterScope === "all"
+        ? true
+        : currentUser
+          ? item.assignee?.id === currentUser.id
+          : false;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesScope;
   });
 
   const totalPages = Math.ceil(filteredRepairs.length / itemsPerPage);
@@ -220,17 +198,55 @@ export function RepairsDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Stats Row - Custom for IT context */}
+        {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="งานรอรับเรื่อง" value={stats.waiting} />
-          <StatCard label="งานด่วน" value={stats.urgent} />
-          <StatCard label="งานของฉัน" value={stats.mine} />
-          <StatCard label="เสร็จสิ้น" value={stats.completed} />
+          <div onClick={() => setFilterScope("all")} className="cursor-pointer">
+            <StatCard label="งานรอรับเรื่อง" value={stats.waiting} />
+          </div>
+          <div
+            onClick={() => {
+              setFilterScope("all");
+            }}
+            className="cursor-pointer"
+          >
+            <StatCard label="งานด่วน" value={stats.urgent} />
+          </div>
+          <div
+            onClick={() => setFilterScope("mine")}
+            className={`cursor-pointer ring-2 ring-offset-2 rounded-lg transition-all ${filterScope === "mine" ? "ring-blue-500" : "ring-transparent"}`}
+          >
+            <StatCard label="งานของฉัน" value={stats.mine} />
+          </div>
+          <div
+            onClick={() => {
+              setFilterScope("all");
+              setFilterStatus("COMPLETED");
+            }}
+            className="cursor-pointer"
+          >
+            <StatCard label="เสร็จสิ้น" value={stats.completed} />
+          </div>
         </div>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            {/* Scope Toggle */}
+            <div className="flex bg-gray-200 rounded-lg p-1">
+              <button
+                onClick={() => setFilterScope("all")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filterScope === "all" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                ทั้งหมด
+              </button>
+              <button
+                onClick={() => setFilterScope("mine")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filterScope === "mine" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                งานของฉัน
+              </button>
+            </div>
+
             {/* Search */}
             <div className="relative flex-1 max-w-md">
               <input
@@ -258,13 +274,6 @@ export function RepairsDashboard() {
               <option value="PENDING">รอรับงาน</option>
               <option value="IN_PROGRESS">กำลังดำเนินการ</option>
               <option value="COMPLETED">เสร็จสิ้น</option>
-            </select>
-
-            {/* Priority Filter - Visual only for now or implement if needed */}
-            <select className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none">
-              <option value="all">ทุกความสำคัญ</option>
-              <option value="NORMAL">ปกติ</option>
-              <option value="URGENT">ด่วน</option>
             </select>
           </div>
 
@@ -373,7 +382,9 @@ export function RepairsDashboard() {
                     colSpan={5}
                     className="px-6 py-12 text-center text-gray-500"
                   >
-                    ไม่พบรายการ
+                    {filterScope === "mine"
+                      ? "คุณยังไม่มีงานที่ได้รับมอบหมาย"
+                      : "ไม่พบรายการ"}
                   </td>
                 </tr>
               )}
@@ -405,6 +416,13 @@ export function RepairsDashboard() {
               </p>
             </div>
           ))}
+          {paginatedRepairs.length === 0 && (
+            <div className="bg-white rounded-lg p-8 text-center text-gray-500">
+              {filterScope === "mine"
+                ? "คุณยังไม่มีงานที่ได้รับมอบหมาย"
+                : "ไม่พบรายการ"}
+            </div>
+          )}
         </div>
 
         {/* Pagination */}
