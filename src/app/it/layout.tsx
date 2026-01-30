@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { ProtectedRoute } from '@/hooks/useAuth';
-import ITSidebar from '@/components/ITSidebar';
+import { ProtectedRoute } from "@/hooks/useAuth";
+import ITSidebar from "@/components/ITSidebar";
 
 export default function ITLayout({
   children,
@@ -13,9 +13,7 @@ export default function ITLayout({
       <div className="flex min-h-screen bg-white">
         <ITSidebar />
         <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
-          <div className="p-4 lg:p-8">
-            {children}
-          </div>
+          <div className="lg:p-8">{children}</div>
         </main>
       </div>
     </ProtectedRoute>
