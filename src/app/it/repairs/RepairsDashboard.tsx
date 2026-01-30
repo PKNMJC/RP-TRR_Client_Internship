@@ -28,10 +28,10 @@ interface Repair {
   status: string;
   urgency: string;
   createdAt: string;
-  assignee?: {
+  assignees?: {
     id: number;
     name: string;
-  };
+  }[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -107,7 +107,7 @@ export function RepairsDashboard() {
       filtered = repairs.filter(
         (r) =>
           currentUser &&
-          r.assignee?.id === currentUser.id &&
+          r.assignees?.some((a) => a.id === currentUser.id) &&
           !["COMPLETED", "CANCELLED"].includes(r.status),
       );
     } else if (activeTab === "unassigned") {
@@ -145,7 +145,7 @@ export function RepairsDashboard() {
   const countMine = currentUser
     ? repairs.filter(
         (r) =>
-          r.assignee?.id === currentUser.id &&
+          r.assignees?.some((a) => a.id === currentUser.id) &&
           !["COMPLETED", "CANCELLED"].includes(r.status),
       ).length
     : 0;
@@ -167,7 +167,7 @@ export function RepairsDashboard() {
             : "ปกติ",
       สถานที่: repair.location,
       สถานะ: statusLabels[repair.status] || repair.status,
-      ผู้รับผิดชอบ: repair.assignee?.name || "-",
+      ผู้รับผิดชอบ: repair.assignees?.map((a) => a.name).join(", ") || "-",
     }));
 
     const wb = XLSX.utils.book_new();

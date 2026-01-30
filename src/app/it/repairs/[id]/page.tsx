@@ -28,8 +28,7 @@ interface RepairDetail {
   location: string;
   status: Status;
   urgency: Urgency;
-  assigneeId: number | null;
-  assigneeName?: string;
+  assignees: { id: number; name: string }[];
   reporterName: string;
   reporterDepartment: string;
   reporterPhone: string;
@@ -83,8 +82,11 @@ export default function ITRepairDetailPage() {
           location: res.location,
           status: res.status,
           urgency: res.urgency,
-          assigneeId: res.assignedTo,
-          assigneeName: res.assignee?.name,
+          assignees:
+            res.assignees?.map((a: any) => ({
+              id: a.user.id,
+              name: a.user.name,
+            })) || [],
           reporterName: res.reporterName,
           reporterDepartment: res.reporterDepartment,
           reporterPhone: res.reporterPhone,
@@ -110,9 +112,10 @@ export default function ITRepairDetailPage() {
   }, [id]);
 
   /* ---------------- Computed ---------------- */
-  const isAssigned =
-    data?.assigneeId !== null && data?.assigneeId !== undefined;
-  const isMyJob = currentUserId !== null && data?.assigneeId === currentUserId;
+  const isAssigned = (data?.assignees?.length || 0) > 0;
+  const isMyJob =
+    currentUserId !== null &&
+    data?.assignees?.some((a) => a.id === currentUserId);
   const canEdit = isMyJob; // Only allow edit if it's my job
 
   /* ---------------- Actions ---------------- */
@@ -126,7 +129,7 @@ export default function ITRepairDetailPage() {
       await apiFetch(`/api/repairs/${data.id}`, {
         method: "PUT",
         body: {
-          assignedTo: currentUserId,
+          assigneeIds: [currentUserId],
           status: "IN_PROGRESS",
         },
       });
@@ -334,7 +337,9 @@ export default function ITRepairDetailPage() {
               <div className="space-y-1">
                 <label className="text-xs text-zinc-500">ผู้รับผิดชอบ</label>
                 <div className="font-medium text-sm text-zinc-900">
-                  {data.assigneeName ? data.assigneeName : "ยังไม่มีผู้รับงาน"}
+                  {isAssigned
+                    ? data.assignees.map((a) => a.name).join(", ")
+                    : "ยังไม่มีผู้รับงาน"}
                 </div>
               </div>
             </Block>

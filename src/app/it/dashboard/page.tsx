@@ -18,10 +18,10 @@ interface RepairItem {
   problemTitle: string;
   status: string;
   createdAt: string;
-  assignee?: {
+  assignees?: {
     id: number;
     name: string;
-  };
+  }[];
 }
 
 interface LoanItem {
@@ -79,11 +79,10 @@ export default function ITDashboard() {
         const allLoans: LoanItem[] = Array.isArray(loansData) ? loansData : [];
 
         // Filter Repairs for Current IT User (My Repairs)
-        // If userId is present, filter by assignee.id === userId
-        // Note: Check if assignee object exists.
+        // If userId is present, check if userId exists in the assignees array
         const myRepairs = userId
-          ? allRepairs.filter((r) => r.assignee?.id === userId)
-          : []; // If no user ID, maybe show none? Or all? "My repairs" implies none if not logged in.
+          ? allRepairs.filter((r) => r.assignees?.some((a) => a.id === userId))
+          : [];
 
         // Calculate Repair Stats (My Repairs)
         const repairStats = {
