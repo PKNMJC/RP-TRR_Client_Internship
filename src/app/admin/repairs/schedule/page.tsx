@@ -110,10 +110,10 @@ function CalendarContent() {
   );
 
   /* ========== HELPER: Get event date ========== */
-const getEventDate = useCallback((e: RepairEvent): Date => {
-  const rawDate = e.scheduledAt || e.createdAt;
-  return startOfDay(parseISO(rawDate));
-}, []);
+  const getEventDate = useCallback((e: RepairEvent): Date => {
+    const rawDate = e.scheduledAt || e.createdAt;
+    return startOfDay(parseISO(rawDate));
+  }, []);
 
   /* ========== FILTER ========== */
   const filteredEvents = useMemo(() => {
@@ -148,15 +148,14 @@ const getEventDate = useCallback((e: RepairEvent): Date => {
   }, [filteredEvents, selectedDate, getEventDate]);
 
   /* ========== CALENDAR MAP (FAST) ========== */
- const eventsByDate = useMemo(() => {
-  const map = new Map<string, RepairEvent[]>();
-  filteredEvents.forEach((e) => {
-    const key = format(getEventDate(e), "yyyy-MM-dd");
-    map.set(key, [...(map.get(key) || []), e]);
-  });
-  return map;
-}, [filteredEvents, getEventDate]);
-
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, RepairEvent[]>();
+    filteredEvents.forEach((e) => {
+      const key = format(getEventDate(e), "yyyy-MM-dd");
+      map.set(key, [...(map.get(key) || []), e]);
+    });
+    return map;
+  }, [filteredEvents, getEventDate]);
 
   /* ========== COMPONENTS ========== */
 
@@ -191,7 +190,7 @@ const getEventDate = useCallback((e: RepairEvent): Date => {
       <div className="flex flex-wrap gap-4 text-sm text-gray-700">
         <div className="flex items-center gap-2">
           <Clock size={16} className="text-gray-400" />
-          {format(getEventDate(event), "HH:mm")}
+          {format(parseISO(event.scheduledAt || event.createdAt), "HH:mm")}
         </div>
         <div className="flex items-center gap-2">
           <MapPin size={16} className="text-gray-400" />
