@@ -108,15 +108,24 @@ function CalendarContent() {
     [events],
   );
 
+  /* ========== HELPER: Get event date ========== */
+  const getEventDate = useCallback((e: RepairEvent): Date => {
+    // Use scheduledAt if available, otherwise fallback to createdAt
+    if (e.scheduledAt) {
+      return parseISO(e.scheduledAt);
+    }
+    return parseISO(e.createdAt);
+  }, []);
+
   /* ========== FILTER ========== */
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
       const q = searchQuery.toLowerCase();
       const matchesSearch =
-        e.problemTitle.toLowerCase().includes(q) ||
-        e.ticketCode.toLowerCase().includes(q) ||
-        e.reporterName.toLowerCase().includes(q) ||
-        e.location.toLowerCase().includes(q);
+        (e.problemTitle?.toLowerCase() || "").includes(q) ||
+        (e.ticketCode?.toLowerCase() || "").includes(q) ||
+        (e.reporterName?.toLowerCase() || "").includes(q) ||
+        (e.location?.toLowerCase() || "").includes(q);
 
       const matchesStatus = filterStatus === "all" || e.status === filterStatus;
 
@@ -130,25 +139,26 @@ function CalendarContent() {
   /* ========== DATE-BASED EVENTS ========== */
   const selectedDateEvents = useMemo(() => {
     return filteredEvents.filter((e) =>
-      isSameDay(parseISO(e.scheduledAt), selectedDate),
+      isSameDay(getEventDate(e), selectedDate),
     );
-  }, [filteredEvents, selectedDate]);
+  }, [filteredEvents, selectedDate, getEventDate]);
 
   const upcomingEvents = useMemo(() => {
     return filteredEvents.filter((e) =>
-      isAfter(parseISO(e.scheduledAt), endOfDay(selectedDate)),
+      isAfter(getEventDate(e), endOfDay(selectedDate)),
     );
-  }, [filteredEvents, selectedDate]);
+  }, [filteredEvents, selectedDate, getEventDate]);
 
   /* ========== CALENDAR MAP (FAST) ========== */
   const eventsByDate = useMemo(() => {
     const map = new Map<string, RepairEvent[]>();
     events.forEach((e) => {
-      const key = format(parseISO(e.scheduledAt), "yyyy-MM-dd");
+      const eventDate = getEventDate(e);
+      const key = format(eventDate, "yyyy-MM-dd");
       map.set(key, [...(map.get(key) || []), e]);
     });
     return map;
-  }, [events]);
+  }, [events, getEventDate]);
 
   /* ========== COMPONENTS ========== */
 
@@ -183,15 +193,15 @@ function CalendarContent() {
       <div className="flex flex-wrap gap-4 text-sm text-gray-700">
         <div className="flex items-center gap-2">
           <Clock size={16} className="text-gray-400" />
-          {format(parseISO(event.scheduledAt), "HH:mm")}
+          {format(getEventDate(event), "HH:mm")}
         </div>
         <div className="flex items-center gap-2">
           <MapPin size={16} className="text-gray-400" />
-          {event.location}
+          {event.location || "-"}
         </div>
         <div className="flex items-center gap-2">
           <User size={16} className="text-gray-400" />
-          {event.reporterName}
+          {event.reporterName || "ไม่ระบุ"}
         </div>
       </div>
     </div>
@@ -268,13 +278,9 @@ function CalendarContent() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="รายการซ่อมทั้งหมด" value={stats.total} />
-          <StatCard label="รอรับงาน" value={stats.pending}  />
-          <StatCard
-            label="กำลังดำเนินการ"
-            value={stats.inProgress}
-            
-          />
-          <StatCard label="เสร็จสิ้น" value={stats.completed}/>
+          <StatCard label="รอรับงาน" value={stats.pending} />
+          <StatCard label="กำลังดำเนินการ" value={stats.inProgress} />
+          <StatCard label="เสร็จสิ้น" value={stats.completed} />
         </div>
 
         {/* Filters */}
