@@ -152,6 +152,12 @@ export function RepairsDashboard() {
       เลขใบงาน: repair.ticketCode,
       วันที่แจ้ง: new Date(repair.createdAt).toLocaleDateString("th-TH"),
       ปัญหา: repair.problemTitle,
+      ความสำคัญ:
+        repair.urgency === "CRITICAL"
+          ? "ด่วนมาก"
+          : repair.urgency === "URGENT"
+            ? "ด่วน"
+            : "ปกติ",
       สถานที่: repair.location,
       สถานะ: statusLabels[repair.status] || repair.status,
       ผู้รับผิดชอบ: repair.assignee?.name || "-",
@@ -318,12 +324,12 @@ export function RepairsDashboard() {
                         {/* Urgency Badge */}
                         {item.urgency === "CRITICAL" && (
                           <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded-full">
-                            DANGER
+                            ด่วนมาก
                           </span>
                         )}
                         {item.urgency === "URGENT" && (
                           <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-600 rounded-full">
-                            URGENT
+                            ด่วน
                           </span>
                         )}
                       </td>
