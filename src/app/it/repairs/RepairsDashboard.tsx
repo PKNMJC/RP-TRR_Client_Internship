@@ -207,9 +207,9 @@ export function RepairsDashboard() {
         </div>
 
         {/* Tabs & Search Bar */}
-        <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="sticky top-[4rem] z-30 bg-white/95 backdrop-blur-sm p-2 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 transition-all">
           {/* Tabs */}
-          <div className="flex p-1 bg-gray-100/50 rounded-lg w-full md:w-auto overflow-x-auto">
+          <div className="flex p-1 bg-gray-100/80 rounded-lg w-full md:w-auto overflow-x-auto no-scrollbar">
             <TabButton
               active={activeTab === "mine"}
               onClick={() => {
@@ -239,7 +239,7 @@ export function RepairsDashboard() {
                 setCurrentPage(1);
               }}
               icon={<CheckCircle size={16} />}
-              label="ประวัติงานทั้งหมด"
+              label="ประวัติ"
             />
           </div>
 
@@ -252,7 +252,7 @@ export function RepairsDashboard() {
             <input
               type="text"
               placeholder="ค้นหา..."
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-gray-50/50 focus:bg-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -377,7 +377,7 @@ export function RepairsDashboard() {
               paginatedData.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 transition-colors cursor-pointer"
+                  className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 active:scale-[0.99] transition-all cursor-pointer"
                   onClick={() => router.push(`/it/repairs/${item.id}`)}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -397,11 +397,11 @@ export function RepairsDashboard() {
                   </h3>
 
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                    <span className="bg-gray-100 px-1.5 py-0.5 rounded">
+                    <span className="bg-gray-100 px-1.5 py-0.5 rounded truncate max-w-[120px]">
                       {item.location}
                     </span>
                     <span>•</span>
-                    <span>{item.reporterName}</span>
+                    <span className="truncate">{item.reporterName}</span>
                   </div>
 
                   <div className="flex justify-between items-center border-t border-gray-50 pt-2">
