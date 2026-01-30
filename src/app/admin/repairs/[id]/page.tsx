@@ -25,6 +25,12 @@ interface User {
   role: string;
 }
 
+interface Assignee {
+  id: number;
+  userId: number;
+  user: User;
+}
+
 interface RepairDetail {
   id: string;
   ticketCode: string;
@@ -34,7 +40,7 @@ interface RepairDetail {
   location: string;
   status: Status;
   urgency: Urgency;
-  assigneeId: string | null;
+  assignees: Assignee[];
   reporterName: string;
   reporterDepartment: string;
   reporterPhone: string;
@@ -59,7 +65,7 @@ export default function RepairDetailPage() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<Status>("PENDING");
   const [urgency, setUrgency] = useState<Urgency>("NORMAL");
-  const [assigneeId, setAssigneeId] = useState("");
+  const [assigneeIds, setAssigneeIds] = useState<number[]>([]);
 
   /* ---------------- Fetch ---------------- */
   useEffect(() => {
@@ -70,6 +76,8 @@ export default function RepairDetailPage() {
         setLoading(true);
         const res = await apiFetch(`/api/repairs/${id}`);
 
+        const assignees = res.assignees || [];
+
         setData({
           id: res.id,
           ticketCode: res.ticketCode,
@@ -79,7 +87,7 @@ export default function RepairDetailPage() {
           location: res.location,
           status: res.status,
           urgency: res.urgency,
-          assigneeId: res.assignedTo ? String(res.assignedTo) : null,
+          assignees: assignees,
           reporterName: res.reporterName,
           reporterDepartment: res.reporterDepartment,
           reporterPhone: res.reporterPhone,
@@ -94,7 +102,7 @@ export default function RepairDetailPage() {
         setStatus(res.status);
         setUrgency(res.urgency);
         setNotes(res.notes || "");
-        setAssigneeId(res.assignedTo ? String(res.assignedTo) : "");
+        setAssigneeIds(assignees.map((a: Assignee) => a.userId));
       } catch {
         setError("ไม่สามารถโหลดข้อมูลงานซ่อมได้");
       } finally {
@@ -119,6 +127,15 @@ export default function RepairDetailPage() {
     fetchTechnicians();
   }, []);
 
+  /* ---------------- Assignee Toggle ---------------- */
+  const toggleAssignee = (userId: number) => {
+    setAssigneeIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
+    );
+  };
+
   /* ---------------- Save ---------------- */
   const handleSave = async () => {
     if (!data) return;
@@ -134,7 +151,7 @@ export default function RepairDetailPage() {
           status,
           urgency,
           notes,
-          assignedTo: assigneeId ? parseInt(assigneeId) : null,
+          assigneeIds: assigneeIds,
         },
       });
 
@@ -264,18 +281,40 @@ export default function RepairDetailPage() {
                 <option value="CRITICAL">ด่วนมาก</option>
               </Select>
 
-              <Select
-                label="ผู้รับผิดชอบ"
-                value={assigneeId}
-                onChange={setAssigneeId}
-              >
-                <option value="">ยังไม่ระบุ</option>
-                {technicians.map((tech) => (
-                  <option key={tech.id} value={String(tech.id)}>
-                    {tech.name} ({tech.role})
-                  </option>
-                ))}
-              </Select>
+              {/* Multi-select Assignees */}
+              <div className="space-y-2">
+                <label className="text-xs text-zinc-500">ผู้รับผิดชอบ</label>
+                <div className="border border-zinc-200 rounded p-3 max-h-48 overflow-y-auto space-y-2">
+                  {technicians.length === 0 ? (
+                    <p className="text-sm text-zinc-400">ไม่พบรายชื่อช่าง</p>
+                  ) : (
+                    technicians.map((tech) => (
+                      <label
+                        key={tech.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-zinc-50 p-1 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={assigneeIds.includes(tech.id)}
+                          onChange={() => toggleAssignee(tech.id)}
+                          className="w-4 h-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                        />
+                        <span className="text-sm text-zinc-700">
+                          {tech.name}
+                        </span>
+                        <span className="text-xs text-zinc-400">
+                          ({tech.role})
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+                {assigneeIds.length > 0 && (
+                  <p className="text-xs text-zinc-500">
+                    เลือกแล้ว {assigneeIds.length} คน
+                  </p>
+                )}
+              </div>
             </Block>
 
             <Block title="บันทึกการซ่อม">
