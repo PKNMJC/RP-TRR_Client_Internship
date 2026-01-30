@@ -19,6 +19,7 @@ import {
 import { th } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, MapPin, User, Clock } from "lucide-react";
 import { apiFetch } from "@/services/api";
+import { startOfDay } from "date-fns";
 
 /* ================= TYPES ================= */
 
@@ -109,13 +110,10 @@ function CalendarContent() {
   );
 
   /* ========== HELPER: Get event date ========== */
-  const getEventDate = useCallback((e: RepairEvent): Date => {
-    // Use scheduledAt if available, otherwise fallback to createdAt
-    if (e.scheduledAt) {
-      return parseISO(e.scheduledAt);
-    }
-    return parseISO(e.createdAt);
-  }, []);
+const getEventDate = useCallback((e: RepairEvent): Date => {
+  const rawDate = e.scheduledAt || e.createdAt;
+  return startOfDay(parseISO(rawDate));
+}, []);
 
   /* ========== FILTER ========== */
   const filteredEvents = useMemo(() => {
@@ -150,15 +148,15 @@ function CalendarContent() {
   }, [filteredEvents, selectedDate, getEventDate]);
 
   /* ========== CALENDAR MAP (FAST) ========== */
-  const eventsByDate = useMemo(() => {
-    const map = new Map<string, RepairEvent[]>();
-    events.forEach((e) => {
-      const eventDate = getEventDate(e);
-      const key = format(eventDate, "yyyy-MM-dd");
-      map.set(key, [...(map.get(key) || []), e]);
-    });
-    return map;
-  }, [events, getEventDate]);
+ const eventsByDate = useMemo(() => {
+  const map = new Map<string, RepairEvent[]>();
+  filteredEvents.forEach((e) => {
+    const key = format(getEventDate(e), "yyyy-MM-dd");
+    map.set(key, [...(map.get(key) || []), e]);
+  });
+  return map;
+}, [filteredEvents, getEventDate]);
+
 
   /* ========== COMPONENTS ========== */
 
@@ -230,7 +228,7 @@ function CalendarContent() {
         days.push(
           <div
             key={key}
-            onClick={() => setSelectedDate(currentDay)}
+            onClick={() => setSelectedDate(startOfDay(currentDay))}
             className={`h-10 w-10 rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors
               ${!isCurrentMonth ? "text-gray-300" : "text-gray-700"}
               ${isSelected ? "bg-blue-500 text-white font-bold" : "hover:bg-gray-100"}
