@@ -174,7 +174,7 @@ export function RepairsDashboard() {
 
   /* ---------------- UI Components ---------------- */
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans">
+    <div className="min-h-screen bg-gray-50 p-4 lg:p-6 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header & Controls */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -259,7 +259,7 @@ export function RepairsDashboard() {
         {/* Content Area */}
         <div className="space-y-4">
           {/* Desktop Table */}
-          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-gray-50 border-b border-gray-100">
@@ -363,7 +363,7 @@ export function RepairsDashboard() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="md:hidden space-y-3">
+          <div className="lg:hidden space-y-3">
             {loading && repairs.length === 0 ? (
               <div className="text-center py-8 text-gray-400">กำลังโหลด...</div>
             ) : paginatedData.length === 0 ? (
