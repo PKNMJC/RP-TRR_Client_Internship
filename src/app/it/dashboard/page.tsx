@@ -73,9 +73,20 @@ export default function ITDashboard() {
           apiFetch("/api/loans").catch(() => []),
         ]);
 
-        const allRepairs: RepairItem[] = Array.isArray(repairsData)
+        const allRepairsRaw: any[] = Array.isArray(repairsData)
           ? repairsData
           : repairsData?.data || [];
+
+        // Map data to match our interface (flattens assignees)
+        const allRepairs: RepairItem[] = allRepairsRaw.map((r) => ({
+          ...r,
+          assignees:
+            r.assignees?.map((a: any) => ({
+              id: a.user?.id || a.userId,
+              name: a.user?.name || "Unknown",
+            })) || [],
+        }));
+
         const allLoans: LoanItem[] = Array.isArray(loansData) ? loansData : [];
 
         // Filter Repairs for Current IT User (My Repairs)

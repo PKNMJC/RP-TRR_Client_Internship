@@ -81,8 +81,16 @@ export function RepairsDashboard() {
   const fetchRepairs = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch("/api/repairs");
-      setRepairs((data as Repair[]) || []);
+      const rawData = await apiFetch("/api/repairs");
+      const mappedData = ((rawData as any[]) || []).map((r) => ({
+        ...r,
+        assignees:
+          r.assignees?.map((a: any) => ({
+            id: a.user?.id || a.userId,
+            name: a.user?.name || "Unknown",
+          })) || [],
+      }));
+      setRepairs(mappedData);
     } catch (err) {
       console.error("Error fetching repairs:", err);
     } finally {
