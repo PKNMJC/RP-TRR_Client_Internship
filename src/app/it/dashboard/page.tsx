@@ -88,19 +88,11 @@ export default function ITDashboard() {
         // Calculate Repair Stats (My Repairs)
         const repairStats = {
           total: myRepairs.length,
-          waiting: myRepairs.filter(
-            (r) => r.status === "PENDING" || r.status === "ASSIGNED",
-          ).length, // "รอรับงาน" usually PENDING implies unassigned, but if assigned to me and pending start...
-          // Actually if it's assigned to me, it might be IN_PROGRESS or just assigned?
-          // Let's assume PENDING status checks on the ticket.
-          // Wait, if "My Repairs" includes tickets I accepted, they might be IN_PROGRESS.
-          // If "Pending" means "Waiting for me to accept", then it might NOT look like "My Repair" yet depending on backend logic.
-          // However, assuming the standard flow: I have been assigned.
+          waiting: allRepairs.filter((r) => r.status === "PENDING").length, // "งานที่รอรับเรื่อง" - Total unassigned pending tasks
           inProgress: myRepairs.filter((r) =>
             ["IN_PROGRESS", "REPAIRING"].includes(r.status),
           ).length,
           completed: myRepairs.filter((r) => r.status === "COMPLETED").length,
-          waiting_real: myRepairs.filter((r) => r.status === "PENDING").length,
         };
 
         // Calculate Loan Stats (Global - as IT monitors the system)
@@ -114,7 +106,7 @@ export default function ITDashboard() {
         setStats({
           repairs: {
             total: repairStats.total,
-            waiting: repairStats.waiting_real,
+            waiting: repairStats.waiting,
             inProgress: repairStats.inProgress,
             completed: repairStats.completed,
           },
@@ -139,7 +131,7 @@ export default function ITDashboard() {
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      PENDING: "รอรับงาน",
+      PENDING: "งานที่รอรับเรื่อง",
       ASSIGNED: "มอบหมายแล้ว",
       IN_PROGRESS: "กำลังดำเนินการ",
       REPAIRING: "กำลังซ่อม",
@@ -171,7 +163,7 @@ export default function ITDashboard() {
             href="/it/repairs"
           />
           <StatCard
-            label="รอรับงาน"
+            label="งานที่รอรับเรื่อง"
             value={stats.repairs.waiting}
             href="/it/repairs?status=PENDING"
           />
