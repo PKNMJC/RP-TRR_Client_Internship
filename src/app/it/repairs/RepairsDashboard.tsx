@@ -256,132 +256,198 @@ export function RepairsDashboard() {
           </div>
         </div>
 
-        {/* Content Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    รหัสใบงาน
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    ปัญหา / สถานที่
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    ผู้แจ้ง
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    สถานะ
-                  </th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
-                    ดำเนินการ
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {loading && repairs.length === 0 ? (
+        {/* Content Area */}
+        <div className="space-y-4">
+          {/* Desktop Table */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-50 border-b border-gray-100">
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-8 text-center text-gray-400"
-                    >
-                      กำลังโหลด...
-                    </td>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      รหัสใบงาน
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      ปัญหา / สถานที่
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      ผู้แจ้ง
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      สถานะ
+                    </th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
+                      ดำเนินการ
+                    </th>
                   </tr>
-                ) : paginatedData.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-8 text-center text-gray-400"
-                    >
-                      ไม่พบรายการ
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer group"
-                      onClick={() => router.push(`/it/repairs/${item.id}`)}
-                    >
-                      <td className="px-6 py-4">
-                        <span className="font-mono text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                          {item.ticketCode}
-                        </span>
-                        <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
-                          <Clock size={12} />
-                          {new Date(item.createdAt).toLocaleDateString("th-TH")}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.problemTitle}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {item.location}
-                        </div>
-                        {/* Urgency Badge */}
-                        {item.urgency === "CRITICAL" && (
-                          <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded-full">
-                            ด่วนมาก
-                          </span>
-                        )}
-                        {item.urgency === "URGENT" && (
-                          <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-600 rounded-full">
-                            ด่วน
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-700">
-                          {item.reporterName}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {item.reporterDepartment || "-"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={item.status} />
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <ChevronRight
-                          size={18}
-                          className="text-gray-300 ml-auto group-hover:text-gray-500"
-                        />
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {loading && repairs.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-6 py-8 text-center text-gray-400"
+                      >
+                        กำลังโหลด...
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : paginatedData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-6 py-8 text-center text-gray-400"
+                      >
+                        ไม่พบรายการ
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedData.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer group"
+                        onClick={() => router.push(`/it/repairs/${item.id}`)}
+                      >
+                        <td className="px-6 py-4">
+                          <span className="font-mono text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                            {item.ticketCode}
+                          </span>
+                          <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
+                            <Clock size={12} />
+                            {new Date(item.createdAt).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.problemTitle}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            {item.location}
+                          </div>
+                          {/* Urgency Badge */}
+                          {item.urgency === "CRITICAL" && (
+                            <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded-full">
+                              ด่วนมาก
+                            </span>
+                          )}
+                          {item.urgency === "URGENT" && (
+                            <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-600 rounded-full">
+                              ด่วน
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-700">
+                            {item.reporterName}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {item.reporterDepartment || "-"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={item.status} />
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <ChevronRight
+                            size={18}
+                            className="text-gray-300 ml-auto group-hover:text-gray-500"
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-              <div className="text-xs text-gray-500">
-                หน้า {currentPage} จาก {totalPages}
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {loading && repairs.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">กำลังโหลด...</div>
+            ) : paginatedData.length === 0 ? (
+              <div className="text-center py-8 text-gray-400 bg-white rounded-xl border border-gray-100">
+                ไม่พบรายการ
               </div>
-              <div className="flex gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((c) => c - 1)}
-                  className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30 transition-all"
+            ) : (
+              paginatedData.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/it/repairs/${item.id}`)}
                 >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((c) => c + 1)}
-                  className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30 transition-all"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-          )}
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-mono text-xs text-gray-500">
+                      {item.ticketCode}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400">
+                        {new Date(item.createdAt).toLocaleDateString("th-TH")}
+                      </span>
+                      <StatusBadge status={item.status} />
+                    </div>
+                  </div>
+
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">
+                    {item.problemTitle}
+                  </h3>
+
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                    <span className="bg-gray-100 px-1.5 py-0.5 rounded">
+                      {item.location}
+                    </span>
+                    <span>•</span>
+                    <span>{item.reporterName}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center border-t border-gray-50 pt-2">
+                    <div className="flex gap-1">
+                      {item.urgency === "CRITICAL" && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded-full">
+                          ด่วนมาก
+                        </span>
+                      )}
+                      {item.urgency === "URGENT" && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-orange-100 text-orange-600 rounded-full">
+                          ด่วน
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs text-blue-600 font-medium">
+                      ดูรายละเอียด &rarr;
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden px-6 py-4 flex items-center justify-between">
+            <div className="text-xs text-gray-500">
+              หน้า {currentPage} จาก {totalPages}
+            </div>
+            <div className="flex gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((c) => c - 1)}
+                className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30 transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((c) => c + 1)}
+                className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30 transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
