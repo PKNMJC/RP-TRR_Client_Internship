@@ -19,6 +19,12 @@ interface Attachment {
   filename: string;
 }
 
+interface User {
+  id: number;
+  name: string;
+  role: string;
+}
+
 interface RepairDetail {
   id: string;
   ticketCode: string;
@@ -44,6 +50,7 @@ export default function RepairDetailPage() {
   const [data, setData] = useState<RepairDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [technicians, setTechnicians] = useState<User[]>([]);
 
   // Editable fields
   const [title, setTitle] = useState("");
@@ -98,6 +105,20 @@ export default function RepairDetailPage() {
     fetchDetail();
   }, [id]);
 
+  useEffect(() => {
+    const fetchTechnicians = async () => {
+      try {
+        const res = await apiFetch("/api/users/it-staff");
+        if (Array.isArray(res)) {
+          setTechnicians(res);
+        }
+      } catch (err) {
+        console.error("Failed to fetch technicians:", err);
+      }
+    };
+    fetchTechnicians();
+  }, []);
+
   /* ---------------- Save ---------------- */
   const handleSave = async () => {
     if (!data) return;
@@ -118,8 +139,8 @@ export default function RepairDetailPage() {
       });
 
       router.push("/admin/repairs");
-    } catch {
-      setError("บันทึกข้อมูลไม่สำเร็จ");
+    } catch (err: any) {
+      setError(err.message || "บันทึกข้อมูลไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -249,7 +270,11 @@ export default function RepairDetailPage() {
                 onChange={setAssigneeId}
               >
                 <option value="">ยังไม่ระบุ</option>
-                <option value="1">Admin</option>
+                {technicians.map((tech) => (
+                  <option key={tech.id} value={String(tech.id)}>
+                    {tech.name} ({tech.role})
+                  </option>
+                ))}
               </Select>
             </Block>
 
