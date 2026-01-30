@@ -1,408 +1,348 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/services/api";
 import {
+  ArrowUpRight,
+  ChevronRight,
   Package,
   Wrench,
-  AlertCircle,
-  Activity,
-  Users,
-  ChevronRight,
-  LayoutDashboard,
   Clock,
-  ArrowUpRight,
 } from "lucide-react";
-import { safeFormat } from "@/lib/date-utils";
 
-// --- Types ---
-interface ActivityItem {
+interface RepairItem {
   id: number;
-  itemName?: string;
-  problemTitle?: string;
+  ticketCode: string;
+  problemTitle: string;
+  status: string;
+  createdAt: string;
+  assignee?: {
+    id: number;
+    name: string;
+  };
+}
+
+interface LoanItem {
+  id: number;
+  itemName: string;
   borrowerName?: string;
-  borrowAt?: string;
-  ticketCode?: string;
-  createdAt?: string;
+  expectedReturnDate: string;
   status: string;
 }
 
-interface DashboardStats {
-  totalLoans: number;
-  activeLoans: number;
-  overdueLoans: number;
-  totalRepairs: number;
-  pendingRepairs: number;
-  completedRepairs: number;
-  recentLoans: ActivityItem[];
-  recentRepairs: ActivityItem[];
+interface Stats {
+  repairs: {
+    total: number;
+    waiting: number; // For "รอรับงาน"
+    inProgress: number;
+    completed: number;
+  };
+  loans: {
+    total: number;
+    active: number;
+    overdue: number;
+    returned: number;
+  };
 }
 
 export default function ITDashboard() {
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalLoans: 0,
-    activeLoans: 0,
-    overdueLoans: 0,
-    totalRepairs: 0,
-    pendingRepairs: 0,
-    completedRepairs: 0,
-    recentLoans: [],
-    recentRepairs: [],
+  const [stats, setStats] = useState<Stats>({
+    repairs: { total: 0, waiting: 0, inProgress: 0, completed: 0 },
+    loans: { total: 0, active: 0, overdue: 0, returned: 0 },
   });
+  const [recentRepairs, setRecentRepairs] = useState<RepairItem[]>([]);
+  const [recentLoans, setRecentLoans] = useState<LoanItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("access_token") ||
-            localStorage.getItem("token")
-          : null;
-      const role =
-        typeof window !== "undefined" ? localStorage.getItem("role") : null;
-
-      if (!token || (role !== "IT" && role !== "ADMIN")) {
-        router.push("/login/admin");
-        return;
-      }
-
-      const [repairsData, loansData] = await Promise.all([
-        apiFetch("/api/repairs").catch(() => []),
-        apiFetch("/api/loans").catch(() => []),
-      ]);
-
-      const repairs = Array.isArray(repairsData) ? repairsData : [];
-      const loans = Array.isArray(loansData) ? loansData : [];
-
-      setStats({
-        totalRepairs: repairs.length,
-        pendingRepairs: repairs.filter((r: any) => r.status === "PENDING")
-          .length,
-        completedRepairs: repairs.filter((r: any) => r.status === "COMPLETED")
-          .length,
-        recentRepairs: repairs.slice(0, 5),
-        totalLoans: loans.length,
-        activeLoans: loans.filter((l: any) => l.status === "BORROWED").length,
-        overdueLoans: loans.filter((l: any) => l.status === "OVERDUE").length,
-        recentLoans: loans.slice(0, 5),
-      });
-    } catch (error) {
-      console.error("Dashboard Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    const loadDashboardData = async () => {
+      try {
+        const userIdStr = localStorage.getItem("userId");
+        const userId = userIdStr ? parseInt(userIdStr) : null;
 
-  if (loading) return <DashboardSkeleton />;
+        if (!userId) {
+          // If no user ID, maybe redirect or just show empty
+          // But usually middleware handles this.
+        }
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              ภาพรวมระบบ IT
-            </h1>
-            <p className="text-slate-500 text-sm mt-1">
-              ยินดีต้อนรับเข้าสู่ระบบจัดการพัสดุและแจ้งซ่อม
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg w-fit shadow-sm">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            อัปเดตล่าสุด:{" "}
-            {new Date().toLocaleTimeString("th-TH", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </div>
-        </header>
+        const [repairsData, loansData] = await Promise.all([
+          apiFetch("/api/repairs").catch(() => []),
+          apiFetch("/api/loans").catch(() => []),
+        ]);
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-          <StatCard
-            title="รายการยืมพัสดุ"
-            value={stats.totalLoans}
-            subtext={`กำลังยืม ${stats.activeLoans} | เกินกำหนด ${stats.overdueLoans}`}
-            icon={<Package className="text-blue-600" size={20} />}
-            urgent={stats.overdueLoans > 0}
-          />
-          <StatCard
-            title="รายการซ่อมบำรุง"
-            value={stats.totalRepairs}
-            subtext={`ค้างดำเนินการ ${stats.pendingRepairs} | สำเร็จ ${stats.completedRepairs}`}
-            icon={<Wrench className="text-slate-600" size={20} />}
-          />
-          <StatCard
-            title="ประสิทธิภาพระบบ"
-            value={`${Math.round(((stats.activeLoans + stats.pendingRepairs) / 20) * 100)}%`}
-            subtext="สถานะการทำงานปกติ"
-            icon={<Activity className="text-emerald-600" size={20} />}
-          />
-        </div>
+        const allRepairs: RepairItem[] = Array.isArray(repairsData)
+          ? repairsData
+          : repairsData?.data || [];
+        const allLoans: LoanItem[] = Array.isArray(loansData) ? loansData : [];
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Areas */}
-          <div className="lg:col-span-2 space-y-6">
-            <Section
-              title="รายการยืมล่าสุด"
-              icon={<Clock size={16} />}
-              href="/it/loans"
-            >
-              <ActivityList items={stats.recentLoans} type="loan" />
-            </Section>
+        // Filter Repairs for Current IT User (My Repairs)
+        // If userId is present, filter by assignee.id === userId
+        // Note: Check if assignee object exists.
+        const myRepairs = userId
+          ? allRepairs.filter((r) => r.assignee?.id === userId)
+          : []; // If no user ID, maybe show none? Or all? "My repairs" implies none if not logged in.
 
-            <Section
-              title="รายการแจ้งซ่อมล่าสุด"
-              icon={<Wrench size={16} />}
-              href="/it/repairs"
-            >
-              <ActivityList items={stats.recentRepairs} type="repair" />
-            </Section>
-          </div>
+        // Calculate Repair Stats (My Repairs)
+        const repairStats = {
+          total: myRepairs.length,
+          waiting: myRepairs.filter(
+            (r) => r.status === "PENDING" || r.status === "ASSIGNED",
+          ).length, // "รอรับงาน" usually PENDING implies unassigned, but if assigned to me and pending start...
+          // Actually if it's assigned to me, it might be IN_PROGRESS or just assigned?
+          // Let's assume PENDING status checks on the ticket.
+          // Wait, if "My Repairs" includes tickets I accepted, they might be IN_PROGRESS.
+          // If "Pending" means "Waiting for me to accept", then it might NOT look like "My Repair" yet depending on backend logic.
+          // However, assuming the standard flow: I have been assigned.
+          inProgress: myRepairs.filter((r) =>
+            ["IN_PROGRESS", "REPAIRING"].includes(r.status),
+          ).length,
+          completed: myRepairs.filter((r) => r.status === "COMPLETED").length,
+          waiting_real: myRepairs.filter((r) => r.status === "PENDING").length,
+        };
 
-          {/* Sidebar / Quick Actions */}
-          <div className="space-y-6">
-            <div className="bg-slate-900 text-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <LayoutDashboard size={18} /> ทางลัดจัดการ
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <ActionBtn
-                  href="/it/loans"
-                  label="ยืมพัสดุ"
-                  icon={<Package size={16} />}
-                />
-                <ActionBtn
-                  href="/it/repairs"
-                  label="แจ้งซ่อม"
-                  icon={<Wrench size={16} />}
-                />
-                <ActionBtn
-                  href="/it/settings/profile"
-                  label="โปรไฟล์"
-                  icon={<Users size={16} />}
-                />
-                <ActionBtn
-                  href="/it/settings/security"
-                  label="ประวัติงาน"
-                  icon={<Activity size={16} />}
-                />
-              </div>
-            </div>
+        // Calculate Loan Stats (Global - as IT monitors the system)
+        const loanStats = {
+          total: allLoans.length,
+          active: allLoans.filter((l) => l.status === "BORROWED").length,
+          overdue: allLoans.filter((l) => l.status === "OVERDUE").length,
+          returned: allLoans.filter((l) => l.status === "RETURNED").length,
+        };
 
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-              <h3 className="text-sm font-bold uppercase text-slate-400 tracking-wider mb-4">
-                สุขภาพของระบบ
-              </h3>
-              <div className="space-y-4">
-                <HealthMetric label="API Response" val={98} />
-                <HealthMetric label="Database" val={100} />
-                <HealthMetric label="Storage" val={45} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+        setStats({
+          repairs: {
+            total: repairStats.total,
+            waiting: repairStats.waiting_real,
+            inProgress: repairStats.inProgress,
+            completed: repairStats.completed,
+          },
+          loans: loanStats,
+        });
 
-// --- Internal Components ---
+        // Set Recent Items
+        // Repairs: My recent repairs
+        setRecentRepairs(myRepairs.slice(0, 4));
 
-function StatCard({ title, value, subtext, icon, urgent }: any) {
-  return (
-    <div
-      className={`bg-white border p-5 rounded-xl shadow-sm transition-all hover:shadow-md ${urgent ? "border-rose-100 bg-rose-50/10" : "border-slate-200"}`}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-          {icon}
-        </div>
-        <ArrowUpRight size={16} className="text-slate-300" />
-      </div>
-      <p className="text-sm font-medium text-slate-500">{title}</p>
-      <div className="mt-1 flex items-baseline gap-2">
-        <span className="text-3xl font-bold tracking-tight">{value}</span>
-      </div>
-      <p
-        className={`text-xs mt-2 font-medium ${urgent ? "text-rose-600" : "text-slate-400"}`}
-      >
-        {subtext}
-      </p>
-    </div>
-  );
-}
+        // Loans: Global recent loans
+        setRecentLoans(allLoans.slice(0, 4));
+      } catch (error) {
+        console.error("Failed to load dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-function Section({ title, icon, href, children }: any) {
-  return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-        <div className="flex items-center gap-2 font-bold text-slate-700">
-          {icon} <span>{title}</span>
-        </div>
-        <a
-          href={href}
-          className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1"
-        >
-          ดูทั้งหมด <ChevronRight size={12} />
-        </a>
-      </div>
-      <div className="overflow-x-auto">{children}</div>
-    </div>
-  );
-}
+    loadDashboardData();
+  }, []);
 
-function ActivityList({
-  items,
-  type,
-}: {
-  items: ActivityItem[];
-  type: "loan" | "repair";
-}) {
-  if (items.length === 0) {
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      PENDING: "รอรับงาน",
+      ASSIGNED: "มอบหมายแล้ว",
+      IN_PROGRESS: "กำลังดำเนินการ",
+      REPAIRING: "กำลังซ่อม",
+      COMPLETED: "เสร็จสิ้น",
+      CANCELLED: "ยกเลิก",
+      BORROWED: "กำลังยืม",
+      RETURNED: "คืนแล้ว",
+      OVERDUE: "เกินกำหนด",
+    };
+    return labels[status] || status;
+  };
+
+  if (loading) {
     return (
-      <div className="p-12 text-center text-slate-400 text-sm italic">
-        ไม่พบรายการข้อมูลในขณะนี้
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">กำลังโหลด...</div>
       </div>
     );
   }
 
   return (
-    <table className="w-full text-left border-collapse min-w-[500px]">
-      <thead>
-        <tr className="bg-slate-50 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
-          <th className="px-5 py-3">รายละเอียด</th>
-          <th className="px-5 py-3">ข้อมูลผู้ใช้ / วันที่</th>
-          <th className="px-5 py-3 text-right">สถานะ</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-100">
-        {items.map((item) => (
-          <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-            <td className="px-5 py-4">
-              <p className="text-sm font-semibold text-slate-900 leading-none">
-                {type === "loan" ? item.itemName : item.problemTitle}
-              </p>
-              <p className="text-[10px] text-slate-400 mt-1.5 font-mono">
-                {type === "loan" ? "ASSET-SYSTEM" : `#${item.ticketCode}`}
-              </p>
-            </td>
-            <td className="px-5 py-4">
-              <p className="text-xs font-medium text-slate-600">
-                {type === "loan" ? item.borrowerName : "ฝ่ายเทคนิค"}
-              </p>
-              <p className="text-[10px] text-slate-400 mt-1">
-                {safeFormat(
-                  type === "loan" ? item.borrowAt : item.createdAt,
-                  "dd MMM yyyy",
-                )}
-              </p>
-            </td>
-            <td className="px-5 py-4 text-right">
-              <span
-                className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-bold border ${getStatusStyles(item.status)}`}
-              >
-                {translateStatus(item.status)}
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
+    <div className="min-h-screen bg-gray-100 p-4 md:p-6">
+      <div className="max-w-[1400px] mx-auto space-y-4 md:space-y-6">
+        {/* Repairs Section (My Repairs) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="รายการซ่อมทั้งหมดของฉัน"
+            value={stats.repairs.total}
+            href="/it/repairs"
+          />
+          <StatCard
+            label="รอรับงาน"
+            value={stats.repairs.waiting}
+            href="/it/repairs?status=PENDING"
+          />
+          <StatCard
+            label="กำลังดำเนินการ"
+            value={stats.repairs.inProgress}
+            href="/it/repairs?status=IN_PROGRESS"
+          />
+          <StatCard
+            label="เสร็จสิ้น"
+            value={stats.repairs.completed}
+            href="/it/repairs?status=COMPLETED"
+          />
+        </div>
 
-function ActionBtn({ href, label, icon }: any) {
-  return (
-    <a
-      href={href}
-      className="flex flex-col items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white hover:text-slate-900 transition-all text-xs font-bold"
-    >
-      {icon} <span>{label}</span>
-    </a>
-  );
-}
+        {/* Loans Section (Global) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="รายการยืมทั้งหมด"
+            value={stats.loans.total}
+            href="/it/loans"
+          />
+          <StatCard
+            label="กำลังยืม"
+            value={stats.loans.active}
+            href="/it/loans?status=BORROWED"
+          />
+          <StatCard
+            label="เกินกำหนด"
+            value={stats.loans.overdue}
+            href="/it/loans?status=OVERDUE"
+          />
+          <StatCard
+            label="ส่งคืนแล้ว"
+            value={stats.loans.returned}
+            href="/it/loans?status=RETURNED"
+          />
+        </div>
 
-function HealthMetric({ label, val }: any) {
-  return (
-    <div>
-      <div className="flex justify-between text-[11px] font-bold uppercase text-slate-500 mb-1.5">
-        <span>{label}</span>
-        <span>{val}%</span>
+        {/* Recent Lists */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Repairs List */}
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="font-semibold text-gray-900 bg-gray-100 px-3 py-1 rounded-md">
+                งานแจ้งซ่อม
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {recentRepairs.length > 0 ? (
+                recentRepairs.map((repair) => (
+                  <Link
+                    key={repair.id}
+                    href={`/it/repairs?id=${repair.id}`} // Or a specific detail page if exists
+                    className="block p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {repair.problemTitle}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500">
+                            {new Date(repair.createdAt).toLocaleDateString(
+                              "th-TH",
+                            )}
+                          </span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500">
+                            {repair.ticketCode}
+                          </span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500">
+                            สถานะ: {getStatusLabel(repair.status)}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-gray-400 ml-2" />
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="p-8 text-center text-gray-400 text-sm">
+                  ไม่มีรายการซ่อมที่ได้รับมอบหมาย
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Loans List */}
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="font-semibold text-gray-900 bg-gray-100 px-3 py-1 rounded-md">
+                การยืม
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {recentLoans.length > 0 ? (
+                recentLoans.map((loan) => (
+                  <Link
+                    key={loan.id}
+                    href="/it/loans"
+                    className="block p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {loan.itemName}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500">
+                            {new Date(
+                              loan.expectedReturnDate,
+                            ).toLocaleDateString("th-TH")}
+                          </span>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500">
+                            {loan.id}
+                          </span>{" "}
+                          {/* Using ID or code if available */}
+                          <div className="ml-auto">
+                            <span className="text-xs text-gray-500">
+                              กำหนดคืน:{" "}
+                              {new Date(
+                                loan.expectedReturnDate,
+                              ).toLocaleDateString("th-TH")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-gray-400 ml-2" />
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="p-8 text-center text-gray-400 text-sm">
+                  ไม่มีรายการยืม
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-        <div
-          className={`h-full transition-all duration-500 ${val < 50 ? "bg-rose-500" : "bg-slate-800"}`}
-          style={{ width: `${val}%` }}
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: number;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="bg-gray-200 hover:bg-gray-300 transition-colors p-4 rounded-lg group relative overflow-hidden"
+    >
+      <div className="flex items-start justify-between relative z-10">
+        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <ArrowUpRight
+          size={16}
+          className="text-gray-500 group-hover:text-gray-700 transition-colors"
         />
       </div>
-    </div>
-  );
-}
-
-function translateStatus(s: string) {
-  switch (s) {
-    case "PENDING":
-      return "รอรับเรื่อง";
-    case "BORROWED":
-      return "กำลังยืม";
-    case "RETURNED":
-      return "คืนแล้ว";
-    case "OVERDUE":
-      return "เกินกำหนด";
-    case "COMPLETED":
-      return "เสร็จสิ้น";
-    case "REPAIRING":
-      return "กำลังซ่อม";
-    default:
-      return s;
-  }
-}
-
-function getStatusStyles(s: string) {
-  switch (s) {
-    case "COMPLETED":
-    case "RETURNED":
-      return "bg-emerald-50 text-emerald-700 border-emerald-100";
-    case "OVERDUE":
-    case "URGENT":
-      return "bg-rose-50 text-rose-700 border-rose-100";
-    case "PENDING":
-    case "BORROWED":
-    case "REPAIRING":
-      return "bg-slate-50 text-slate-700 border-slate-200";
-    default:
-      return "bg-slate-50 text-slate-400 border-slate-200";
-  }
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="min-h-screen bg-slate-50 p-8 animate-pulse">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="h-10 w-48 bg-slate-200 rounded-lg" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-32 bg-white rounded-xl border border-slate-200 shadow-sm"
-            />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 h-96 bg-white rounded-xl border border-slate-200 shadow-sm" />
-          <div className="h-96 bg-white rounded-xl border border-slate-200 shadow-sm" />
-        </div>
+      <div className="mt-3 relative z-10">
+        <span className="text-3xl font-bold text-gray-800">{value}</span>
       </div>
-    </div>
+    </Link>
   );
 }
