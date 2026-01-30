@@ -6,31 +6,59 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
-  Package,
   Wrench,
-  Settings,
+  Users,
   LogOut,
   Menu,
   X,
-  ChevronDown,
-  Bell,
   User,
-  Users,
+  Package,
+  ChevronDown,
+  ChevronUp,
+  Settings,
 } from "lucide-react";
+import { userService, User as UserType } from "@/services/userService";
 
-interface MenuItem {
-  icon: React.ComponentType<{ size: number; strokeWidth?: number }>;
+interface SubMenuItem {
   label: string;
   href: string;
-  subItems?: Array<{ label: string; href: string }>;
+}
+
+interface MenuItem {
+  icon: React.ComponentType<{
+    size: number;
+    strokeWidth?: number;
+    className?: string;
+  }>;
+  label: string;
+  href?: string;
+  subItems?: SubMenuItem[];
 }
 
 export default function ITSidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserType | null>(null);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          const user = await userService.getUserById(parseInt(userId));
+          setUserProfile(user);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  // Menu items for IT role
   const menuItems: MenuItem[] = [
     { icon: LayoutDashboard, label: "แดชบอร์ด", href: "/it/dashboard" },
     { icon: Package, label: "ระบบยืมของ", href: "/it/loans" },
@@ -39,7 +67,6 @@ export default function ITSidebar() {
     {
       icon: Settings,
       label: "ตั้งค่า",
-      href: "/it/settings",
       subItems: [
         { label: "โปรไฟล์", href: "/it/settings/profile" },
         { label: "ความปลอดภัย", href: "/it/settings/security" },
@@ -47,174 +74,210 @@ export default function ITSidebar() {
     },
   ];
 
-  useEffect(() => setIsOpen(false), [pathname]);
+  const isActive = useCallback(
+    (href: string) => pathname === href || pathname.startsWith(href + "/"),
+    [pathname],
+  );
 
-  const toggleSubMenu = useCallback((label: string) => {
-    setExpandedMenu((prev) => (prev === label ? null : label));
+  const isMenuActive = useCallback(
+    (item: MenuItem) => {
+      if (item.href) {
+        return isActive(item.href);
+      }
+      if (item.subItems) {
+        return item.subItems.some((sub) => isActive(sub.href));
+      }
+      return false;
+    },
+    [isActive],
+  );
+
+  const toggleMenu = useCallback((label: string) => {
+    setExpandedMenus((prev) =>
+      prev.includes(label) ? prev.filter((m) => m !== label) : [...prev, label],
+    );
   }, []);
 
-  const handleLogout = async () => {
-    localStorage.clear();
-    router.push("/login/admin");
-  };
+  // Auto-expand menu if a submenu is active
+  useEffect(() => {
+    menuItems.forEach((item) => {
+      if (item.subItems) {
+        const hasActiveChild = item.subItems.some((sub) => isActive(sub.href));
+        if (hasActiveChild && !expandedMenus.includes(item.label)) {
+          setExpandedMenus((prev) => [...prev, item.label]);
+        }
+      }
+    });
+  }, [pathname]);
+
+  useEffect(() => setIsOpen(false), [pathname]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+      localStorage.clear();
+      router.push("/login/admin");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [router]);
 
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-zinc-200 z-50 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-zinc-900 tracking-tight">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white z-50 px-4 flex items-center justify-between shadow-sm">
+        <Link href="/it/dashboard" className="flex items-center gap-2">
+          <span className="font-bold text-gray-800 text-lg tracking-wide">
             IT SUPPORT
           </span>
-        </div>
+        </Link>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 text-zinc-500 hover:text-zinc-700 transition-colors"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          {isOpen ? <X size={20} /> : <Menu size={20} />}
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 lg:hidden z-50"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-white border-r border-zinc-200 transition-transform duration-300 z-[60] ${
+        className={`fixed left-0 top-0 h-screen w-56 bg-white transition-transform duration-300 z-[60] flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        {/* Branding */}
-        <div className="h-20 flex items-center px-8">
-          <Link href="/it/dashboard" className="flex items-center gap-3">
-            <div className="flex flex-col">
-              <span className="text-md font-bold text-zinc-900 tracking-tight">
-                IT
-              </span>
-              <span className="text-[10px] text-zinc-400 font-medium tracking-wider">
-                SUPPORT
-              </span>
-            </div>
+        {/* Logo Header */}
+        <div className="h-20 flex items-center justify-center">
+          <Link href="/it/dashboard" className="flex flex-col items-center">
+            <span className="text-xl font-bold text-gray-800 tracking-wider">
+              IT
+            </span>
+            <span className="text-[10px] text-gray-400 font-medium tracking-wider">
+              SUPPORT
+            </span>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="px-4 py-4 space-y-1">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isExpanded = expandedMenu === item.label;
-            const isActive = pathname.startsWith(item.href);
+            const hasSubItems = item.subItems && item.subItems.length > 0;
+            const isExpanded = expandedMenus.includes(item.label);
+            const active = isMenuActive(item);
 
-            return (
-              <div key={item.label}>
-                {item.subItems ? (
+            if (hasSubItems) {
+              return (
+                <div key={item.label}>
+                  {/* Parent Menu with Dropdown */}
                   <button
-                    onClick={() => toggleSubMenu(item.label)}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg transition-all group ${
-                      isExpanded || isActive
-                        ? "bg-zinc-50 text-zinc-900"
-                        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                    onClick={() => toggleMenu(item.label)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                      active
+                        ? "text-gray-900"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className={
-                          isActive || isExpanded
-                            ? "text-zinc-900"
-                            : "text-zinc-400 group-hover:text-zinc-900"
-                        }
-                      >
-                        <Icon size={18} strokeWidth={1.5} />
-                      </div>
+                      <Icon
+                        size={20}
+                        strokeWidth={1.5}
+                        className="text-gray-500"
+                      />
                       <span className="text-sm font-medium">{item.label}</span>
                     </div>
-                    <div
-                      className={`transition-transform duration-200 ${
-                        isExpanded ? "rotate-180" : "opacity-40"
-                      }`}
-                    >
-                      <ChevronDown size={14} />
-                    </div>
+                    {isExpanded ? (
+                      <ChevronUp size={18} className="text-gray-400" />
+                    ) : (
+                      <ChevronDown size={18} className="text-gray-400" />
+                    )}
                   </button>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group ${
-                      isActive
-                        ? "bg-zinc-200 text-zinc-900"
-                        : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
-                    }`}
-                  >
-                    <div
-                      className={
-                        isActive
-                          ? "text-zinc-900"
-                          : "text-zinc-400 group-hover:text-zinc-900"
-                      }
-                    >
-                      <Icon size={18} strokeWidth={1.5} />
-                    </div>
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </Link>
-                )}
 
-                {/* Submenu */}
-                {item.subItems && isExpanded && (
-                  <div className="mt-1 ml-4 border-l border-zinc-200">
-                    {item.subItems.map((sub) => (
-                      <Link
-                        key={sub.label}
-                        href={sub.href}
-                        className={`block py-2 px-6 text-xs font-medium transition-colors ${
-                          pathname === sub.href
-                            ? "text-zinc-900"
-                            : "text-zinc-400 hover:text-zinc-900"
-                        }`}
-                      >
-                        {sub.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  {/* Submenu Items */}
+                  {isExpanded && (
+                    <div className="mt-1 ml-8 space-y-1">
+                      {item.subItems!.map((subItem) => {
+                        const subActive = isActive(subItem.href);
+                        return (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                              subActive
+                                ? "text-gray-900 font-medium"
+                                : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                            }`}
+                          >
+                            {subItem.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Regular Menu Item (no submenu)
+            return (
+              <Link
+                key={item.href}
+                href={item.href!}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                  active
+                    ? "text-gray-900 font-medium"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                }`}
+              >
+                <Icon size={20} strokeWidth={1.5} className="text-gray-500" />
+                <span className="text-sm">{item.label}</span>
+              </Link>
             );
           })}
         </nav>
 
-        {/* User Profile Area */}
-        <div className="absolute bottom-0 w-full p-4 border-t border-zinc-100 bg-zinc-50/50">
-          <div className="flex items-center gap-3 px-2 py-3">
-            <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-600">
-              <User size={18} />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-zinc-800 truncate">
-                IT Support
-              </span>
-              <span className="text-[10px] text-zinc-400 uppercase tracking-tight">
-                IT Team
-              </span>
+        {/* User Profile Section */}
+        <div className="p-4 bg-white">
+          <div className="flex items-center gap-3 mb-4">
+            {userProfile?.pictureUrl ? (
+              <Image
+                src={userProfile.pictureUrl}
+                alt={userProfile.name}
+                width={44}
+                height={44}
+                className="w-11 h-11 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-amber-700 flex items-center justify-center">
+                <User size={20} className="text-white" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {userProfile?.name || "IT Profile"}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {userProfile?.email || "it@trr.com"}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            <button className="flex items-center justify-center p-2 rounded-md bg-white border border-zinc-200 text-zinc-400 hover:text-zinc-900 hover:border-zinc-400 transition-all">
-              <Bell size={16} />
-            </button>
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center p-2 rounded-md bg-white border border-zinc-200 text-zinc-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors text-sm font-medium"
+          >
+            ออกจากระบบ
+          </button>
         </div>
       </aside>
-
-      {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/10 backdrop-blur-[2px] lg:hidden z-[55]"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </>
   );
 }
