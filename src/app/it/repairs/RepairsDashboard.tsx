@@ -199,7 +199,7 @@ export function RepairsDashboard() {
             </button>
             <button
               onClick={handleExportExcel}
-              className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 shadow-sm transition-all"
+              className="p-2 text-gray-500 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-sm transition-all"
             >
               <span>Export</span>
             </button>
