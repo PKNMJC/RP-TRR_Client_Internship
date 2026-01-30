@@ -127,6 +127,47 @@ export default function RepairDetailPage() {
     fetchTechnicians();
   }, []);
 
+  /* ---------------- Status Flow Validation ---------------- */
+  // Define which statuses can transition to which
+  const getAvailableStatuses = (
+    currentStatus: Status,
+  ): { value: Status; label: string; disabled: boolean }[] => {
+    const allStatuses: { value: Status; label: string }[] = [
+      { value: "PENDING", label: "รอดำเนินการ" },
+      { value: "IN_PROGRESS", label: "กำลังดำเนินการ" },
+      { value: "WAITING_PARTS", label: "รออะไหล่" },
+      { value: "COMPLETED", label: "เสร็จสิ้น" },
+      { value: "CANCELLED", label: "ยกเลิก" },
+    ];
+
+    // Status flow rules:
+    // PENDING → can go to any status
+    // IN_PROGRESS → cannot go back to PENDING
+    // WAITING_PARTS → cannot go back to PENDING
+    // COMPLETED → locked, cannot change
+    // CANCELLED → locked, cannot change
+
+    return allStatuses.map((s) => {
+      let disabled = false;
+
+      // If current status is COMPLETED or CANCELLED, disable all options except current
+      if (currentStatus === "COMPLETED" || currentStatus === "CANCELLED") {
+        disabled = s.value !== currentStatus;
+      }
+      // If current status is IN_PROGRESS or WAITING_PARTS, disable PENDING
+      else if (
+        currentStatus === "IN_PROGRESS" ||
+        currentStatus === "WAITING_PARTS"
+      ) {
+        disabled = s.value === "PENDING";
+      }
+
+      return { ...s, disabled };
+    });
+  };
+
+  const availableStatuses = data ? getAvailableStatuses(data.status) : [];
+
   /* ---------------- Assignee Toggle ---------------- */
   const toggleAssignee = (userId: number) => {
     setAssigneeIds((prev) =>
@@ -263,13 +304,39 @@ export default function RepairDetailPage() {
           {/* RIGHT : ACTION */}
           <aside className="space-y-6">
             <Block title="การจัดการ">
-              <Select label="สถานะ" value={status} onChange={setStatus}>
-                <option value="PENDING">รอดำเนินการ</option>
-                <option value="IN_PROGRESS">กำลังดำเนินการ</option>
-                <option value="WAITING_PARTS">รออะไหล่</option>
-                <option value="COMPLETED">เสร็จสิ้น</option>
-                <option value="CANCELLED">ยกเลิก</option>
-              </Select>
+              {/* Status with validation */}
+              <div className="space-y-1">
+                <label className="text-xs text-zinc-500">สถานะ</label>
+                {data.status === "COMPLETED" || data.status === "CANCELLED" ? (
+                  <div className="w-full border border-zinc-200 rounded px-3 py-2 text-sm bg-zinc-100 text-zinc-500">
+                    {availableStatuses.find((s) => s.value === status)?.label ||
+                      status}
+                    <span className="ml-2 text-xs">(ล็อค)</span>
+                  </div>
+                ) : (
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as Status)}
+                    className="w-full border border-zinc-300 rounded px-3 py-2 text-sm bg-white"
+                  >
+                    {availableStatuses.map((s) => (
+                      <option
+                        key={s.value}
+                        value={s.value}
+                        disabled={s.disabled}
+                      >
+                        {s.label} {s.disabled ? "(ไม่สามารถย้อนกลับ)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {(data.status === "IN_PROGRESS" ||
+                  data.status === "WAITING_PARTS") && (
+                  <p className="text-xs text-amber-600">
+                    ⚠️ ไม่สามารถย้อนกลับไปสถานะ "รอดำเนินการ" ได้
+                  </p>
+                )}
+              </div>
 
               <Select
                 label="ความเร่งด่วน"
