@@ -219,24 +219,35 @@ function CalendarContent() {
     while (day <= endDate) {
       const days = [];
       for (let i = 0; i < 7; i++) {
-        const key = format(day, "yyyy-MM-dd");
+        // ✅ Capture วันที่ปัจจุบันเพื่อแก้ปัญหา closure
+        const currentDay = day;
+        const key = format(currentDay, "yyyy-MM-dd");
         const hasEvents = eventsByDate.get(key)?.length || 0;
+        const isToday = isSameDay(currentDay, new Date());
+        const isSelected = isSameDay(currentDay, selectedDate);
+        const isCurrentMonth = isSameMonth(currentDay, monthStart);
 
         days.push(
           <div
-            key={day.toString()}
-            onClick={() => setSelectedDate(day)}
-            className={`h-10 w-10 rounded-full flex flex-col items-center justify-center cursor-pointer
-              ${!isSameMonth(day, monthStart) ? "text-gray-300" : ""}
-              ${isSameDay(day, selectedDate) ? "border-2 border-blue-400 font-bold" : "hover:bg-gray-100"}
+            key={key}
+            onClick={() => setSelectedDate(currentDay)}
+            className={`h-10 w-10 rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors
+              ${!isCurrentMonth ? "text-gray-300" : "text-gray-700"}
+              ${isSelected ? "bg-blue-500 text-white font-bold" : "hover:bg-gray-100"}
+              ${isToday && !isSelected ? "ring-2 ring-blue-300" : ""}
             `}
           >
-            {format(day, "d")}
+            <span className="text-sm">{format(currentDay, "d")}</span>
             {hasEvents > 0 && (
               <div className="flex gap-0.5 mt-0.5">
-                {Array.from({ length: Math.min(3, hasEvents) }).map((_, i) => (
-                  <span key={i} className="w-1 h-1 bg-blue-500 rounded-full" />
-                ))}
+                {Array.from({ length: Math.min(3, hasEvents) }).map(
+                  (_, idx) => (
+                    <span
+                      key={idx}
+                      className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-blue-500"}`}
+                    />
+                  ),
+                )}
               </div>
             )}
           </div>,
@@ -244,7 +255,7 @@ function CalendarContent() {
         day = addDays(day, 1);
       }
       rows.push(
-        <div key={day.toString()} className="grid grid-cols-7">
+        <div key={`row-${rows.length}`} className="grid grid-cols-7 gap-1">
           {days}
         </div>,
       );
