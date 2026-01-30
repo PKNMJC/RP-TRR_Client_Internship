@@ -160,22 +160,22 @@ export default function ITDashboard() {
           <StatCard
             label="รายการซ่อมทั้งหมดของฉัน"
             value={stats.repairs.total}
-            href="/it/repairs"
+            href="/it/repairs?tab=mine"
           />
           <StatCard
             label="งานที่รอรับเรื่อง"
             value={stats.repairs.waiting}
-            href="/it/repairs?status=PENDING"
+            href="/it/repairs?tab=unassigned"
           />
           <StatCard
             label="กำลังดำเนินการ"
             value={stats.repairs.inProgress}
-            href="/it/repairs?status=IN_PROGRESS"
+            href="/it/repairs?tab=mine"
           />
           <StatCard
             label="เสร็จสิ้น"
             value={stats.repairs.completed}
-            href="/it/repairs?status=COMPLETED"
+            href="/it/repairs?tab=history"
           />
         </div>
 

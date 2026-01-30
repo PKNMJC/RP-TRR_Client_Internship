@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Trash2,
   ChevronLeft,
@@ -61,6 +61,9 @@ export function RepairsDashboard() {
     name: string;
   } | null>(null);
 
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab");
+
   /* ---------------- Init ---------------- */
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -68,7 +71,11 @@ export function RepairsDashboard() {
     if (userId) {
       setCurrentUser({ id: parseInt(userId), name: userName });
     }
-  }, []);
+
+    if (urlTab === "mine" || urlTab === "unassigned" || urlTab === "history") {
+      setActiveTab(urlTab as Tab);
+    }
+  }, [urlTab]);
 
   /* ---------------- Fetching ---------------- */
   const fetchRepairs = useCallback(async () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/services/api";
 import {
   Search,
@@ -120,9 +120,18 @@ export default function ITLoansPage() {
     }
   }, [router]);
 
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get("status");
+
   useEffect(() => {
     fetchLoans();
   }, [fetchLoans]);
+
+  useEffect(() => {
+    if (urlStatus) {
+      setFilterStatus(urlStatus);
+    }
+  }, [urlStatus]);
 
   const filteredLoans = useMemo(() => {
     return loans.filter((loan) => {
