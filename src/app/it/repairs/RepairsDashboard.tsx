@@ -174,8 +174,8 @@ export function RepairsDashboard() {
 
   /* ---------------- UI Components ---------------- */
   return (
-    <div className="min-h-[calc(100vh-4rem)] lg:min-h-screen bg-gray-50 p-4 lg:p-6 font-sans">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-[calc(100vh-4rem)] lg:min-h-screen bg-gray-50 p-4 lg:p-6 font-sans overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto space-y-6">
         {/* Header & Controls */}
         <div className="flex flex-row flex-wrap justify-between items-center gap-4">
           <div>

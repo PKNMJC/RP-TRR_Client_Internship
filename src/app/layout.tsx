@@ -18,6 +18,7 @@ export const metadata: Metadata = {
     "ระบบแจ้งซ่อมอุปกรณ์ IT สำหรับพนักงาน TRR - รวดเร็ว สะดวก ติดตามสถานะได้ตลอดเวลา",
   keywords: "IT Support, ระบบแจ้งซ่อม, TRR, Help Desk",
   authors: [{ name: "TRR Internship Team" }],
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({
