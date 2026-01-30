@@ -268,13 +268,13 @@ function CalendarContent() {
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="รายการซ่อมทั้งหมด" value={stats.total} />
-          <StatCard label="รอรับงาน" value={stats.pending} color="yellow" />
+          <StatCard label="รอรับงาน" value={stats.pending}  />
           <StatCard
             label="กำลังดำเนินการ"
             value={stats.inProgress}
-            color="orange"
+            
           />
-          <StatCard label="เสร็จสิ้น" value={stats.completed} color="green" />
+          <StatCard label="เสร็จสิ้น" value={stats.completed}/>
         </div>
 
         {/* Filters */}
