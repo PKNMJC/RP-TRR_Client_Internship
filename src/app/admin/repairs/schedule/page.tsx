@@ -327,7 +327,7 @@ function CalendarContent() {
           <div className="lg:col-span-8 space-y-6">
             <section className="bg-white rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4 text-gray-900">
-                📅 {format(selectedDate, "dd MMMM yyyy", { locale: th })}
+                {format(selectedDate, "dd MMMM yyyy", { locale: th })}
               </h2>
 
               {selectedDateEvents.length ? (
@@ -345,7 +345,7 @@ function CalendarContent() {
 
             <section className="bg-white rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4 text-gray-900">
-                🔜 งานที่กำลังจะมาถึง
+                งานที่กำลังจะมาถึง
               </h2>
               {upcomingEvents.length ? (
                 <div className="space-y-4">
