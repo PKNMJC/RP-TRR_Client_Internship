@@ -69,7 +69,7 @@ export default function ITSidebar() {
       label: "ตั้งค่า",
       subItems: [
         { label: "โปรไฟล์", href: "/it/settings/profile" },
-        { label: "ความปลอดภัย", href: "/it/settings/security" },
+      
       ],
     },
   ];
