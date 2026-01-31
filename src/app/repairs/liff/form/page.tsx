@@ -218,12 +218,23 @@ function RepairFormContent() {
   const handleCloseLiff = async () => {
     try {
       const liff = (await import("@line/liff")).default;
+
+      // Ensure LIFF is initialized before trying to close
+      if (!liff.id) {
+        const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
+        if (liffId) {
+          await liff.init({ liffId });
+        }
+      }
+
       if (liff.isInClient()) {
         liff.closeWindow();
       } else {
         window.close();
       }
-    } catch {
+    } catch (error) {
+      console.error("Close LIFF Error:", error);
+      // Fallback
       window.close();
     }
   };
