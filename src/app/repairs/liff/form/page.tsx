@@ -72,6 +72,7 @@ function RepairFormContent() {
     searchParams.get("lineUserId") || "",
   );
   const [lineDisplayName, setLineDisplayName] = useState("");
+  const [linePictureUrl, setLinePictureUrl] = useState("");
 
   // Initialize LIFF lazily
   useEffect(() => {
@@ -99,6 +100,7 @@ function RepairFormContent() {
             if (isMounted) {
               setLineUserId(profile.userId);
               setLineDisplayName(profile.displayName);
+              setLinePictureUrl(profile.pictureUrl || "");
             }
           } else {
             liff.login();
@@ -187,6 +189,8 @@ function RepairFormContent() {
         location: formData.location,
         urgency: formData.urgency,
         problemCategory: "OTHER",
+        displayName: lineDisplayName || undefined,
+        pictureUrl: linePictureUrl || undefined,
       };
 
       const response = await uploadData(
