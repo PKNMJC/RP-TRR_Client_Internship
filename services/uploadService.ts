@@ -32,14 +32,15 @@ export async function uploadData(
     const fileArray = Array.isArray(files) ? files : [files];
     
     for (const file of fileArray) {
-      // Check original size (optional insurance)
-      // if (file.size > MAX_FILE_SIZE) {
-      //   throw new Error(`ไฟล์ ${file.name} ใหญ่เกิน 10MB`);
-      // }
-
-      // Resize/Compress before appending
-      const resizedFile = await resizeImage(file);
-      payload.append("files", resizedFile);
+      try {
+        // Try to resize/compress the image
+        const resizedFile = await resizeImage(file);
+        payload.append("files", resizedFile, resizedFile.name);
+      } catch (resizeError) {
+        // If resize fails, use original file
+        console.warn("Image resize failed, using original file:", resizeError);
+        payload.append("files", file, file.name);
+      }
     }
   }
 

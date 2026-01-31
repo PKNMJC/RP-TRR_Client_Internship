@@ -65,6 +65,9 @@ function RepairFormContent() {
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [successData, setSuccessData] = useState<{ ticketCode: string } | null>(
+    null,
+  );
   const [lineUserId, setLineUserId] = useState(
     searchParams.get("lineUserId") || "",
   );
@@ -192,16 +195,8 @@ function RepairFormContent() {
         file || undefined,
       );
 
-      await showAlert({
-        icon: "success",
-        title: "ส่งข้อมูลสำเร็จ",
-        text: `รหัสรายการ: ${response.ticketCode}`,
-        confirmButtonColor: "#3b82f6",
-      });
-
-      // Close LIFF window and return to LINE chat
-      const liff = (await import("@line/liff")).default;
-      liff.closeWindow();
+      // Show success state instead of SweetAlert
+      setSuccessData({ ticketCode: response.ticketCode });
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "กรุณาลองใหม่อีกครั้ง";
@@ -214,6 +209,96 @@ function RepairFormContent() {
       setIsLoading(false);
     }
   };
+
+  // Handle close LIFF window
+  const handleCloseLiff = async () => {
+    try {
+      const liff = (await import("@line/liff")).default;
+      if (liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        window.close();
+      }
+    } catch {
+      window.close();
+    }
+  };
+
+  // Handle reset form for new request
+  const handleNewRequest = () => {
+    setSuccessData(null);
+    setFormData({
+      name: "",
+      dept: "",
+      phone: "",
+      issueType: "",
+      details: "",
+      urgency: "NORMAL",
+      location: "",
+    });
+    setFile(null);
+    setFilePreview(null);
+  };
+
+  // Success Page
+  if (successData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50/50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md text-center">
+          {/* Success Icon */}
+          <div className="mb-6">
+            <div className="mx-auto w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+              <svg
+                className="w-10 h-10 text-emerald-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Success Message */}
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
+            ส่งเรื่องแจ้งซ่อมสำเร็จ
+          </h1>
+          <p className="text-slate-500 mb-6">
+            ทีมงานจะดำเนินการตรวจสอบโดยเร็วที่สุด
+          </p>
+
+          {/* Ticket Code Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+            <p className="text-sm text-slate-500 mb-2">รหัสการแจ้งซ่อม</p>
+            <p className="text-2xl font-mono font-bold text-emerald-600 tracking-wider">
+              {successData.ticketCode}
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <button
+              onClick={handleCloseLiff}
+              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-lg shadow-emerald-200/50 transition-all duration-200"
+            >
+              กลับหน้าแชท
+            </button>
+            <button
+              onClick={handleNewRequest}
+              className="w-full py-3 bg-white hover:bg-slate-50 text-slate-600 rounded-xl font-medium border border-slate-200 transition-all duration-200"
+            >
+              แจ้งซ่อมรายการใหม่
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
