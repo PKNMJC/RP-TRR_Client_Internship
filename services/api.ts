@@ -109,7 +109,6 @@ export async function apiFetch(url: string, options?: string | FetchOptions | "G
     return text ? JSON.parse(text) : null;
   } catch (error) {
     // Handle network errors (Failed to fetch)
-    // Handle network errors (Failed to fetch)
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       const targetUrl = API_URL + url;
       throw new Error(`ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (${targetUrl}) กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต`);

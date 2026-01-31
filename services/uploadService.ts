@@ -1,7 +1,5 @@
 import { resizeImage } from "@/utils/imageResize";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (Original limit, we compress it anyway)
-
 /**
  * Uploads data and files to a specified endpoint.
  * @param url The API endpoint URL.
