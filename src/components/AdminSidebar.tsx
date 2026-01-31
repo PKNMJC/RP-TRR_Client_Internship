@@ -19,8 +19,10 @@ import {
   Calendar,
   List,
   CheckSquare,
+  Trash2,
 } from "lucide-react";
 import { userService, User as UserType } from "@/services/userService";
+import ClearDataModal from "./ClearDataModal";
 
 interface SubMenuItem {
   label: string;
@@ -43,6 +45,7 @@ export default function AdminSidebar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [adminProfile, setAdminProfile] = useState<UserType | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+  const [isClearDataOpen, setIsClearDataOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -247,7 +250,20 @@ export default function AdminSidebar() {
               </Link>
             );
           })}
+
+          <button
+            onClick={() => setIsClearDataOpen(true)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-red-600 hover:bg-red-50 hover:text-red-700 mt-2"
+          >
+            <Trash2 size={20} strokeWidth={1.5} />
+            <span className="text-sm font-medium">ล้างข้อมูลระบบ</span>
+          </button>
         </nav>
+
+        <ClearDataModal
+          isOpen={isClearDataOpen}
+          onClose={() => setIsClearDataOpen(false)}
+        />
 
         {/* User Profile Section */}
         <div className="p-4 bg-white">
