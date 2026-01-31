@@ -12,6 +12,12 @@ import {
   ArrowRight,
   RefreshCcw,
   CheckSquare,
+  Wrench,
+  Ticket,
+  Clock,
+  Bell,
+  Package,
+  Users,
 } from "lucide-react";
 import {
   dataManagementService,
@@ -201,7 +207,18 @@ export default function DataManagementPage() {
                           {selectedTypes.includes(type.key) ? (
                             <CheckCircle size={20} />
                           ) : (
-                            type.icon
+                            (() => {
+                              const Icon =
+                                {
+                                  Wrench,
+                                  Ticket,
+                                  Clock,
+                                  Bell,
+                                  Package,
+                                  Users,
+                                }[type.icon] || Database;
+                              return <Icon size={20} />;
+                            })()
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -297,7 +314,6 @@ export default function DataManagementPage() {
               </div>
 
               <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex gap-3 items-start">
-                <AlertTriangle className="text-amber-500 shrink-0 w-5 h-5 mt-0.5" />
                 <p className="text-xs text-amber-700 leading-relaxed">
                   ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
                   กรุณาตรวจสอบให้แน่ใจก่อนดำเนินการ
