@@ -91,14 +91,26 @@ export default function DataManagementPage() {
     if (result.isConfirmed) {
       try {
         setProcessing(true);
-        const response = await dataManagementService.clearData(
+        const responseCallback = await dataManagementService.clearData(
           selectedTypes,
           exportFirst,
         );
 
         if (exportFirst) {
-          // Handle file download
-          const url = window.URL.createObjectURL(new Blob([response]));
+          // Check if response is JSON (error) or Blob (file)
+          const isJson =
+            responseCallback instanceof Blob &&
+            responseCallback.type === "application/json";
+
+          if (isJson) {
+            // It's an error in JSON format, wrapped in a Blob
+            const text = await responseCallback.text();
+            const errorData = JSON.parse(text);
+            throw new Error(errorData.message || "Export failed");
+          }
+
+          // Handle successful file download
+          const url = window.URL.createObjectURL(new Blob([responseCallback]));
           const link = document.createElement("a");
           link.href = url;
           link.setAttribute(
@@ -108,6 +120,7 @@ export default function DataManagementPage() {
           document.body.appendChild(link);
           link.click();
           link.remove();
+          window.URL.revokeObjectURL(url);
         }
 
         await Swal.fire({
@@ -121,12 +134,18 @@ export default function DataManagementPage() {
         // Refresh counts
         fetchDataTypes();
         setSelectedTypes([]);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to clear data:", error);
+
+        let errorMessage = "ไม่สามารถลบข้อมูลได้";
+        if (error.message) {
+          errorMessage = error.message;
+        }
+
         Swal.fire({
           icon: "error",
           title: "เกิดข้อผิดพลาด",
-          text: "ไม่สามารถลบข้อมูลได้",
+          text: errorMessage,
         });
       } finally {
         setProcessing(false);
