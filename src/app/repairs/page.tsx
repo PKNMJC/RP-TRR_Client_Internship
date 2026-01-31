@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Upload, X } from "lucide-react";
 import { apiFetch } from "@/services/api";
-
-
+import { uploadData } from "@/services/uploadService";
 
 const PROBLEM_CATEGORIES = [
   { value: "HARDWARE", label: "💻 Hardware (คอมพิวเตอร์, อุปกรณ์)" },
@@ -87,7 +86,7 @@ function RepairPageContent() {
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -104,39 +103,51 @@ function RepairPageContent() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (selectedFiles) {
-      const newFiles: File[] = [];
-      const newPreviews: string[] = [];
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFiles = e.target.files;
+      if (selectedFiles) {
+        const newFiles: File[] = [];
+        const newPreviews: string[] = [];
 
-      for (
-        let i = 0;
-        i < Math.min(selectedFiles.length, 3 - files.length);
-        i++
-      ) {
-        const file = selectedFiles[i];
-        if (file.size <= 5 * 1024 * 1024) {
-          // 5MB max
+        const remainingSlots = 3 - files.length;
+        const filesToProcess = Math.min(selectedFiles.length, remainingSlots);
+
+        for (let i = 0; i < filesToProcess; i++) {
+          const file = selectedFiles[i];
           newFiles.push(file);
-
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            newPreviews.push(reader.result as string);
-          };
-          reader.readAsDataURL(file);
+          // Use object URL for faster preview
+          const url = URL.createObjectURL(file);
+          newPreviews.push(url);
         }
+
+        setFiles((prev) => [...prev, ...newFiles]);
+        setFilePreviews((prev) => [...prev, ...newPreviews]);
       }
+    },
+    [files.length],
+  );
 
-      setFiles((prev) => [...prev, ...newFiles]);
-      setFilePreviews((prev) => [...prev, ...newPreviews]);
-    }
-  };
+  const removeFile = useCallback((index: number) => {
+    setFiles((prev) => {
+      const newFiles = [...prev];
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+    setFilePreviews((prev) => {
+      const newPreviews = [...prev];
+      const removedUrl = newPreviews.splice(index, 1)[0];
+      if (removedUrl) URL.revokeObjectURL(removedUrl);
+      return newPreviews;
+    });
+  }, []);
 
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setFilePreviews((prev) => prev.filter((_, i) => i !== index));
-  };
+  // Clean up all object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      filePreviews.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [filePreviews]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -174,33 +185,26 @@ function RepairPageContent() {
     setLoading(true);
 
     try {
-      const formPayload = new FormData();
-
-      // Append form data
-      formPayload.append("reporterName", formData.reporterName);
-      formPayload.append("reporterDepartment", formData.reporterDepartment);
-      formPayload.append("reporterPhone", formData.reporterPhone);
-      if (formData.reporterLineId) {
-        formPayload.append("reporterLineId", formData.reporterLineId);
-      }
-      formPayload.append("problemCategory", formData.problemCategory);
-      formPayload.append("problemTitle", formData.problemTitle);
-      formPayload.append("problemDescription", formData.problemDescription);
-      formPayload.append("location", formData.location);
-      formPayload.append("urgency", formData.urgency);
-
-      // Append files
-      files.forEach((file) => {
-        formPayload.append("files", file);
-      });
+      // Prepare payload object for uploadData
+      const dataPayload = {
+        reporterName: formData.reporterName,
+        reporterDepartment: formData.reporterDepartment,
+        reporterPhone: formData.reporterPhone || "-",
+        reporterLineId:
+          formData.reporterLineId || (lineUserId ? lineUserId : undefined),
+        problemCategory: formData.problemCategory,
+        problemTitle: formData.problemTitle,
+        problemDescription: formData.problemDescription,
+        location: formData.location,
+        urgency: formData.urgency,
+      };
 
       // Use LIFF endpoint if lineUserId is present, otherwise use protected endpoint
       const endpoint = lineUserId ? "/api/repairs/liff/create" : "/api/repairs";
 
-      const data = await apiFetch(endpoint, {
-        method: "POST",
-        body: formPayload,
-      });
+      const data = await uploadData(endpoint, dataPayload, files);
+
+      setSuccess({ show: true, ticketCode: data.ticketCode });
 
       setSuccess({ show: true, ticketCode: data.ticketCode });
     } catch (err) {
@@ -278,7 +282,8 @@ function RepairPageContent() {
               แจ้งซ่อมอุปกรณ์ IT
             </h1>
             <p className="text-gray-600 dark:text-gray-400 text-lg max-w-lg mx-auto leading-relaxed">
-              กรอกข้อมูลด้านล่างเพื่อให้ทีมงาน IT ช่วยเหลือคุณ <br className="hidden md:block" />
+              กรอกข้อมูลด้านล่างเพื่อให้ทีมงาน IT ช่วยเหลือคุณ{" "}
+              <br className="hidden md:block" />
               เราพร้อมดูแลทุกปัญหาการใช้งาน
             </p>
           </div>
@@ -343,10 +348,7 @@ function RepairPageContent() {
                     <option value="ฝ่าย IT">ฝ่าย IT</option>
                   </select>
                   <div className="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400">
-                    <svg
-                      className="w-4 h-4 fill-current"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                       <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                     </svg>
                   </div>
@@ -436,12 +438,12 @@ function RepairPageContent() {
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
               />
               <div className="flex justify-between items-center text-xs">
-                 {errors.problemTitle ? (
+                {errors.problemTitle ? (
                   <p className="text-red-500 font-medium">
                     {errors.problemTitle}
                   </p>
                 ) : (
-                  <span></span> 
+                  <span></span>
                 )}
                 <span className="text-gray-500 dark:text-gray-400">
                   {formData.problemTitle.length}/100
@@ -482,7 +484,7 @@ function RepairPageContent() {
                 rows={4}
                 className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-none"
               />
-               <div className="flex justify-end text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex justify-end text-xs text-gray-500 dark:text-gray-400">
                 {formData.problemDescription.length}/500
               </div>
             </div>
@@ -511,7 +513,7 @@ function RepairPageContent() {
                   onChange={handleFileChange}
                   disabled={files.length >= 3}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  title="" 
+                  title=""
                 />
               </div>
 
@@ -546,12 +548,12 @@ function RepairPageContent() {
             {/* ความเร่งด่วน */}
             <div className="space-y-3">
               <label className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                 <span className="w-1.5 h-6 bg-orange-500 rounded-full inline-block"></span>
+                <span className="w-1.5 h-6 bg-orange-500 rounded-full inline-block"></span>
                 ระดับความเร่งด่วน
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {URGENCY_LEVELS.map((level) => (
-                   <label
+                  <label
                     key={level.value}
                     className={`
                       relative flex flex-col md:flex-row items-center justify-center md:justify-start p-4 border rounded-xl cursor-pointer transition-all duration-200 gap-3 text-center md:text-left
@@ -568,11 +570,11 @@ function RepairPageContent() {
                       value={level.value}
                       checked={formData.urgency === level.value}
                       onChange={handleInputChange}
-                      className="hidden" 
+                      className="hidden"
                     />
                     <span className="text-2xl">{level.emoji}</span>
                     <div className="flex flex-col">
-                       <span
+                      <span
                         className={`font-semibold ${
                           formData.urgency === level.value
                             ? "text-orange-900 dark:text-orange-100"
@@ -581,9 +583,9 @@ function RepairPageContent() {
                       >
                         {level.label.split(" ")[1]}
                       </span>
-                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                         {level.label.split("(")[1]?.replace(")", "") || "ปกติ"}
-                       </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {level.label.split("(")[1]?.replace(")", "") || "ปกติ"}
+                      </span>
                     </div>
                   </label>
                 ))}
@@ -605,7 +607,7 @@ function RepairPageContent() {
                 ) : (
                   <>
                     <span>ส่งแจ้งซ่อม</span>
-                     <svg
+                    <svg
                       className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"

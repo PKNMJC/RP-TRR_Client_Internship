@@ -18,6 +18,7 @@ import SelectField from "@/components/SelectField";
 import FileUpload from "@/components/FileUpload";
 import InputField from "@/components/InputField";
 import { apiFetch } from "@/services/api";
+import { uploadData } from "@/services/uploadService";
 
 // Problem Categories with Subcategories - Must match Prisma ProblemCategory enum
 const PROBLEM_CATEGORIES = [
@@ -143,36 +144,27 @@ export default function CreateRepairRequest() {
     setLoading(true);
 
     try {
-      const formDataToSend = new FormData();
+      const token =
+        localStorage.getItem("access_token") || localStorage.getItem("token");
+      const dataPayload = {
+        title: formData.title,
+        description: formData.description,
+        category: "REPAIR",
+        priority: formData.priority,
+        problemCategory: formData.problemCategory,
+        problemSubcategory: formData.problemSubcategory,
+        equipmentName: formData.equipmentName,
+        location: formData.location,
+        guestName: !token ? formData.guestName : undefined,
+        guestEmail: !token ? formData.guestEmail : undefined,
+        guestPhone: !token ? formData.guestPhone : undefined,
+        guestDepartment:
+          !token && formData.guestDepartment
+            ? formData.guestDepartment
+            : undefined,
+      };
 
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("category", "REPAIR");
-      formDataToSend.append("priority", formData.priority);
-      formDataToSend.append("problemCategory", formData.problemCategory);
-      formDataToSend.append("problemSubcategory", formData.problemSubcategory);
-      formDataToSend.append("equipmentName", formData.equipmentName);
-      formDataToSend.append("location", formData.location);
-
-      // Add guest information if not authenticated
-      const token = localStorage.getItem("token");
-      if (!token) {
-        formDataToSend.append("guestName", formData.guestName);
-        formDataToSend.append("guestEmail", formData.guestEmail);
-        formDataToSend.append("guestPhone", formData.guestPhone);
-        if (formData.guestDepartment) {
-          formDataToSend.append("guestDepartment", formData.guestDepartment);
-        }
-      }
-
-      files.forEach((file) => {
-        formDataToSend.append("files", file);
-      });
-
-      const result = await apiFetch("/api/tickets", {
-        method: "POST",
-        body: formDataToSend,
-      });
+      const result = await uploadData("/api/tickets", dataPayload, files);
 
       // Show success message with ticket code
       alert(`สำเร็จ! รหัสแจ้งซ่อมของคุณคือ: ${result.ticketCode}`);
@@ -237,8 +229,8 @@ export default function CreateRepairRequest() {
                         isCompleted
                           ? "bg-emerald-500 text-white shadow-md"
                           : isActive
-                          ? "bg-indigo-600 text-white ring-4 ring-indigo-200 shadow-lg"
-                          : "bg-slate-200 text-slate-600"
+                            ? "bg-indigo-600 text-white ring-4 ring-indigo-200 shadow-lg"
+                            : "bg-slate-200 text-slate-600"
                       }`}
                     >
                       {isCompleted ? <CheckCircle2 size={20} /> : step}

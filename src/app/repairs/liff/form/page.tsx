@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { apiFetch } from "@/services/api";
+import { uploadData } from "@/services/uploadService";
 
 // Lazy load icons for better performance
 const ArrowLeft = dynamic(
@@ -134,18 +135,31 @@ function RepairFormContent() {
       if (e.target.files && e.target.files[0]) {
         const selectedFile = e.target.files[0];
         setFile(selectedFile);
-        const reader = new FileReader();
-        reader.onloadend = () => setFilePreview(reader.result as string);
-        reader.readAsDataURL(selectedFile);
+
+        // Use object URL for faster preview and lower memory usage
+        const url = URL.createObjectURL(selectedFile);
+        setFilePreview(url);
       }
     },
     [],
   );
 
   const clearFile = useCallback(() => {
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+    }
     setFile(null);
     setFilePreview(null);
-  }, []);
+  }, [filePreview]);
+
+  // Clean up object URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
+      }
+    };
+  }, [filePreview]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,25 +174,23 @@ function RepairFormContent() {
 
     setIsLoading(true);
     try {
-      const payload = new FormData();
-      payload.append(
-        "reporterName",
-        formData.name.trim() || lineDisplayName || "ไม่ระบุชื่อ",
-      );
-      payload.append("reporterLineId", lineUserId || "Guest");
-      payload.append("reporterDepartment", formData.dept);
-      payload.append("reporterPhone", formData.phone || "-");
-      payload.append("problemTitle", formData.issueType);
-      payload.append("problemDescription", formData.details);
-      payload.append("location", formData.location);
-      payload.append("urgency", formData.urgency);
-      payload.append("problemCategory", "OTHER");
-      if (file) payload.append("files", file);
+      const dataPayload = {
+        reporterName: formData.name.trim() || lineDisplayName || "ไม่ระบุชื่อ",
+        reporterLineId: lineUserId || "Guest",
+        reporterDepartment: formData.dept,
+        reporterPhone: formData.phone || "-",
+        problemTitle: formData.issueType,
+        problemDescription: formData.details,
+        location: formData.location,
+        urgency: formData.urgency,
+        problemCategory: "OTHER",
+      };
 
-      const response = await apiFetch("/api/repairs/liff/create", {
-        method: "POST",
-        body: payload,
-      });
+      const response = await uploadData(
+        "/api/repairs/liff/create",
+        dataPayload,
+        file || undefined,
+      );
 
       await showAlert({
         icon: "success",
