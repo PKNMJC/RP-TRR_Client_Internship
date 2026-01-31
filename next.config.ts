@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   skipTrailingSlashRedirect: true,
 
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'date-fns', 'xlsx'],
+  },
+
   // ✅ API proxy configuration
   // Forward /api/* requests to backend
   async rewrites() {
