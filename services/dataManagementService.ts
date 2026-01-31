@@ -29,7 +29,7 @@ export const dataManagementService = {
         responseType: exportFirst ? 'blob' : 'json',
       }
     );
-    return response.data;
+    return response;
   },
 
   async exportData(types: string[]): Promise<Blob> {

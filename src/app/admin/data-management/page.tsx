@@ -91,12 +91,14 @@ export default function DataManagementPage() {
     if (result.isConfirmed) {
       try {
         setProcessing(true);
-        const responseCallback = await dataManagementService.clearData(
+        const response = await dataManagementService.clearData(
           selectedTypes,
           exportFirst,
         );
 
         if (exportFirst) {
+          const responseCallback = response.data; // Blob is in .data
+
           // Check if response is JSON (error) or Blob (file)
           const isJson =
             responseCallback instanceof Blob &&
@@ -110,13 +112,23 @@ export default function DataManagementPage() {
           }
 
           // Handle successful file download
+          const contentDisposition = response.headers["content-disposition"];
+          let filename = `data-backup-${new Date().toISOString().split("T")[0]}.xlsx`; // Default
+
+          if (contentDisposition) {
+            const filenameMatch =
+              contentDisposition.match(/filename="?([^"]+)"?/);
+            if (filenameMatch && filenameMatch[1]) {
+              filename = filenameMatch[1];
+            }
+          } else if (responseCallback.type === "application/zip") {
+            filename = `data-backup-${new Date().toISOString().split("T")[0]}.zip`;
+          }
+
           const url = window.URL.createObjectURL(new Blob([responseCallback]));
           const link = document.createElement("a");
           link.href = url;
-          link.setAttribute(
-            "download",
-            `data-backup-${new Date().toISOString().split("T")[0]}.xlsx`,
-          );
+          link.setAttribute("download", filename);
           document.body.appendChild(link);
           link.click();
           link.remove();
